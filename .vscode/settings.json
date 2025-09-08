@@ -1,0 +1,10 @@
+{
+  "liveServer.settings.port": 5501,
+  "css.validate": false,
+  "tailwindCSS.experimental.configFile": "apps/web/tailwind.config.ts",
+  "files.associations": { "*.css": "tailwindcss" },
+   "files.watcherExclude": { "**/.firebase/**": true },
+  "search.exclude": { "**/.firebase/**": true },
+    "files.exclude": { "**/.firebase/**": true }
+
+}

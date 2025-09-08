@@ -1,0 +1,48 @@
+@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== Tailwind v4 theme tokens (brand) ===== */
+@theme {
+  --color-brand-blue: #008af7;
+  --color-brand-blueDark: #0075ed;
+}
+
+/* ===== Base (רקע לבן, טקסט שחור) ===== */
+html, body {
+  background: #ffffff;
+  color: #000000;
+  scroll-behavior: smooth;
+}
+
+/* ===== Utilities: אנימציות ===== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: fadeIn .6s ease both; }
+
+/* ===== Components Layer ===== */
+@layer components {
+  /* כפתורי ברנד */
+  .btn-brand { @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white bg-brand-blue hover:bg-brand-blueDark transition; }
+
+  /* כפתור לבן עם מסגרת */
+  .btn-outline { @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm border border-neutral-300 text-black hover:bg-neutral-50 transition; }
+
+  /* קארד */
+  .card { @apply rounded-2xl bg-white border border-neutral-200 shadow-sm; }
+
+  /* קו מפריד רך */
+  .hr-soft { border-color: rgba(0,0,0,.08); }
+
+  /* אינפוטים */
+  .input {
+    @apply w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-black
+           placeholder-neutral-400 outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue;
+  }
+}
+
+/* מעברי hover/active כלליים */
+a, button { transition: background-color .2s ease, color .2s ease, border-color .2s ease, opacity .2s ease, box-shadow .2s ease; }

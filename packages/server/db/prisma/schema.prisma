@@ -1,0 +1,178 @@
+// apps/api/prisma/schema.prisma
+// Monorepo-friendly: generate client into root node_modules so all apps share it
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+//// ========= Enums ========= ////
+
+enum PropertyStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum PropertyType {
+  APARTMENT
+  HOUSE
+  VILLA
+  PENTHOUSE
+  DUPLEX
+  COTTAGE
+  OFFICE
+  STORE
+  LOT
+  COMMERCIAL
+  OTHER
+}
+
+enum PropertyProvider {
+  MANUAL
+  AIRBNB
+  BOOKING
+  GUESTY
+  ZILLOW
+  YAD2
+  MADLAN
+  OTHER
+}
+
+enum SyncStatus {
+  IDLE
+  SYNCING
+  PENDING
+  SUCCESS
+  ERROR
+}
+
+enum LeadStage {
+  NEW
+  CONTACTED
+  QUALIFIED
+  MEETING
+  OFFER
+  DEAL
+  WON
+  LOST
+}
+
+enum RealEstateLeadStatus {
+  NEW
+  CONTACTED
+  IN_PROGRESS
+  MEETING
+  OFFER
+  DEAL
+  CONVERTED
+  DISQUALIFIED
+}
+
+//// ========= Models ========= ////
+
+model Property {
+  id       String  @id @default(cuid())
+  ownerUid String
+  name     String
+  address  String?
+  city     String?
+
+  // חשוב: שיהיה מסוג enum ולא String:
+  status PropertyStatus @default(DRAFT)
+
+  type       PropertyType? // אם יש לך כבר Enum כזה – השאירי; אם אין, זה יכול להיות גם String? לשלב ה-MVP
+  photos     PropertyPhoto[]  @relation("PropertyToPhotos")
+  leads      RealEstateLead[] @relation("PropertyToLeads")
+  rooms      Int?
+  size       Int?
+  price      Int?
+  slug       String?          @unique
+  agentName  String?
+  agentPhone String?
+  photosJson Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerUid, status])
+}
+
+model PropertyPhoto {
+  id         String @id @default(cuid())
+  url        String
+  propertyId String
+
+  // 🔽 ודא שם-יחס עקבי + opposite relation קיים ב-Property
+  property Property @relation(name: "PropertyToPhotos", fields: [propertyId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([propertyId])
+}
+
+model RealEstateLead {
+  id        String   @id @default(cuid())
+  ownerUid  String
+  fullName  String?
+  phone     String?
+  email     String?
+  message   String?
+  source    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  propertyId String? // יכול להיות אופציונלי אם יש לידים כלליים
+  // 🔽 ודא שם-יחס עקבי + opposite relation קיים ב-Property
+  property   Property? @relation(name: "PropertyToLeads", fields: [propertyId], references: [id])
+
+  @@index([ownerUid])
+  @@index([propertyId])
+}
+
+model Client {
+  id            String    @id @default(cuid())
+  ownerUid      String
+  fullName      String
+  phone         String?
+  email         String?
+  budgetMin     Decimal?  @db.Decimal(12, 2)
+  budgetMax     Decimal?  @db.Decimal(12, 2)
+  preferredCity String?
+  stage         LeadStage @default(NEW)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([ownerUid, stage])
+}
+
+// --- Add below your existing enums ---
+enum CampaignStatus {
+  DRAFT
+  READY
+  SCHEDULED
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+// --- Add model Campaign ---
+model Campaign {
+  id        String         @id @default(cuid())
+  ownerUid  String
+  goal      String // sales | leads | awareness (טקסט חופשי בשלב זה)
+  copy      String // קופי המודעה
+  image     String? // URL לתמונה/קריאייטיב
+  audience  Json? // {ageMin, ageMax, locations[], interests[], genders[], languages[]}
+  platform  String? // אופציונלי (facebook|instagram|google...) לשלב עתידי
+  status    CampaignStatus @default(DRAFT)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([ownerUid, status])
+}

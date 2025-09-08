@@ -1,0 +1,30 @@
+{
+  "name": "web",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "NEXT_DISABLE_SWC_TOOLS_PATCHING=1 next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "echo 'lint web'"
+  },
+  "dependencies": {
+    "firebase": "^12.2.1",
+    "framer-motion": "^12.23.12",
+    "next": "^15.5.2",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@next/swc-darwin-arm64": "^15.5.2",
+    "@tailwindcss/postcss": "^4.1.12",
+    "@types/node": "^20.19.11",
+    "@types/react": "^18.3.24",
+    "@types/react-dom": "^18.3.7",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.12",
+    "typescript": "^5.9.2"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "hosting": {
+    "source": "apps/web",
+    "frameworksBackend": { "region": "europe-west1", "runtime": "nodejs20" }
+  },
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs20",
+    "region": "europe-west1"
+  }
+}
