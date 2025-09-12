@@ -3,7 +3,6 @@
 import { useState } from 'react';
 
 type Industry = 'ecommerce' | 'realestate' | 'law';
-<div className="bg-red-500 text-white p-4">Tailwind TEST</div>
 
 export default function LandingPage() {
   const [industry, setIndustry] = useState<Industry>('ecommerce');

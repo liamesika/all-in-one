@@ -1,5 +1,7 @@
-import { Body, Controller, Delete, Get, Headers, Param, Patch, Post, Query } from '@nestjs/common';
-import { RealEstateLeadsService } from './real-estate-leads.service.js';
+import { Body, Controller, Delete, Get, Headers, Param, Patch, Post, Query, BadRequestException } from '@nestjs/common';
+import { RealEstateLeadsService } from './real-estate-leads.service';
+import { CreateRealEstateLeadDto } from './dto/create-real-estate-lead.dto';
+import { UpdateRealEstateLeadDto } from './dto/update-real-estate-lead.dto';
 
 @Controller('real-estate/leads')
 export class RealEstateLeadsController {
@@ -12,7 +14,10 @@ export class RealEstateLeadsController {
     @Query('status') status?: string,
     @Query('limit') limit = '100',
   ) {
-    return this.svc.list({ orgId: orgId || 'demo', q, status, limit: Number(limit) });
+    if (!orgId) {
+      throw new BadRequestException('Organization ID is required');
+    }
+    return this.svc.list({ orgId, q, status, limit: Number(limit) });
   }
 
   @Get(':id')
@@ -21,12 +26,15 @@ export class RealEstateLeadsController {
   }
 
   @Post()
-  create(@Headers('x-org-id') orgId: string, @Body() dto: any) {
-    return this.svc.create({ orgId: orgId || 'demo', dto });
+  create(@Headers('x-org-id') orgId: string, @Body() dto: CreateRealEstateLeadDto) {
+    if (!orgId) {
+      throw new BadRequestException('Organization ID is required');
+    }
+    return this.svc.create({ orgId, dto });
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: any) {
+  update(@Param('id') id: string, @Body() dto: UpdateRealEstateLeadDto) {
     return this.svc.update(id, dto);
   }
 
