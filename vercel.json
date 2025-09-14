@@ -1,21 +1,9 @@
 {
-  "build": {
-    "env": {
-      "NEXT_DISABLE_SWC_TOOLS_PATCHING": "1",
-      "SKIP_ENV_VALIDATION": "true",
-      "npm_config_target_platform": "linux",
-      "npm_config_target_arch": "x64",
-      "npm_config_target_libc": "glibc",
-      "npm_config_cache": "false"
-    }
-  },
-  "installCommand": "rm -f package-lock.json apps/web/package-lock.json && npm install --force --no-optional --legacy-peer-deps",
-  "buildCommand": "cd apps/web && NEXT_DISABLE_SWC_TOOLS_PATCHING=1 npm run build",
+  "buildCommand": "cd apps/web && npm run build",
   "outputDirectory": "apps/web/.next",
+  "installCommand": "npm ci && npm run postinstall",
   "framework": "nextjs",
-  "functions": {
-    "apps/web/app/api/**/*.ts": {
-      "runtime": "nodejs18.x"
-    }
+  "env": {
+    "NEXT_DISABLE_SWC_TOOLS_PATCHING": "1"
   }
 }

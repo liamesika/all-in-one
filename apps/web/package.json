@@ -20,6 +20,9 @@
     "perf:test": "node scripts/performance-test.js",
     "perf:test:ci": "npm run build && npm run start & sleep 10 && npm run perf:test && kill %1"
   },
+  "engines": {
+    "node": ">=20 <=22"
+  },
   "dependencies": {
     "@axe-core/react": "^4.10.2",
     "babel-loader": "^10.0.0",
