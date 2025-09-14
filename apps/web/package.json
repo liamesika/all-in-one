@@ -43,7 +43,6 @@
   },
   "devDependencies": {
     "@next/bundle-analyzer": "^15.5.2",
-    "@next/swc-darwin-arm64": "^15.5.2",
     "@swc/jest": "^0.2.39",
     "@tailwindcss/postcss": "^4.1.12",
     "@testing-library/jest-dom": "^6.8.0",

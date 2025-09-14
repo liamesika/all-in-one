@@ -12,7 +12,8 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "format": "prettier -w .",
-    "prisma:generate": "prisma generate --schema packages/server/db/prisma/schema.prisma"
+    "prisma:generate": "prisma generate --schema packages/server/db/prisma/schema.prisma",
+    "vercel-install": "npm install --force --no-optional"
   },
   "devDependencies": {
     "@types/caseless": "^0.12.5",
