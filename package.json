@@ -29,7 +29,7 @@
     "openai": "5.16.0"
   },
   "engines": {
-    "node": ">=20 <=22"
+    "node": ">=20.0.0 <23.0.0"
   },
   "dependencies": {
     "@prisma/client": "^6.15.0",
