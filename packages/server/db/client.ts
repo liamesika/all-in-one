@@ -1,13 +1,13 @@
-import { PrismaClient } from '@prisma/client';
+// packages/server/db/client.ts
+import { PrismaClient as PrismaClientType } from '@prisma/client';
+const { PrismaClient } = require('@prisma/client');
 
-declare global {
-  // eslint-disable-next-line no-var
-  var __PRISMA__: PrismaClient | undefined;
-}
+const globalForPrisma = globalThis as unknown as { prisma?: PrismaClientType };
 
 export const prisma =
-  globalThis.__PRISMA__ ?? new PrismaClient();
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    // אפשר להדליק לוגים אם צריך: log: ['query', 'error', 'warn'],
+  });
 
-if (process.env.NODE_ENV !== 'production') {
-  globalThis.__PRISMA__ = prisma;
-}
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;

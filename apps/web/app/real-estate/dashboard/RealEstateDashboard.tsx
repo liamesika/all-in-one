@@ -1,10 +1,31 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+
+// KPI Icon Component
+function KPIIcon({ type, className }: { type: string; className?: string }) {
+  const iconPaths = {
+    target: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />,
+    chart: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />,
+    clock: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />,
+    home: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />,
+    briefcase: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6" />,
+    calendar: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />,
+    money: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
+    rocket: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+  };
+
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      {iconPaths[type as keyof typeof iconPaths] || iconPaths.target}
+    </svg>
+  );
+}
 import { useRouter, useSearchParams } from 'next/navigation';
 import { EffinityHeader } from '@/components/effinity-header';
 import { LanguageProvider, useLanguage } from '@/lib/language-context';
 import { useLang } from '@/components/i18n/LangProvider';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui';
 import { LeadsQualityWidget } from './components/LeadsQualityWidget';
 import { ListingsPerformanceWidget } from './components/ListingsPerformanceWidget';
 import { CompsWidget } from './components/CompsWidget';
@@ -138,24 +159,55 @@ function RealEstateDashboardContent({
   };
 
   return (
-    <div className={`min-h-screen bg-gray-50 ${language === 'he' ? 'rtl' : 'ltr'}`}>
-      {/* Header */}
+    <div className={`min-h-screen bg-gradient-to-br from-white via-blue-50/30 to-gray-50 animate-fade-in ${language === 'he' ? 'rtl' : 'ltr'}`}>
+      {/* Professional Header with Real Estate Branding */}
       <EffinityHeader 
-        title={lang === 'he' ? 'מרכז אוטומציה נדל״ן' : 'Real Estate Automation Hub'}
-        subtitle={lang === 'he' ? 'לידים, נכסים, שיווק אוטומטי וניתוח ביצועים' : 'Leads, Properties, Auto-Marketing & Performance Analytics'}
-        rightContent={
-          <div className="flex gap-3 items-center">
-            <button className="bg-white/20 backdrop-blur-sm border border-white/30 px-4 py-2 rounded-xl text-white font-medium hover:bg-white/30 transition-all">
-              📊 {lang === 'he' ? 'דוח ביצועים' : 'Performance Report'}
+        variant="dashboard"
+        className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 shadow-xl border-0"
+      />
+      
+      {/* Professional Hero Section */}
+      <section className="relative px-6 py-16 bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 text-white overflow-hidden">
+        {/* Background decorations */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-8 left-1/4 w-64 h-64 bg-white rounded-full blur-3xl" />
+          <div className="absolute bottom-8 right-1/4 w-80 h-80 bg-blue-200 rounded-full blur-3xl" />
+        </div>
+        
+        <div className="relative z-10 max-w-7xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl md:text-4xl font-semibold mb-4 animate-fade-in">
+              {lang === 'he' ? 'מרכז אוטומציה נדל״ן' : 'Real Estate Automation Hub'}
+            </h1>
+            <p className="text-xl opacity-90 animate-fade-in max-w-3xl mx-auto">
+              {lang === 'he' ? 'לידים, נכסים, שיווק אוטומטי וניתוח ביצועים' : 'Leads, Properties, Auto-Marketing & Performance Analytics'}
+            </p>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <button className="bg-white text-blue-700 px-8 py-4 rounded-xl font-semibold hover:bg-gray-50 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 animate-fade-in flex items-center gap-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              {lang === 'he' ? 'דוח ביצועים' : 'Performance Report'}
             </button>
-            <button className="bg-white/20 backdrop-blur-sm border border-white/30 px-4 py-2 rounded-xl text-white font-medium hover:bg-white/30 transition-all">
-              🎯 {lang === 'he' ? 'קמפיינים חדשים' : 'New Campaigns'}
+            <button className="border-2 border-white/30 text-white px-8 py-4 rounded-xl font-semibold hover:bg-white/10 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 animate-fade-in flex items-center gap-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+              </svg>
+              {lang === 'he' ? 'קמפיינים חדשים' : 'New Campaigns'}
+            </button>
+            <button className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 animate-fade-in flex items-center gap-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              {lang === 'he' ? 'נכסים חדשים' : 'New Properties'}
             </button>
           </div>
-        }
-      />
+        </div>
+      </section>
 
-      <div className="max-w-8xl mx-auto px-6 py-8">
+      <div className="relative z-10 max-w-7xl mx-auto px-6 py-12">
         {/* Filters Bar */}
         <DashboardFilters 
           filters={filters}
@@ -308,13 +360,13 @@ function DashboardFilters({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
         {/* Date Range */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
             {lang === 'he' ? 'טווח תאריכים' : 'Date Range'}
           </label>
           <select
             value={filters.dateRange}
             onChange={(e) => onFilterChange('dateRange', e.target.value)}
-            className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-300 focus:outline-none"
+            className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:outline-none transition-all duration-200"
             disabled={loading}
           >
             {dateRangeOptions.map(option => (
@@ -327,13 +379,13 @@ function DashboardFilters({
 
         {/* Agent/Team */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
             {lang === 'he' ? 'סוכן/צוות' : 'Agent/Team'}
           </label>
           <select
             value={filters.agentId || ''}
             onChange={(e) => onFilterChange('agentId', e.target.value)}
-            className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-300 focus:outline-none"
+            className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:outline-none transition-all duration-200"
             disabled={loading}
           >
             <option value="">{lang === 'he' ? 'כל הסוכנים' : 'All Agents'}</option>
@@ -345,13 +397,13 @@ function DashboardFilters({
 
         {/* City/Neighborhood */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
             {lang === 'he' ? 'עיר/שכונה' : 'City/Neighborhood'}
           </label>
           <select
             value={filters.city || ''}
             onChange={(e) => onFilterChange('city', e.target.value)}
-            className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-300 focus:outline-none"
+            className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:outline-none transition-all duration-200"
             disabled={loading}
           >
             <option value="">{lang === 'he' ? 'כל הערים' : 'All Cities'}</option>
@@ -364,13 +416,13 @@ function DashboardFilters({
 
         {/* Property Type */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
             {lang === 'he' ? 'סוג נכס' : 'Property Type'}
           </label>
           <select
             value={filters.propertyType || ''}
             onChange={(e) => onFilterChange('propertyType', e.target.value)}
-            className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-300 focus:outline-none"
+            className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:outline-none transition-all duration-200"
             disabled={loading}
           >
             {propertyTypeOptions.map(option => (
@@ -383,13 +435,13 @@ function DashboardFilters({
 
         {/* Status */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
             {lang === 'he' ? 'סטטוס' : 'Status'}
           </label>
           <select
             value={filters.status || ''}
             onChange={(e) => onFilterChange('status', e.target.value)}
-            className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-300 focus:outline-none"
+            className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:outline-none transition-all duration-200"
             disabled={loading}
           >
             {statusOptions.map(option => (
@@ -402,13 +454,13 @@ function DashboardFilters({
 
         {/* Lead Source */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
             {lang === 'he' ? 'מקור ליד' : 'Lead Source'}
           </label>
           <select
             value={filters.leadSource || ''}
             onChange={(e) => onFilterChange('leadSource', e.target.value)}
-            className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-300 focus:outline-none"
+            className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:outline-none transition-all duration-200"
             disabled={loading}
           >
             {leadSourceOptions.map(option => (
@@ -421,13 +473,13 @@ function DashboardFilters({
 
         {/* Price Band */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
             {lang === 'he' ? 'טווח מחירים' : 'Price Range'}
           </label>
           <select
             value={filters.priceBand || ''}
             onChange={(e) => onFilterChange('priceBand', e.target.value)}
-            className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-300 focus:outline-none"
+            className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:outline-none transition-all duration-200"
             disabled={loading}
           >
             {priceBandOptions.map(option => (
@@ -440,13 +492,13 @@ function DashboardFilters({
 
         {/* Bedrooms */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
             {lang === 'he' ? 'חדרי שינה' : 'Bedrooms'}
           </label>
           <select
             value={filters.bedrooms || ''}
             onChange={(e) => onFilterChange('bedrooms', e.target.value)}
-            className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-300 focus:outline-none"
+            className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:outline-none transition-all duration-200"
             disabled={loading}
           >
             {bedroomsOptions.map(option => (
@@ -459,7 +511,7 @@ function DashboardFilters({
 
         {/* Search */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
             {lang === 'he' ? 'חיפוש חופשי' : 'Free Search'}
           </label>
           <input
@@ -467,7 +519,7 @@ function DashboardFilters({
             value={filters.search || ''}
             onChange={(e) => onFilterChange('search', e.target.value)}
             placeholder={lang === 'he' ? 'חפש נכסים, לקוחות, כתובות...' : 'Search properties, clients, addresses...'}
-            className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-300 focus:outline-none"
+            className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:outline-none transition-all duration-200"
             dir={language === 'he' ? 'rtl' : 'ltr'}
             disabled={loading}
           />
@@ -488,7 +540,7 @@ function KPIStrip({ kpis }: { kpis: DashboardData['kpis'] }) {
       value: kpis.newLeads.value,
       delta: kpis.newLeads.delta,
       subtitle: `🔥${kpis.newLeads.hotWarmCold.hot} 🟡${kpis.newLeads.hotWarmCold.warm} 🔵${kpis.newLeads.hotWarmCold.cold}`,
-      icon: '🎯',
+      icon: 'target',
       color: 'blue'
     },
     {
@@ -497,7 +549,7 @@ function KPIStrip({ kpis }: { kpis: DashboardData['kpis'] }) {
       value: `${kpis.conversionRates.qualified}→${kpis.conversionRates.deal}`,
       delta: kpis.conversionRates.delta,
       subtitle: `${lang === 'he' ? 'ליד→עסקה' : 'Lead→Deal'}`,
-      icon: '📈',
+      icon: 'chart',
       color: 'green'
     },
     {
@@ -505,7 +557,7 @@ function KPIStrip({ kpis }: { kpis: DashboardData['kpis'] }) {
       title: lang === 'he' ? 'זמן יצירת קשר' : 'Time to Contact',
       value: `${kpis.timeToContact.value}${lang === 'he' ? 'ש' : 'h'}`,
       subtitle: `${kpis.timeToContact.slaMetRate} ${lang === 'he' ? 'עמידה ב-SLA' : 'SLA met'}`,
-      icon: '⏱️',
+      icon: 'clock',
       color: 'purple'
     },
     {
@@ -514,7 +566,7 @@ function KPIStrip({ kpis }: { kpis: DashboardData['kpis'] }) {
       value: kpis.scheduledViewings.value,
       delta: kpis.scheduledViewings.delta,
       subtitle: `${kpis.scheduledViewings.noShowRate} ${lang === 'he' ? 'אי-הגעות' : 'no-shows'}`,
-      icon: '🏠',
+      icon: 'home',
       color: 'orange'
     },
     {
@@ -523,7 +575,7 @@ function KPIStrip({ kpis }: { kpis: DashboardData['kpis'] }) {
       value: kpis.offersCreated.value,
       delta: kpis.offersCreated.delta,
       subtitle: `${kpis.offersCreated.acceptanceRate} ${lang === 'he' ? 'קבלה' : 'acceptance'}`,
-      icon: '💼',
+      icon: 'briefcase',
       color: 'emerald'
     },
     {
@@ -532,7 +584,7 @@ function KPIStrip({ kpis }: { kpis: DashboardData['kpis'] }) {
       value: `${kpis.avgDOM.value}${lang === 'he' ? 'י' : 'd'}`,
       delta: kpis.avgDOM.delta,
       subtitle: `${kpis.avgDOM.listToSoldRatio} ${lang === 'he' ? 'יחס רשימה→מכירה' : 'list→sold ratio'}`,
-      icon: '📅',
+      icon: 'calendar',
       color: 'indigo'
     },
     {
@@ -541,7 +593,7 @@ function KPIStrip({ kpis }: { kpis: DashboardData['kpis'] }) {
       value: kpis.roasCAC.roas,
       subtitle: `₪${kpis.roasCAC.cac} ${lang === 'he' ? 'CAC' : 'CAC'}`,
       delta: kpis.roasCAC.delta,
-      icon: '💰',
+      icon: 'money',
       color: 'amber'
     },
     {
@@ -550,7 +602,7 @@ function KPIStrip({ kpis }: { kpis: DashboardData['kpis'] }) {
       value: typeof kpis.pipelineValue.value === 'number' ? `₪${kpis.pipelineValue.value.toLocaleString()}` : kpis.pipelineValue.value,
       delta: kpis.pipelineValue.delta,
       subtitle: `₪${kpis.pipelineValue.expectedCommissions.toLocaleString()} ${lang === 'he' ? 'עמלות צפויות' : 'expected commissions'}`,
-      icon: '🚀',
+      icon: 'rocket',
       color: 'rose'
     }
   ];
@@ -562,18 +614,20 @@ function KPIStrip({ kpis }: { kpis: DashboardData['kpis'] }) {
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-2xl">{item.icon}</span>
-                <h3 className="text-sm font-medium text-gray-600">{item.title}</h3>
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <KPIIcon type={item.icon} className="w-4 h-4 text-blue-600" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-600">{item.title}</h3>
               </div>
-              <div className="text-2xl font-bold text-gray-900 mb-1">
+              <div className="text-2xl font-semibold text-gray-900 mb-1">
                 {item.value}
               </div>
               {item.subtitle && (
-                <div className="text-sm text-gray-500">{item.subtitle}</div>
+                <div className="text-xs font-normal text-gray-500">{item.subtitle}</div>
               )}
             </div>
             {item.delta && (
-              <div className={`text-sm font-semibold ${
+              <div className={`text-xs font-semibold ${
                 item.delta.startsWith('+') ? 'text-green-600' : 'text-red-600'
               }`}>
                 {item.delta}

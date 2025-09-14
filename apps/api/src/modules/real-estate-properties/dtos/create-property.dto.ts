@@ -3,10 +3,9 @@ import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsArray, IsUrl } fr
 import { PropertyStatus, PropertyType } from './enums';
 
 export class CreatePropertyDto {
-  // NOTE: בפרונט קיים name כטייטל. משאירים name כדי לא לשבור את ה-UI הנוכחי.
   @IsString()
   @IsNotEmpty()
-  name!: string; // acts as "title"
+  name!: string;
 
   @IsString()
   @IsOptional()
@@ -16,25 +15,61 @@ export class CreatePropertyDto {
   @IsOptional()
   city?: string;
 
+  @IsString()
+  @IsOptional()
+  neighborhood?: string;
+
+  @IsString()
+  @IsOptional()
+  description?: string;
+
   @IsEnum(PropertyType)
   @IsOptional()
   type?: PropertyType;
 
   @IsEnum(PropertyStatus)
   @IsOptional()
-  status?: PropertyStatus; // <-- היה string, מתוקן ל-Enum
+  status?: PropertyStatus;
 
   @IsNumber()
   @IsOptional()
-  rooms?: number;
+  rooms?: number; // will be mapped to bedrooms in the service
+
+  @IsNumber()  
+  @IsOptional()
+  size?: number; // will be mapped to areaSqm in the service
 
   @IsNumber()
   @IsOptional()
-  size?: number; // sqm
+  bedrooms?: number;
+
+  @IsNumber()
+  @IsOptional()
+  bathrooms?: number;
+
+  @IsNumber()
+  @IsOptional()
+  areaSqm?: number;
+
+  @IsNumber()
+  @IsOptional()
+  floor?: number;
+
+  @IsNumber()
+  @IsOptional()
+  yearBuilt?: number;
 
   @IsNumber()
   @IsOptional()
   price?: number;
+
+  @IsString()
+  @IsOptional()
+  currency?: string;
+
+  @IsString()
+  @IsOptional()
+  amenities?: string;
 
   @IsString()
   @IsOptional()
@@ -44,7 +79,23 @@ export class CreatePropertyDto {
   @IsOptional()
   agentPhone?: string;
 
-  // תמונות (URLs) — אופציונלי למינימום ה-MVP
+  @IsString()
+  @IsOptional()
+  coverImageUrl?: string;
+
+  @IsString()
+  @IsOptional()
+  seoTitle?: string;
+
+  @IsString()
+  @IsOptional()
+  seoDescription?: string;
+
+  @IsString()
+  @IsOptional()
+  slug?: string;
+
+  // Photos as URLs for the photos array
   @IsArray()
   @IsOptional()
   @IsUrl({}, { each: true })

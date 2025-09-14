@@ -1,0 +1,6 @@
+// packages/server/db/prisma/prisma.config.ts
+// Minimal config: point Prisma to the schema file.
+// (No type imports needed.)
+export default {
+  schema: './schema.prisma',
+};

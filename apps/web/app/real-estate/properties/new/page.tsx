@@ -2,6 +2,9 @@
 
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/api';
+import { LanguageProvider, useLanguage } from '@/lib/language-context';
+import { LanguageToggle } from '@/components/language-toggle';
+import { EffinityHeader } from '@/components/effinity-header';
 
 function inputClass(extra = '') {
   return [
@@ -15,11 +18,12 @@ function inputClass(extra = '') {
 
 type FileWithPreview = File & { _preview?: string };
 
-export default function NewPropertyPage() {
+function NewPropertyPageContent() {
+  const { t, language } = useLanguage();
   const [form, setForm] = useState({
     name: '', address: '', city: '',
-    agentName: '', agentPhone: '0587878676',
-    price: '', bedrooms: '', bathrooms: '', areaSqm: ''
+    agentName: '', agentPhone: '050-1234567',
+    price: '', rooms: '', size: ''
   });
 
   const [files, setFiles] = useState<FileWithPreview[]>([]);
@@ -88,9 +92,8 @@ export default function NewPropertyPage() {
           agentName: form.agentName || undefined,
           agentPhone: form.agentPhone || undefined,
           price: form.price ? Number(form.price) : undefined,
-          bedrooms: form.bedrooms ? Number(form.bedrooms) : undefined,
-          bathrooms: form.bathrooms ? Number(form.bathrooms) : undefined,
-          areaSqm: form.areaSqm ? Number(form.areaSqm) : undefined,
+          rooms: form.rooms ? Number(form.rooms) : undefined,
+          size: form.size ? Number(form.size) : undefined,
         }),
       });
 
@@ -107,182 +110,198 @@ export default function NewPropertyPage() {
       window.location.href = `/real-estate/properties/${created.id}`;
     } catch (err: any) {
       console.error(err);
-      setError('שמירה נכשלה. נסי שוב או בדקי את החיבור לשרת.');
+      setError('Failed to save. Please try again or check connection.');
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6" dir="rtl">
-      <h1 className="text-2xl font-semibold mb-4">נכס חדש</h1>
-
-      {error && (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 text-red-700 px-4 py-2">
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium mb-1">שם הנכס *</label>
-          <input
-            required
-            value={form.name}
-            onChange={e => setForm(s => ({ ...s, name: e.target.value }))}
-            placeholder="לדוגמה: דירת 4 חד׳ ברח׳ ויצמן"
-            className={inputClass()}
-          />
-          <p className="text-xs text-gray-500 mt-1">שדה חובה. השדה יסומן באדום אם חסר.</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">כתובת</label>
-            <input
-              value={form.address}
-              onChange={e => setForm(s => ({ ...s, address: e.target.value }))}
-              placeholder="לדוגמה: ויצמן 12"
-              className={inputClass()}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">עיר</label>
-            <input
-              value={form.city}
-              onChange={e => setForm(s => ({ ...s, city: e.target.value }))}
-              placeholder="תל אביב / חיפה / ..."
-              className={inputClass()}
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">שם הסוכן</label>
-            <input
-              value={form.agentName}
-              onChange={e => setForm(s => ({ ...s, agentName: e.target.value }))}
-              placeholder="שם מלא"
-              className={inputClass()}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">טלפון סוכן</label>
-            <input
-              value={form.agentPhone}
-              onChange={e => setForm(s => ({ ...s, agentPhone: e.target.value }))}
-              placeholder="לדוגמה: 0587878676"
-              className={inputClass()}
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">מחיר</label>
-            <input
-              inputMode="numeric"
-              value={form.price}
-              onChange={e => setForm(s => ({ ...s, price: e.target.value }))}
-              placeholder="מספר"
-              className={inputClass()}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">חדרים</label>
-            <input
-              inputMode="numeric"
-              value={form.bedrooms}
-              onChange={e => setForm(s => ({ ...s, bedrooms: e.target.value }))}
-              placeholder="מספר"
-              className={inputClass()}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">אמבטיות</label>
-            <input
-              inputMode="numeric"
-              value={form.bathrooms}
-              onChange={e => setForm(s => ({ ...s, bathrooms: e.target.value }))}
-              placeholder="מספר"
-              className={inputClass()}
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">מ״ר</label>
-          <input
-            inputMode="numeric"
-            value={form.areaSqm}
-            onChange={e => setForm(s => ({ ...s, areaSqm: e.target.value }))}
-            placeholder="מספר"
-            className={inputClass()}
-          />
-        </div>
-
-        {/* Image upload */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium">תמונות הנכס</label>
-
-          {/* Hidden input */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
-            onChange={onFileChange}
-          />
-
-          {/* Clickable + Dropzone */}
-          <div
-            onClick={onPickFiles}
-            onDrop={onDrop}
-            onDragOver={onDragOver}
-            className="cursor-pointer rounded-2xl border border-dashed p-6 text-center hover:bg-gray-50 select-none"
+    <div className="min-h-screen bg-gray-50">
+      <EffinityHeader 
+        title={t('newProperty.title')}
+        subtitle={language === 'he' ? 'הוספת נכס חדש למערכת' : 'Add a new property to the system'}
+        rightContent={
+          <a
+            href="/real-estate/properties"
+            className="bg-white/20 backdrop-blur-sm border border-white/30 px-4 py-2 rounded-xl text-white font-medium hover:bg-white/30 transition-colors"
           >
-            <p className="text-sm text-gray-600">
-              גררי תמונות לכאן או <span className="underline">לחצי לבחירת קבצים</span>
-            </p>
-            <p className="text-xs text-gray-400 mt-1">תמכי עד 20 תמונות בבת אחת</p>
+            ← {language === 'he' ? 'חזרה לנכסים' : 'Back to Properties'}
+          </a>
+        }
+      />
+      
+      <div className="max-w-2xl mx-auto p-6">
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+
+        {error && (
+          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 text-red-700 px-4 py-2">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-semibold mb-2 text-gray-700">{t('newProperty.propertyName')} *</label>
+            <input
+              required
+              value={form.name}
+              onChange={e => setForm(s => ({ ...s, name: e.target.value }))}
+              placeholder={t('newProperty.propertyNamePlaceholder')}
+              className={inputClass()}
+              dir={language === 'he' ? 'rtl' : 'ltr'}
+            />
+            <p className="text-xs text-gray-500 mt-1">{t('newProperty.propertyNameRequired')}</p>
           </div>
 
-          {/* Previews */}
-          {previews.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {files.map((f, i) => (
-                <div key={i} className="relative group">
-                  <img
-                    src={f._preview}
-                    alt=""
-                    className="w-full h-28 object-cover rounded-lg border"
-                  />
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); removeFile(i); }}
-                    className="absolute top-1 left-1 text-xs rounded-full bg-white/90 px-2 py-1 border shadow opacity-0 group-hover:opacity-100 transition"
-                    aria-label="הסרה"
-                  >
-                    הסרה
-                  </button>
-                </div>
-              ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold mb-2 text-gray-700">{t('newProperty.address')}</label>
+              <input
+                value={form.address}
+                onChange={e => setForm(s => ({ ...s, address: e.target.value }))}
+                placeholder={t('newProperty.addressPlaceholder')}
+                className={inputClass()}
+                dir={language === 'he' ? 'rtl' : 'ltr'}
+              />
             </div>
-          )}
-        </div>
+            <div>
+              <label className="block text-sm font-semibold mb-2 text-gray-700">{t('newProperty.city')}</label>
+              <input
+                value={form.city}
+                onChange={e => setForm(s => ({ ...s, city: e.target.value }))}
+                placeholder={t('newProperty.cityPlaceholder')}
+                className={inputClass()}
+                dir={language === 'he' ? 'rtl' : 'ltr'}
+              />
+            </div>
+          </div>
 
-        <div className="flex items-center justify-end gap-3">
-          <a href="/real-estate/properties" className="text-gray-600 hover:underline">ביטול</a>
-          <button
-            disabled={saving}
-            className="bg-black text-white px-5 py-2 rounded-xl disabled:opacity-60"
-          >
-            {saving ? 'שומר...' : 'שמור נכס'}
-          </button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold mb-2 text-gray-700">{t('newProperty.agentName')}</label>
+              <input
+                value={form.agentName}
+                onChange={e => setForm(s => ({ ...s, agentName: e.target.value }))}
+                placeholder={t('newProperty.agentNamePlaceholder')}
+                className={inputClass()}
+                dir={language === 'he' ? 'rtl' : 'ltr'}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold mb-2 text-gray-700">{t('newProperty.agentPhone')}</label>
+              <input
+                value={form.agentPhone}
+                onChange={e => setForm(s => ({ ...s, agentPhone: e.target.value }))}
+                placeholder={t('newProperty.agentPhonePlaceholder')}
+                className={inputClass()}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-semibold mb-2 text-gray-700">{t('newProperty.price')}</label>
+              <input
+                inputMode="numeric"
+                value={form.price}
+                onChange={e => setForm(s => ({ ...s, price: e.target.value }))}
+                placeholder={t('newProperty.pricePlaceholder')}
+                className={inputClass()}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold mb-2 text-gray-700">{t('newProperty.rooms')}</label>
+              <input
+                inputMode="numeric"
+                value={form.rooms}
+                onChange={e => setForm(s => ({ ...s, rooms: e.target.value }))}
+                placeholder={t('newProperty.roomsPlaceholder')}
+                className={inputClass()}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold mb-2 text-gray-700">{t('newProperty.size')}</label>
+              <input
+                inputMode="numeric"
+                value={form.size}
+                onChange={e => setForm(s => ({ ...s, size: e.target.value }))}
+                placeholder={t('newProperty.sizePlaceholder')}
+                className={inputClass()}
+              />
+            </div>
+          </div>
+
+          {/* Image upload */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold mb-2 text-gray-700">{t('newProperty.photos')}</label>
+
+            {/* Hidden input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={onFileChange}
+            />
+
+            {/* Clickable + Dropzone */}
+            <div
+              onClick={onPickFiles}
+              onDrop={onDrop}
+              onDragOver={onDragOver}
+              className="cursor-pointer rounded-2xl border border-dashed p-6 text-center hover:bg-gray-50 select-none"
+            >
+              <p className="text-sm text-gray-600">
+                {t('newProperty.photosDropText')}
+              </p>
+              <p className="text-xs text-gray-400 mt-1">{t('newProperty.photosSupport')}</p>
+            </div>
+
+            {/* Previews */}
+            {previews.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {files.map((f, i) => (
+                  <div key={i} className="relative group">
+                    <img
+                      src={f._preview}
+                      alt=""
+                      className="w-full h-28 object-cover rounded-lg border"
+                    />
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); removeFile(i); }}
+                      className="absolute top-1 left-1 text-xs rounded-full bg-white/90 px-2 py-1 border shadow opacity-0 group-hover:opacity-100 transition"
+                      aria-label={t('newProperty.removePhoto')}
+                    >
+                      {t('newProperty.removePhoto')}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center justify-end gap-3">
+            <button
+              disabled={saving}
+              className="bg-gradient-to-r from-blue-800 to-blue-600 text-white px-6 py-2 rounded-xl disabled:opacity-60 hover:from-blue-900 hover:to-blue-700 transition-all"
+            >
+              {saving ? t('newProperty.saving') : t('newProperty.save')}
+            </button>
+          </div>
+        </form>
         </div>
-      </form>
+      </div>
     </div>
+  );
+}
+
+export default function NewPropertyPage() {
+  return (
+    <LanguageProvider>
+      <NewPropertyPageContent />
+    </LanguageProvider>
   );
 }

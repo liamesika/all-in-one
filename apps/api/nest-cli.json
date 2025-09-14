@@ -1,0 +1,12 @@
+{
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "src",
+  "entryFile": "main",
+  "root": "src",
+  "compilerOptions": {
+    "tsConfigPath": "tsconfig.json",
+    "deleteOutDir": true,
+    "assets": ["**/*.json"],
+    "watchAssets": true
+  }
+}

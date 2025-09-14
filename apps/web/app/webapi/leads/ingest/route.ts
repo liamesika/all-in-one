@@ -20,7 +20,10 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
     }
-    const lead = await saveLead(parsed.data);
+    const lead = await saveLead({
+      ...parsed.data,
+      ownerUid: 'default' // TODO: Get actual user UID from authentication context
+    });
     return NextResponse.json({ ok: true, id: lead.id });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'ingest_failed' }, { status: 500 });

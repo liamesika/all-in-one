@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 async function getLeads() {
-  const apiBase = process.env.API_BASE ?? 'http://localhost:4000';
+  const apiBase = process.env.API_BASE ?? 'http://localhost:3000';
   const res = await fetch(`${apiBase}/api/real-estate/leads?limit=100`, { cache: 'no-store' });
   if (!res.ok) return { items: [] as any[] };
   const ct = res.headers.get('content-type') || '';

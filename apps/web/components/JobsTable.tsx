@@ -1,5 +1,7 @@
 'use client';
 
+import { useLanguage } from '@/lib/language-context';
+
 type Job = {
   id: string;
   type?: string;               // e.g. 'shopify_csv'
@@ -23,6 +25,8 @@ function StatusBadge({ s }: { s: Job['status'] }) {
 }
 
 export default function JobsTable({ rows }: { rows: Job[] }) {
+  const { language } = useLanguage();
+  
   if (!rows?.length) return null;
   const fmt = (s?: string) => (s ? new Date(s).toLocaleString() : '');
 
@@ -32,11 +36,11 @@ export default function JobsTable({ rows }: { rows: Job[] }) {
         <thead>
           <tr className="text-left">
             <th className="p-3">ID</th>
-            <th className="p-3">Type</th>
-            <th className="p-3">Status</th>
-            <th className="p-3">Created</th>
-            <th className="p-3">Images</th>
-            <th className="p-3">Actions</th>
+            <th className="p-3">{language === 'he' ? 'סוג' : 'Type'}</th>
+            <th className="p-3">{language === 'he' ? 'סטטוס' : 'Status'}</th>
+            <th className="p-3">{language === 'he' ? 'נוצר' : 'Created'}</th>
+            <th className="p-3">{language === 'he' ? 'תמונות' : 'Images'}</th>
+            <th className="p-3">{language === 'he' ? 'פעולות' : 'Actions'}</th>
           </tr>
         </thead>
         <tbody>
@@ -53,7 +57,7 @@ export default function JobsTable({ rows }: { rows: Job[] }) {
                     href={`/api/jobs/${r.id}/output`}
                     className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-white/15 hover:bg-white/5"
                   >
-                    Download CSV
+                    {language === 'he' ? 'הורד CSV' : 'Download CSV'}
                   </a>
                 ) : (
                   <span className="opacity-60 text-xs">—</span>

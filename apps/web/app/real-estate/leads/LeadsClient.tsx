@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import LanguageToggle from '../../../components/LanguageToggle';
 import { useLang } from '../../../components/i18n/LangProvider';
+import { EffinityHeader } from '@/components/effinity-header';
+import { LanguageProvider, useLanguage } from '@/lib/language-context';
 
 // ===== טיפוס ליד נדל״ן =====
 type Lead = {
@@ -206,6 +208,42 @@ function ImportCsvModal({
 }
 
 // ===== מודאל יצירת ליד =====
+// Modal component matching campaigns style
+const Modal = ({ 
+  isOpen, 
+  onClose, 
+  title, 
+  children 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  title: string; 
+  children: React.ReactNode; 
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50">
+      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
+      <div className="absolute inset-0 flex items-center justify-center p-4">
+        <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl">
+          <div className="sticky top-0 flex items-center justify-between border-b bg-white px-6 py-4 z-10">
+            <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600"
+              aria-label="Close"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="p-6">{children}</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 function CreateLeadModal({
   open,
   onClose,
@@ -216,6 +254,7 @@ function CreateLeadModal({
   onCreated: () => void;
 }) {
   const { lang } = useLang();
+  const { language } = useLanguage();
   const [values, setValues] = useState<Record<string, any>>({
     clientName: '',
     email: '',
@@ -229,20 +268,41 @@ function CreateLeadModal({
     notes: '',
   });
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const apiBase =
     (typeof process !== 'undefined' && (process as any).env?.NEXT_PUBLIC_API_BASE) ||
     (globalThis as any)?.NEXT_PUBLIC_API_BASE ||
     'http://localhost:4000';
 
-  function set(name: string, v: any) { setValues((p) => ({ ...p, [name]: v })); }
+  function set(name: string, v: any) { 
+    setValues((p) => ({ ...p, [name]: v })); 
+    setError(null);
+  }
+
+  const resetForm = () => {
+    setValues({
+      clientName: '',
+      email: '',
+      phone: '',
+      propertyType: '',
+      city: '',
+      budgetMin: '',
+      budgetMax: '',
+      source: '',
+      status: 'NEW',
+      notes: '',
+    });
+    setError(null);
+  };
 
   async function submit() {
     if (!values.clientName.trim()) {
-      alert(lang === 'he' ? 'שם לקוח חובה' : 'Client name is required');
+      setError(lang === 'he' ? 'שם לקוח חובה' : 'Client name is required');
       return;
     }
     setBusy(true);
+    setError(null);
     try {
       const payload = {
         clientName: values.clientName.trim(),
@@ -264,88 +324,248 @@ function CreateLeadModal({
       if (!res.ok) throw new Error(await res.text().catch(() => 'create_failed'));
       onCreated();
       onClose();
+      resetForm();
     } catch {
-      alert(lang === 'he' ? 'יצירת ליד נכשלה' : 'Failed to create lead');
+      setError(lang === 'he' ? 'יצירת ליד נכשלה' : 'Failed to create lead');
     } finally {
       setBusy(false);
     }
   }
 
-  if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div className="relative w-full max-w-xl rounded-2xl bg-white p-6 shadow-xl">
-          <button onClick={onClose} className="absolute right-3 top-3 rounded-full border border-gray-200 px-2 py-1 text-sm hover:bg-gray-50" disabled={busy}>✕</button>
-          <h3 className="mb-4 text-lg font-semibold">{lang === 'he' ? 'ליד חדש — נדל״ן' : 'New Real-Estate Lead'}</h3>
+    <Modal
+      isOpen={open}
+      onClose={onClose}
+      title={lang === 'he' ? 'ליד חדש — נדל״ן' : 'New Real-Estate Lead'}
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Form */}
+        <div className="space-y-4">
+          {/* Error display */}
+          {error && (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <label className="flex flex-col gap-1">
-              <span className="text-sm">{lang==='he'?'לקוח *':'Client *'}</span>
-              <input className="border rounded px-3 py-2" value={values.clientName} onChange={e=>set('clientName', e.target.value)} />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-sm">Email</span>
-              <input className="border rounded px-3 py-2" value={values.email} onChange={e=>set('email', e.target.value)} />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-sm">{lang==='he'?'טלפון':'Phone'}</span>
-              <input className="border rounded px-3 py-2" value={values.phone} onChange={e=>set('phone', e.target.value)} />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-sm">{lang==='he'?'סוג נכס':'Type'}</span>
-              <select className="border rounded px-3 py-2" value={values.propertyType} onChange={e=>set('propertyType', e.target.value)}>
-                <option value=""></option>
-                {['דירה','בית','מגרש','מסחרי','אחר'].map(o=> <option key={o} value={o}>{o}</option>)}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {lang === 'he' ? 'שם לקוח *' : 'Client Name *'}
+              </label>
+              <input
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-300 focus:outline-none"
+                value={values.clientName}
+                onChange={e => set('clientName', e.target.value)}
+                dir={language === 'he' ? 'rtl' : 'ltr'}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-300 focus:outline-none"
+                value={values.email}
+                onChange={e => set('email', e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {lang === 'he' ? 'טלפון' : 'Phone'}
+              </label>
+              <input
+                type="tel"
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-300 focus:outline-none"
+                value={values.phone}
+                onChange={e => set('phone', e.target.value)}
+                dir={language === 'he' ? 'rtl' : 'ltr'}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {lang === 'he' ? 'סוג נכס' : 'Property Type'}
+              </label>
+              <select
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-300 focus:outline-none"
+                value={values.propertyType}
+                onChange={e => set('propertyType', e.target.value)}
+              >
+                <option value="">{lang === 'he' ? 'בחר סוג נכס' : 'Select property type'}</option>
+                {['דירה', 'בית', 'מגרש', 'מסחרי', 'אחר'].map(o => 
+                  <option key={o} value={o}>{o}</option>
+                )}
               </select>
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-sm">{lang==='he'?'עיר':'City'}</span>
-              <input className="border rounded px-3 py-2" value={values.city} onChange={e=>set('city', e.target.value)} />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-sm">{lang==='he'?'תקציב מ־':'Budget Min'}</span>
-              <input type="number" className="border rounded px-3 py-2" value={values.budgetMin} onChange={e=>set('budgetMin', e.target.value)} />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-sm">{lang==='he'?'תקציב עד':'Budget Max'}</span>
-              <input type="number" className="border rounded px-3 py-2" value={values.budgetMax} onChange={e=>set('budgetMax', e.target.value)} />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-sm">{lang==='he'?'מקור':'Source'}</span>
-              <input className="border rounded px-3 py-2" value={values.source} onChange={e=>set('source', e.target.value)} />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-sm">{lang==='he'?'סטטוס':'Status'}</span>
-              <select className="border rounded px-3 py-2" value={values.status} onChange={e=>set('status', e.target.value)}>
-                {['NEW','CONTACTED','MEETING','OFFER','DEAL'].map(s=> <option key={s} value={s}>{tStatusRE(s, lang)}</option>)}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {lang === 'he' ? 'עיר' : 'City'}
+              </label>
+              <input
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-300 focus:outline-none"
+                value={values.city}
+                onChange={e => set('city', e.target.value)}
+                dir={language === 'he' ? 'rtl' : 'ltr'}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {lang === 'he' ? 'מקור' : 'Source'}
+              </label>
+              <input
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-300 focus:outline-none"
+                value={values.source}
+                onChange={e => set('source', e.target.value)}
+                placeholder={lang === 'he' ? 'פייסבוק, גוגל, המלצה...' : 'Facebook, Google, referral...'}
+                dir={language === 'he' ? 'rtl' : 'ltr'}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {lang === 'he' ? 'תקציב מינימלי' : 'Budget Min'}
+              </label>
+              <input
+                type="number"
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-300 focus:outline-none"
+                value={values.budgetMin}
+                onChange={e => set('budgetMin', e.target.value)}
+                placeholder="₪"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {lang === 'he' ? 'תקציב מקסימלי' : 'Budget Max'}
+              </label>
+              <input
+                type="number"
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-300 focus:outline-none"
+                value={values.budgetMax}
+                onChange={e => set('budgetMax', e.target.value)}
+                placeholder="₪"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {lang === 'he' ? 'סטטוס' : 'Status'}
+              </label>
+              <select
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-300 focus:outline-none"
+                value={values.status}
+                onChange={e => set('status', e.target.value)}
+              >
+                {['NEW', 'CONTACTED', 'MEETING', 'OFFER', 'DEAL'].map(s => 
+                  <option key={s} value={s}>{tStatusRE(s, lang)}</option>
+                )}
               </select>
-            </label>
-            <label className="md:col-span-2 flex flex-col gap-1">
-              <span className="text-sm">{lang==='he'?'הערות':'Notes'}</span>
-              <textarea className="border rounded px-3 py-2" value={values.notes} onChange={e=>set('notes', e.target.value)} />
-            </label>
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {lang === 'he' ? 'הערות' : 'Notes'}
+              </label>
+              <textarea
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-300 focus:outline-none resize-none"
+                value={values.notes}
+                onChange={e => set('notes', e.target.value)}
+                rows={3}
+                placeholder={lang === 'he' ? 'הערות נוספות...' : 'Additional notes...'}
+                dir={language === 'he' ? 'rtl' : 'ltr'}
+              />
+            </div>
           </div>
 
-          <div className="mt-4 flex justify-start gap-2">
-            <button onClick={submit} disabled={busy} className="rounded-lg bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 disabled:opacity-60">
-              {busy ? (lang==='he'?'שומרת…':'Saving…') : (lang==='he'?'שמירה':'Save')}
+          {/* Action buttons */}
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              onClick={() => {
+                onClose();
+                resetForm();
+              }}
+              disabled={busy}
+              className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50"
+            >
+              {lang === 'he' ? 'ביטול' : 'Cancel'}
             </button>
-            <button onClick={onClose} disabled={busy} className="rounded-lg border px-4 py-2 hover:bg-gray-50 disabled:opacity-60">
-              {lang==='he'?'ביטול':'Cancel'}
+            <button
+              onClick={submit}
+              disabled={busy || !values.clientName.trim()}
+              className="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {busy ? (lang === 'he' ? 'שומר...' : 'Saving...') : (lang === 'he' ? 'שמירה' : 'Save')}
             </button>
           </div>
         </div>
+
+        {/* Preview/Summary */}
+        <div>
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              {lang === 'he' ? 'תצוגה מקדימה' : 'Lead Preview'}
+            </h3>
+            <div className="space-y-3">
+              {values.clientName && (
+                <div>
+                  <div className="text-sm text-gray-600">{lang === 'he' ? 'לקוח' : 'Client'}</div>
+                  <div className="font-medium">{values.clientName}</div>
+                </div>
+              )}
+              {values.propertyType && (
+                <div>
+                  <div className="text-sm text-gray-600">{lang === 'he' ? 'סוג נכס' : 'Property Type'}</div>
+                  <div className="font-medium">{values.propertyType}</div>
+                </div>
+              )}
+              {values.city && (
+                <div>
+                  <div className="text-sm text-gray-600">{lang === 'he' ? 'עיר' : 'City'}</div>
+                  <div className="font-medium">{values.city}</div>
+                </div>
+              )}
+              {(values.budgetMin || values.budgetMax) && (
+                <div>
+                  <div className="text-sm text-gray-600">{lang === 'he' ? 'תקציב' : 'Budget'}</div>
+                  <div className="font-medium">
+                    {values.budgetMin && values.budgetMax 
+                      ? `₪${Number(values.budgetMin).toLocaleString()} - ₪${Number(values.budgetMax).toLocaleString()}`
+                      : values.budgetMin 
+                        ? `₪${Number(values.budgetMin).toLocaleString()}+`
+                        : `Up to ₪${Number(values.budgetMax).toLocaleString()}`
+                    }
+                  </div>
+                </div>
+              )}
+              {values.source && (
+                <div>
+                  <div className="text-sm text-gray-600">{lang === 'he' ? 'מקור' : 'Source'}</div>
+                  <div className="font-medium">{values.source}</div>
+                </div>
+              )}
+              <div>
+                <div className="text-sm text-gray-600">{lang === 'he' ? 'סטטוס' : 'Status'}</div>
+                <div className="font-medium">{tStatusRE(values.status, lang)}</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 
 // ===== הקומפוננטה הראשית =====
-export default function LeadsClient({ items }: { items: Lead[] }) {
+function LeadsClientContent({ items }: { items: Lead[] }) {
   const router = useRouter();
   const { lang } = useLang();
+  const { language } = useLanguage();
 
   // חיפוש + פילטר
   const [q, setQ] = useState('');
@@ -470,131 +690,177 @@ export default function LeadsClient({ items }: { items: Lead[] }) {
 
   // ===== רנדר =====
   return (
-    <section className="p-6">
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <h1 className="mr-auto text-2xl font-semibold">{lang === 'he' ? 'לידים — נדל״ן' : 'Real-Estate Leads'}</h1>
-        <LanguageToggle />
+    <div className="min-h-screen bg-gray-50">
+      <EffinityHeader variant="dashboard" />
 
-        {/* + ליד חדש */}
-        <button
-          onClick={() => setShowCreate(true)}
-          className="rounded-lg bg-blue-600 text-white px-3 py-2 text-sm hover:bg-blue-700"
-        >
-          {lang === 'he' ? '+ ליד חדש' : '+ New lead'}
-        </button>
-
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder={lang === 'he' ? 'חיפוש...' : 'Search...'}
-          className="rounded-lg border px-3 py-2 text-sm"
-        />
-
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value as any)}
-          className="rounded-lg border px-3 py-2 text-sm"
-        >
-          {STATUS_OPTIONS.map((s) => (
-            <option key={s} value={s}>
-              {s === 'All' ? (lang === 'he' ? 'הכל' : 'All') : tStatusRE(s, lang)}
-            </option>
-          ))}
-        </select>
-
-        {/* הורדת תבנית CSV */}
-        <a
-          href="/webapi/real-estate/leads/template"
-          className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50"
-        >
-          {lang === 'he' ? 'הורדת תבנית CSV' : 'Download CSV template'}
-        </a>
-
-        {/* ייבוא CSV */}
-        <button
-          onClick={() => setShowImport(true)}
-          className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50"
-        >
-          {lang === 'he' ? 'ייבוא CSV' : 'Import CSV'}
-        </button>
+      {/* Page Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-semibold">{language === 'he' ? 'לידים נדל״ן' : 'Real Estate Leads'}</h1>
+              <p className="opacity-90 mt-1">{language === 'he' ? 'ניהול והמרת לקוחות פוטנציאליים בנדל״ן' : 'Real estate lead management and conversion'}</p>
+            </div>
+            <div className="flex gap-3 items-center">
+              <button
+                onClick={() => setShowCreate(true)}
+                className="bg-white/20 backdrop-blur-sm border border-white/30 px-6 py-2 rounded-xl text-white font-semibold hover:bg-white/30 transition-all transform hover:scale-105"
+              >
+                + {language === 'he' ? 'ליד חדש' : 'New Lead'}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
+      
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-12 gap-6">
+          {/* Sidebar */}
+          <aside className="hidden md:block col-span-2">
+            <div className="sticky top-6 rounded-2xl bg-white shadow-xl border p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-9 w-9 rounded-xl bg-blue-600 text-white grid place-items-center font-bold">E</div>
+                <div className="font-semibold">EFFINITY</div>
+              </div>
+              <nav className="space-y-1 text-sm">
+                <a className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-50" href="/real-estate/properties">
+                  {language === 'he' ? 'נכסים' : 'Properties'}
+                </a>
+                <a className="flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-50 text-blue-700 font-medium" href="/real-estate/leads">
+                  {language === 'he' ? 'לידים' : 'Leads'}
+                </a>
+              </nav>
+            </div>
+          </aside>
 
-      {/* הודעת סיכום אחרי ייבוא */}
-      {importSummary && (
-        <div className="mb-4 rounded-lg border bg-green-50 p-3 text-sm text-green-700">
-          {(lang === 'he' ? 'ייבוא הושלם. ' : 'Import complete. ') +
-            `${lang === 'he' ? 'נוצרו' : 'Created'}: ${importSummary.created ?? 0}, ` +
-            `${lang === 'he' ? 'דילוגים' : 'Skipped'}: ${importSummary.skipped ?? 0}, ` +
-            `${lang === 'he' ? 'שגיאות' : 'Errors'}: ${importSummary.errors ?? 0}`}
-        </div>
-      )}
+          {/* Main Content */}
+          <main className="col-span-12 md:col-span-10">
+            <div className="mb-4 flex flex-wrap items-center gap-3">
+              <div className="flex-1">
+                <input
+                  placeholder={language === 'he' ? 'חיפוש...' : 'Search...'}
+                  className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 outline-none focus:border-blue-300"
+                  dir={language === 'he' ? 'rtl' : 'ltr'}
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                />
+              </div>
 
-      {visible.length === 0 ? (
-        <div className="rounded-xl border border-gray-200 p-8 text-center text-gray-500">
-          {lang === 'he' ? 'אין נתונים' : 'No data'}
-        </div>
-      ) : (
-        <>
-          <div className="overflow-x-auto rounded-xl border border-gray-200">
-            <table className="min-w-full text-sm">
-              <thead className="bg-gray-50">
-                <tr className="text-left">
-                  <th className="px-4 py-3">{lang==='he'?'לקוח':'Client'}</th>
-                  <th className="px-4 py-3">Email</th>
-                  <th className="px-4 py-3">{lang==='he'?'טלפון':'Phone'}</th>
-                  <th className="px-4 py-3">{lang==='he'?'סוג נכס':'Type'}</th>
-                  <th className="px-4 py-3">{lang==='he'?'עיר':'City'}</th>
-                  <th className="px-4 py-3">{lang==='he'?'תקציב':'Budget'}</th>
-                  <th className="px-4 py-3">{lang==='he'?'סטטוס':'Status'}</th>
-                  <th className="px-4 py-3">{lang==='he'?'מקור':'Source'}</th>
-                  <th className="px-4 py-3">{lang==='he'?'נוצר':'Created'}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {visible.map((l) => (
-                  <tr key={l.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium">
-                      <button onClick={() => openLead(l.id)} className="text-blue-600 hover:underline">
-                        {l.clientName || '(—)'}
-                      </button>
-                    </td>
-                    <td className="px-4 py-3">{l.email || '-'}</td>
-                    <td className="px-4 py-3">{l.phone || '-'}</td>
-                    <td className="px-4 py-3">{l.propertyType || '-'}</td>
-                    <td className="px-4 py-3">{l.city || '-'}</td>
-                    <td className="px-4 py-3">
-                      {(l.budgetMin ?? null) !== null || (l.budgetMax ?? null) !== null
-                        ? `${l.budgetMin ?? ''}${l.budgetMin && l.budgetMax ? ' - ' : ''}${l.budgetMax ?? ''}`
-                        : '-'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs ${statusClasses(l.status)}`}>
-                        {tStatusRE(l.status, lang)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">{l.source || '-'}</td>
-                    <td className="px-4 py-3" suppressHydrationWarning>{formatIL(l.createdAt)}</td>
-                  </tr>
+              <button
+                onClick={() => setShowCreate(true)}
+                className="rounded-xl bg-blue-600 text-white px-3 py-2 text-sm hover:bg-blue-700"
+              >
+                {lang === 'he' ? '+ ליד חדש' : '+ New lead'}
+              </button>
+
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as any)}
+                className="rounded-xl border px-3 py-2 text-sm"
+              >
+                {STATUS_OPTIONS.map((s) => (
+                  <option key={s} value={s}>
+                    {s === 'All' ? (lang === 'he' ? 'הכל' : 'All') : tStatusRE(s, lang)}
+                  </option>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </select>
 
-          {/* פוטר עימוד */}
-          <div className="flex items-center justify-between py-3 text-sm text-gray-600">
-            <span>
-              {lang==='he' ? 'מציג' : 'Showing'} {Math.min(shown, filtered.length)} {lang==='he' ? 'מתוך' : 'of'} {filtered.length}
-            </span>
-            <button
-              onClick={() => setShown((n) => n + PAGE_SIZE)}
-              disabled={!canLoadMore}
-              className={`rounded-lg border px-3 py-2 ${canLoadMore ? 'hover:bg-gray-50' : 'opacity-50'}`}
-            >
-              {canLoadMore ? (lang==='he' ? 'טען עוד' : 'Load more') : (lang==='he' ? 'הכל נטען' : 'All loaded')}
-            </button>
-          </div>
-        </>
-      )}
+              {/* הורדת תבנית CSV */}
+              <a
+                href="/webapi/real-estate/leads/template"
+                className="rounded-xl border px-3 py-2 text-sm hover:bg-gray-50"
+              >
+                {lang === 'he' ? 'הורדת תבנית CSV' : 'Download CSV template'}
+              </a>
+
+              {/* ייבוא CSV */}
+              <button
+                onClick={() => setShowImport(true)}
+                className="rounded-xl border px-3 py-2 text-sm hover:bg-gray-50"
+              >
+                {lang === 'he' ? 'ייבוא CSV' : 'Import CSV'}
+              </button>
+            </div>
+
+            {/* הודעת סיכום אחרי ייבוא */}
+            {importSummary && (
+              <div className="mb-4 rounded-xl border bg-green-50 p-3 text-sm text-green-700">
+                {(lang === 'he' ? 'ייבוא הושלם. ' : 'Import complete. ') +
+                  `${lang === 'he' ? 'נוצרו' : 'Created'}: ${importSummary.created ?? 0}, ` +
+                  `${lang === 'he' ? 'דילוגים' : 'Skipped'}: ${importSummary.skipped ?? 0}, ` +
+                  `${lang === 'he' ? 'שגיאות' : 'Errors'}: ${importSummary.errors ?? 0}`}
+              </div>
+            )}
+
+            {visible.length === 0 ? (
+              <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center text-gray-500 shadow-sm">
+                {lang === 'he' ? 'אין נתונים' : 'No data'}
+              </div>
+            ) : (
+              <>
+                <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-gray-50">
+                      <tr className="text-left">
+                        <th className="px-4 py-3 font-semibold text-gray-700">{lang==='he'?'לקוח':'Client'}</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">Email</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">{lang==='he'?'טלפון':'Phone'}</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">{lang==='he'?'סוג נכס':'Type'}</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">{lang==='he'?'עיר':'City'}</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">{lang==='he'?'תקציב':'Budget'}</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">{lang==='he'?'סטטוס':'Status'}</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">{lang==='he'?'מקור':'Source'}</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">{lang==='he'?'נוצר':'Created'}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {visible.map((l) => (
+                        <tr key={l.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-4 py-3 font-medium">
+                            <button onClick={() => openLead(l.id)} className="text-blue-600 hover:underline">
+                              {l.clientName || '(—)'}
+                            </button>
+                          </td>
+                          <td className="px-4 py-3 text-gray-900">{l.email || '-'}</td>
+                          <td className="px-4 py-3 text-gray-900">{l.phone || '-'}</td>
+                          <td className="px-4 py-3 text-gray-900">{l.propertyType || '-'}</td>
+                          <td className="px-4 py-3 text-gray-900">{l.city || '-'}</td>
+                          <td className="px-4 py-3 text-gray-900">
+                            {(l.budgetMin ?? null) !== null || (l.budgetMax ?? null) !== null
+                              ? `${l.budgetMin ?? ''}${l.budgetMin && l.budgetMax ? ' - ' : ''}${l.budgetMax ?? ''}`
+                              : '-'}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs ${statusClasses(l.status)}`}>
+                              {tStatusRE(l.status, lang)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-gray-900">{l.source || '-'}</td>
+                          <td className="px-4 py-3 text-gray-600" suppressHydrationWarning>{formatIL(l.createdAt)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* פוטר עימוד */}
+                <div className="flex items-center justify-between py-3 text-sm text-gray-600">
+                  <span>
+                    {lang==='he' ? 'מציג' : 'Showing'} {Math.min(shown, filtered.length)} {lang==='he' ? 'מתוך' : 'of'} {filtered.length}
+                  </span>
+                  <button
+                    onClick={() => setShown((n) => n + PAGE_SIZE)}
+                    disabled={!canLoadMore}
+                    className={`rounded-xl border px-3 py-2 ${canLoadMore ? 'hover:bg-gray-50' : 'opacity-50'}`}
+                  >
+                    {canLoadMore ? (lang==='he' ? 'טען עוד' : 'Load more') : (lang==='he' ? 'הכל נטען' : 'All loaded')}
+                  </button>
+                </div>
+              </>
+            )}
+          </main>
+        </div>
+      </div>
 
       {/* ▼ Modal Lead */}
       {selectedId && (
@@ -701,6 +967,14 @@ export default function LeadsClient({ items }: { items: Lead[] }) {
         }}
       />
       {/* ▲ Create Lead */}
-    </section>
+    </div>
+  );
+}
+
+export default function LeadsClient({ items }: { items: Lead[] }) {
+  return (
+    <LanguageProvider>
+      <LeadsClientContent items={items} />
+    </LanguageProvider>
   );
 }

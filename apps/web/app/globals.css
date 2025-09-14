@@ -1,48 +1,431 @@
 @import "tailwindcss";
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
-/* ===== Tailwind v4 theme tokens (brand) ===== */
-@theme {
-  --color-brand-blue: #008af7;
-  --color-brand-blueDark: #0075ed;
-}
+/* ===== Effinity Design System - Modern Blue & White Theme ===== */
 
-/* ===== Base (רקע לבן, טקסט שחור) ===== */
+/* ===== Base Styles - Clean White Background ===== */
 html, body {
-  background: #ffffff;
-  color: #000000;
+  background: white;
+  color: #1f2937;
   scroll-behavior: smooth;
+  font-family: Inter, system-ui, sans-serif;
 }
 
-/* ===== Utilities: אנימציות ===== */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.animate-fade-in { animation: fadeIn .6s ease both; }
-
-/* ===== Components Layer ===== */
+/* ===== Component Utilities ===== */
 @layer components {
-  /* כפתורי ברנד */
-  .btn-brand { @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white bg-brand-blue hover:bg-brand-blueDark transition; }
+  /* Effinity Brand Button - Blue #1e40af */
+  .btn-brand {
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold
+           text-white bg-blue-800 hover:bg-blue-900 focus:ring-2 focus:ring-blue-500
+           focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow;
+  }
 
-  /* כפתור לבן עם מסגרת */
-  .btn-outline { @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm border border-neutral-300 text-black hover:bg-neutral-50 transition; }
+  /* Primary Button with Blue */
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold
+           text-white bg-blue-800 hover:bg-blue-900 focus:ring-2 focus:ring-blue-500
+           focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow;
+  }
 
-  /* קארד */
-  .card { @apply rounded-2xl bg-white border border-neutral-200 shadow-sm; }
+  /* Secondary Button */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-normal
+           border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400
+           focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200;
+  }
 
-  /* קו מפריד רך */
-  .hr-soft { border-color: rgba(0,0,0,.08); }
+  /* Effinity Card */
+  .card {
+    @apply rounded-lg bg-white border border-gray-200 shadow-sm;
+  }
 
-  /* אינפוטים */
+  /* Effinity Input with Blue Focus */
   .input {
-    @apply w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-black
-           placeholder-neutral-400 outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue;
+    @apply w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-normal
+           text-gray-900 placeholder-gray-500 outline-none
+           focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+           hover:border-gray-400 transition-all duration-200;
+  }
+
+  /* Blue Link Styles */
+  .link-primary {
+    @apply text-blue-600 hover:text-blue-700 font-semibold transition-colors duration-200;
+  }
+
+  /* Navigation Link */
+  .nav-link {
+    @apply text-blue-100 hover:text-white font-normal transition-colors duration-200;
   }
 }
 
-/* מעברי hover/active כלליים */
-a, button { transition: background-color .2s ease, color .2s ease, border-color .2s ease, opacity .2s ease, box-shadow .2s ease; }
+/* ===== Professional Animations & Transitions ===== */
+a, button, input, select, textarea { 
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, 
+              opacity 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease; 
+}
+
+/* ===== Advanced Keyframe Animations ===== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInFromLeft {
+  from { opacity: 0; transform: translateX(-24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInFromRight {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200px 0; }
+  100% { background-position: 200px 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(30, 64, 175, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(30, 64, 175, 0.6), 0 0 30px rgba(30, 64, 175, 0.4); }
+}
+
+/* ===== Animation Classes ===== */
+.animate-fade-in { animation: fadeIn 0.6s ease both; }
+.animate-slide-left { animation: slideInFromLeft 0.6s ease both; }
+.animate-slide-right { animation: slideInFromRight 0.6s ease both; }
+.animate-scale-in { animation: scaleIn 0.4s ease both; }
+.animate-pulse-slow { animation: pulse 3s ease-in-out infinite; }
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-glow { animation: glow 2s ease-in-out infinite; }
+
+/* ===== Staggered Animations ===== */
+.animate-fade-in-1 { animation: fadeIn 0.6s ease both; animation-delay: 0.1s; }
+.animate-fade-in-2 { animation: fadeIn 0.6s ease both; animation-delay: 0.2s; }
+.animate-fade-in-3 { animation: fadeIn 0.6s ease both; animation-delay: 0.3s; }
+.animate-fade-in-4 { animation: fadeIn 0.6s ease both; animation-delay: 0.4s; }
+
+/* ===== Loading Shimmer Effect ===== */
+.animate-shimmer {
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ===== Hover Effects ===== */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(30, 58, 138, 0.15);
+}
+
+/* ===== Interactive Cards ===== */
+.card-interactive {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.card-interactive:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(30, 58, 138, 0.12);
+  border-color: rgba(30, 64, 175, 0.3);
+}
+
+/* ===== Button Animations ===== */
+.btn-animate {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.btn-animate::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-animate:hover::before {
+  left: 100%;
+}
+
+/* ===== Focus States ===== */
+.focus-ring {
+  transition: all 0.2s ease;
+}
+.focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #1e40af;
+  ring-offset: 2px;
+}
+
+/* ===== Scroll Animations ===== */
+@media (prefers-reduced-motion: no-preference) {
+  .scroll-fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  
+  .scroll-fade-in.in-view {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== Responsive Animations ===== */
+@media (max-width: 768px) {
+  .animate-fade-in,
+  .animate-slide-left,
+  .animate-slide-right,
+  .animate-scale-in {
+    animation-duration: 0.4s;
+  }
+}
+
+/* ===== Enhanced Micro-Interactions ===== */
+
+/* Gradient Button Effect */
+.btn-gradient {
+  background: linear-gradient(45deg, oklch(0.45 0.25 240), oklch(0.55 0.22 240));
+  background-size: 200% 200%;
+  animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Ripple Effect for Clicks */
+.btn-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-ripple::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn-ripple:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+/* Enhanced Card Interactions */
+.card-hover {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.card-hover:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 25px 50px oklch(0.22 0.015 240 / 0.15);
+  border-color: oklch(0.45 0.25 240 / 0.2);
+}
+
+/* Magnetic Button Effect */
+.btn-magnetic {
+  transition: transform 0.2s ease;
+}
+
+.btn-magnetic:hover {
+  transform: scale(1.05);
+}
+
+/* Text Shimmer Animation */
+@keyframes textShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.text-shimmer {
+  background: linear-gradient(
+    90deg,
+    oklch(0.45 0.25 240) 0%,
+    oklch(0.65 0.20 240) 50%,
+    oklch(0.45 0.25 240) 100%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textShimmer 2s linear infinite;
+}
+
+/* Bounce In Animation */
+@keyframes bounceIn {
+  0% { opacity: 0; transform: scale(0.3) rotate(-10deg); }
+  50% { opacity: 1; transform: scale(1.05) rotate(2deg); }
+  70% { transform: scale(0.98) rotate(-1deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+.animate-bounce-in { animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+
+/* Slide Up Animation */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-up { animation: slideUp 0.6s ease-out; }
+
+/* Typing Animation */
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes blink {
+  50% { border-color: transparent; }
+}
+
+.animate-typing {
+  overflow: hidden;
+  border-right: 2px solid oklch(0.45 0.25 240);
+  white-space: nowrap;
+  animation: typing 2s steps(30, end), blink 1s step-end infinite;
+}
+
+/* Icon Wiggle */
+@keyframes wiggle {
+  0%, 7% { transform: rotateZ(0); }
+  15% { transform: rotateZ(-15deg); }
+  20% { transform: rotateZ(10deg); }
+  25% { transform: rotateZ(-10deg); }
+  30% { transform: rotateZ(6deg); }
+  35% { transform: rotateZ(-4deg); }
+  40%, 100% { transform: rotateZ(0); }
+}
+
+.animate-wiggle { animation: wiggle 1s ease-in-out; }
+
+/* Heartbeat Effect */
+@keyframes heartbeat {
+  0% { transform: scale(1); }
+  14% { transform: scale(1.3); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.3); }
+  70% { transform: scale(1); }
+}
+
+.animate-heartbeat { animation: heartbeat 1.5s ease-in-out infinite; }
+
+/* Modern Glass Effect */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Gradient Text */
+.text-gradient {
+  background: linear-gradient(45deg, oklch(0.45 0.25 240), oklch(0.65 0.20 240));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Enhanced Focus States */
+.focus-ring-enhanced {
+  transition: all 0.2s ease;
+}
+
+.focus-ring-enhanced:focus {
+  outline: none;
+  box-shadow:
+    0 0 0 2px white,
+    0 0 0 4px oklch(0.45 0.25 240),
+    0 4px 12px oklch(0.22 0.015 240 / 0.15);
+}
+
+/* Smooth Page Transitions */
+.page-transition {
+  animation: pageSlideIn 0.5s ease-out;
+}
+
+@keyframes pageSlideIn {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ===== Enhanced Mobile Interactions ===== */
+@media (max-width: 768px) {
+  .card-hover:hover {
+    transform: translateY(-4px) scale(1.01);
+  }
+
+  .btn-magnetic:hover {
+    transform: scale(1.02);
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* ===== Accessibility - Respect Reduced Motion ===== */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-slide-left,
+  .animate-slide-right,
+  .animate-scale-in,
+  .animate-pulse-slow,
+  .animate-float,
+  .animate-glow,
+  .animate-shimmer,
+  .animate-bounce-in,
+  .animate-slide-up,
+  .animate-typing,
+  .animate-wiggle,
+  .animate-heartbeat,
+  .text-shimmer,
+  .btn-gradient,
+  .page-transition {
+    animation: none;
+  }
+
+  .hover-lift:hover,
+  .card-interactive:hover,
+  .card-hover:hover,
+  .btn-magnetic:hover {
+    transform: none;
+  }
+
+  a, button, input, select, textarea {
+    transition: none;
+  }
+
+  .btn-ripple::after {
+    display: none;
+  }
+}

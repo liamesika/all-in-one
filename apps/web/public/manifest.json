@@ -1,0 +1,26 @@
+{
+  "name": "Effinity - AI-powered efficiency for modern teams",
+  "short_name": "Effinity",
+  "description": "All-in-one platform for real estate, e-commerce, and legal teams with AI-powered automation",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png", 
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity", "finance"],
+  "lang": "en",
+  "orientation": "portrait-primary"
+}

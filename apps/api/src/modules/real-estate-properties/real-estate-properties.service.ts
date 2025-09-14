@@ -1,6 +1,8 @@
 // apps/api/src/modules/real-estate-properties/real-estate-properties.service.ts
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
-import { StorageService } from './storage.service.js';
+import { StorageService } from './storage.service';
+import { CreatePropertyDto } from './dtos/create-property.dto';
+import { UpdatePropertyDto } from './dtos/update-property.dto';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { PrismaClient } = require('@prisma/client');
 
@@ -14,33 +16,16 @@ function slugifyLite(input: string): string {
   return s || `${Date.now()}`;
 }
 
-type CreatePropertyDto = {
-  name: string;
-  address?: string | null;
-  city?: string | null;
-  neighborhood?: string | null;
-  description?: string | null;
-  status?: string | null;   // 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'  (נשלח רק אם סופק)
-  type?: string | null;     // enum בפריזמה – לא נשלח אם לא סופק
-  bedrooms?: number | null;
-  bathrooms?: number | null;
-  areaSqm?: number | null;
-  floor?: number | null;
-  yearBuilt?: number | null;
-  price?: number | null;
-  currency?: string | null; // enum/טקסט – לא נשלח אם לא סופק
-  amenities?: string | null;
-  agentName?: string | null;
-  agentPhone?: string | null;
-  coverImageUrl?: string | null;
-  seoTitle?: string | null;
-  seoDescription?: string | null;
-  slug?: string | null;
-  photos?: string[];
+type ListQuery = { 
+  q?: string; 
+  status?: string; 
+  provider?: string; 
+  limit?: number;
+  offset?: number;
+  page?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 };
-
-type UpdatePropertyDto = Partial<CreatePropertyDto>;
-type ListQuery = { q?: string; status?: string; limit?: number };
 
 @Injectable()
 export class RealEstatePropertiesService {
@@ -58,13 +43,30 @@ export class RealEstatePropertiesService {
       slug = `${baseSlug}-${n++}`;
     }
   }
+async getBySlug(slug: string) {
+  const row = await this.prisma.property.findFirst({
+    where: { slug, status: 'PUBLISHED' },
+    include: { photos: true },
+  });
+  if (!row) throw new NotFoundException('Property not found');
+  return row;
+}
 
   async list(ownerUid: string, args: ListQuery = {}) {
-    const take = Math.max(1, Math.min(100, Number(args.limit || 50)));
+    // Pagination parameters
+    const limit = Math.max(1, Math.min(100, Number(args.limit || 20))); // Reduced default from 50 to 20
+    const page = Math.max(1, Number(args.page || 1));
+    const offset = args.offset !== undefined ? Number(args.offset) : (page - 1) * limit;
+    const skip = Math.max(0, offset);
+
+    // Build where clause
     const where: any = { ownerUid };
 
     if (args.status && ['DRAFT', 'PUBLISHED', 'ARCHIVED'].includes(args.status)) {
       where.status = args.status;
+    }
+    if (args.provider && ['MANUAL', 'YAD2', 'MADLAN'].includes(args.provider)) {
+      where.provider = args.provider;
     }
     if (args.q) {
       where.OR = [
@@ -76,14 +78,52 @@ export class RealEstatePropertiesService {
       ];
     }
 
-    const rows = await this.prisma.property.findMany({
-      where,
-      orderBy: [{ createdAt: 'desc' }],
-      take,
-      include: { photos: true },
-    });
-    const total = await this.prisma.property.count({ where });
-    return { total, rows };
+    // Build orderBy clause
+    let orderBy: any[] = [{ createdAt: 'desc' }]; // Default sort
+    const validSortFields = ['createdAt', 'updatedAt', 'name', 'price', 'city', 'status'];
+    if (args.sortBy && validSortFields.includes(args.sortBy)) {
+      const sortOrder = args.sortOrder === 'asc' ? 'asc' : 'desc';
+      orderBy = [{ [args.sortBy]: sortOrder }];
+    }
+
+    // Execute queries in parallel for better performance
+    const [rows, total] = await Promise.all([
+      this.prisma.property.findMany({
+        where,
+        orderBy,
+        skip,
+        take: limit,
+        include: { 
+          photos: {
+            orderBy: { sortIndex: 'asc' },
+            take: 3 // Only load first 3 photos for list view performance
+          }
+        },
+      }),
+      this.prisma.property.count({ where }),
+    ]);
+
+    // Pagination metadata
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    return {
+      total,
+      rows,
+      pagination: {
+        page,
+        limit,
+        offset: skip,
+        totalPages,
+        hasNextPage,
+        hasPreviousPage,
+      },
+      meta: {
+        count: rows.length,
+        took: Date.now(), // Can be used for performance monitoring
+      }
+    };
   }
 
   async get(ownerUid: string, id: string) {
@@ -116,19 +156,13 @@ export class RealEstatePropertiesService {
       city,
       neighborhood,
       description,
-      bedrooms: dto.bedrooms ?? null,
-      bathrooms: dto.bathrooms ?? null,
-      areaSqm: dto.areaSqm ?? null,
-      floor: dto.floor ?? null,
-      yearBuilt: dto.yearBuilt ?? null,
+      bedrooms: dto.rooms ?? null, // Map 'rooms' from frontend to 'bedrooms' in DB
+      areaSqm: dto.size ?? null,   // Map 'size' from frontend to 'areaSqm' in DB  
       price: dto.price ?? null,
-      amenities: dto.amenities ?? null,
       agentName: dto.agentName ?? null,
       agentPhone: dto.agentPhone ?? null,
-      coverImageUrl: dto.coverImageUrl ?? null,
-      seoTitle: dto.seoTitle ?? null,
-      seoDescription: dto.seoDescription ?? null,
     };
+
 
     // enums/שדות עם ולידציית ערכים — נשלח רק אם סופק כדי לא לטעות בערך
     if (dto.status) data.status = dto.status;
@@ -216,14 +250,10 @@ export class RealEstatePropertiesService {
     if (!prop) throw new NotFoundException('Property not found');
     if (!files?.length) throw new BadRequestException('no files uploaded');
 
-    if (!this.storage || typeof (this.storage as any).uploadPublic !== 'function') {
-      throw new BadRequestException('storage upload not available');
-    }
-
     const uploaded: { url: string }[] = [];
     for (const file of files) {
       const key = `real-estate/properties/${id}/${Date.now()}_${file.originalname}`;
-      const url = await (this.storage as any).uploadPublic(key, file.buffer, file.mimetype);
+      const url = await this.storage.uploadPublic(key, file.buffer, file.mimetype);
       uploaded.push({ url });
     }
 

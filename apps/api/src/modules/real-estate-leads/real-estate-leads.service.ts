@@ -1,7 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-const { PrismaClient } = require('@prisma/client');
-
-const prisma = new PrismaClient();
+import { prisma } from '../../../../../packages/server/db/client';
 // טיפוס מקומי כדי לא להסתבך עם גרסאות enum של Prisma
 type REStatus = 'NEW' | 'CONTACTED' | 'MEETING' | 'OFFER' | 'DEAL';
 
@@ -46,7 +44,7 @@ export class RealEstateLeadsService {
     const db = prisma as any;
     const data = {
       ownerUid: orgId,
-      clientName: String(dto.clientName || '').trim() || '—',
+      clientName: String(dto.clientName || dto.name || '').trim() || '—', // Support both clientName and name
       phone: dto.phone ?? null,
       email: dto.email ?? null,
       propertyType: dto.propertyType ?? null,
@@ -57,7 +55,11 @@ export class RealEstateLeadsService {
         dto.budgetMax !== undefined && dto.budgetMax !== '' ? Number(dto.budgetMax) : null,
       source: dto.source ?? null,
       status: (dto.status as REStatus) || 'NEW',
-      notes: dto.notes ?? null,
+      notes:
+  (dto.notes ?? dto.message) != null
+    ? String(dto.notes ?? dto.message).trim()
+    : null, // Support both notes and message
+      propertyId: dto.propertyId ?? null, // Add propertyId field
     };
     return db.realEstateLead.create({ data });
   }

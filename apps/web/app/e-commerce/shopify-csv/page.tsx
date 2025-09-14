@@ -1,5 +1,6 @@
-import Client from '../shopify-csv';
+'use client';
+import ShopifyCsvFlow from './ShopifyCsvFlow';
 
-export default function Page() {
-  return <Client />;
+export default function ShopifyCsvPage() {
+  return <ShopifyCsvFlow />;
 }

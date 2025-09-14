@@ -2,6 +2,7 @@
 
 import React from 'react';
 import LangProvider from '../components/i18n/LangProvider';
+import { AuthProvider } from '../lib/auth-context';
 
 export default function AppProviders({
   children,
@@ -10,5 +11,9 @@ export default function AppProviders({
   children: React.ReactNode;
   initialLang: 'he' | 'en';
 }) {
-  return <LangProvider initialLang={initialLang}>{children}</LangProvider>;
+  return (
+    <AuthProvider>
+      <LangProvider initialLang={initialLang}>{children}</LangProvider>
+    </AuthProvider>
+  );
 }
