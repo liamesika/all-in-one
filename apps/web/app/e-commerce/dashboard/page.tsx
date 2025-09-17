@@ -6,6 +6,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui';
 import { useAuth } from '@/lib/auth-context';
 import { AiCoachProvider } from '@/lib/ai-coach-context';
 import AiCoachIntegration from '@/components/ai-coach/AiCoachIntegration';
+import { Job } from '@/lib/types/job';
+import { safeFetchJobs, safeFetchJobsSummary } from '@/lib/safe-fetch';
 
 // ====== helpers: tiny charts (inline SVG, בלי תלות חיצונית) ======
 function Sparkline({ points }: { points: number[] }) {
@@ -43,14 +45,6 @@ function Donut({ value, label }: { value: number; label: string }) {
   );
 }
 
-// ====== types ======
-type Job = {
-  id: string;
-  type?: string;
-  status: 'PENDING' | 'RUNNING' | 'SUCCESS' | 'FAILED';
-  createdAt?: string;
-  metrics?: { images?: number };
-};
 
 // ====== page ======
 function EcomDashboardContent() {
@@ -67,8 +61,8 @@ function EcomDashboardContent() {
     if (!ownerUid || authLoading) return;
 
     // Fetch jobs and summary with ownerUid
-    fetch(`/api/jobs/summary?ownerUid=${ownerUid}`, { credentials: 'include' }).then(r => r.json()).then(setSummary).catch(() => {});
-    fetch(`/api/jobs?limit=6&ownerUid=${ownerUid}`, { credentials: 'include' }).then(r => r.json()).then(setJobs).catch(() => {});
+    safeFetchJobsSummary(`/api/jobs/summary?ownerUid=${ownerUid}`, { credentials: 'include' }).then(setSummary);
+    safeFetchJobs(`/api/jobs?limit=6&ownerUid=${ownerUid}`, { credentials: 'include' }).then(setJobs);
     
     // Fetch comprehensive leads statistics
     if (ownerUid) {
@@ -360,16 +354,17 @@ function EcomDashboardContent() {
                   </tr>
                 </thead>
                 <tbody>
-                  {jobs.map((r) => (
+                  {Array.isArray(jobs) ? jobs.map((r) => (
                     <tr key={r.id} className="border-t hover:bg-gray-50">
                       <td className="px-4 py-2 font-mono text-[11px] text-gray-500">{r.id}</td>
-                      <td className="px-4 py-2 text-gray-900">{r.type || '-'}</td>
+                      <td className="px-4 py-2 text-gray-900">{r.type ?? '-'}</td>
                       <td className="px-4 py-2">
                         <span className={
                           `text-xs px-2 py-1 rounded-full border font-medium ${
-                            r.status === 'SUCCESS' ? 'bg-green-50 text-green-700 border-green-200' :
+                            r.status === 'SUCCESS' || r.status === 'COMPLETED' ? 'bg-green-50 text-green-700 border-green-200' :
                             r.status === 'FAILED'  ? 'bg-red-50 text-red-700 border-red-200' :
                             r.status === 'RUNNING' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                            r.status === 'PENDING' ? 'bg-blue-50 text-blue-700 border-blue-200' :
                                                      'bg-gray-50 text-gray-700 border-gray-200'
                           }`
                         }>{r.status}</span>
@@ -377,17 +372,17 @@ function EcomDashboardContent() {
                       <td className="px-4 py-2 text-gray-600">{r.createdAt ? new Date(r.createdAt).toLocaleString() : ''}</td>
                       <td className="px-4 py-2 text-gray-600">{r.metrics?.images ?? ''}</td>
                       <td className="px-4 py-2">
-                        {r.status === 'SUCCESS' && r.type === 'shopify_csv'
+                        {(r.status === 'SUCCESS' || r.status === 'COMPLETED') && r.type === 'shopify_csv'
                           ? <a className="text-blue-600 hover:text-blue-700 hover:underline" href={`/api/jobs/${r.id}/output`}>{language === 'he' ? 'הורד CSV' : 'Download CSV'}</a>
                           : <span className="text-gray-400">—</span>}
                       </td>
                     </tr>
-                  ))}
-                  {!jobs.length && (
+                  )) : []}
+                  {!Array.isArray(jobs) || jobs.length === 0 ? (
                     <tr><td className="px-4 py-6 text-center text-gray-500" colSpan={6}>
                       {language === 'he' ? 'אין עדיין עבודות — העלה ZIP כדי להתחיל' : 'No jobs yet — upload a ZIP to get started'}
                     </td></tr>
-                  )}
+                  ) : null}
                 </tbody>
               </table>
             </div>

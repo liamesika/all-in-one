@@ -115,7 +115,16 @@ export class AuthController {
 
     try {
       console.log('🔑 Got idToken', idToken.substring(0, 12) + '...');
-      const admin = getFirebaseAdmin();
+
+      // Check if Firebase Admin is configured
+      let admin;
+      try {
+        admin = getFirebaseAdmin();
+      } catch (error) {
+        console.error('🔥 Firebase Admin not configured:', error.message);
+        throw new UnauthorizedException('Firebase authentication not configured. Please contact support.');
+      }
+
       const expiresIn = SESSION_TTL_MS;
 
       // Verify the ID token first

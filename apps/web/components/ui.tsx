@@ -13,18 +13,21 @@ export const CardTitle = ({className='', ...p}: any) =>
   <h3 className={`text-base font-semibold text-gray-900 tracking-tight ${className}`} {...p} />;
 
 export const CardDescription = ({className='', ...p}: any) =>
-  <p className={`text-sm font-normal text-gray-700 ${className}`} {...p} />;
+  <p className={`text-sm font-normal text-gray-800 ${className}`} {...p} />;
 
 export const CardContent = ({className='', ...p}: any) =>
   <div className={`p-6 pt-0 ${className}`} {...p} />;
 
 // Button Component - Effinity Design System
-export const Button = ({ 
-  href, 
-  children, 
-  className = '', 
-  variant = 'primary', 
-  size = 'default', 
+type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'accent' | 'destructive';
+type ButtonSize = 'sm' | 'default' | 'lg';
+
+export const Button = ({
+  href,
+  children,
+  className = '',
+  variant = 'primary' as ButtonVariant,
+  size = 'default' as ButtonSize,
   disabled = false,
   'aria-label': ariaLabel,
   'aria-describedby': ariaDescribedby,
@@ -38,19 +41,21 @@ export const Button = ({
     min-h-11
   `;
   
-  const variantClasses = {
-    primary: 'bg-blue-800 text-white hover:bg-blue-900 focus-visible:ring-blue-500 shadow-sm hover:shadow',
-    secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200 focus-visible:ring-gray-600 border border-gray-200',
-    outline: 'border-2 border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 focus-visible:ring-blue-500',
-    accent: 'bg-blue-600 text-white hover:bg-blue-700 focus-visible:ring-blue-500 shadow-sm hover:shadow',
-    destructive: 'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500 shadow-sm hover:shadow'
-  }[variant] || variantClasses.primary;
-  
-  const sizeClasses = {
+  const variantClassMap: Record<ButtonVariant, string> = {
+    primary: 'bg-blue-700 text-white hover:bg-blue-800 focus-visible:ring-blue-600 shadow-sm hover:shadow',
+    secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200 focus-visible:ring-blue-600 border border-gray-400',
+    outline: 'border-2 border-gray-400 bg-white text-gray-900 hover:bg-gray-50 hover:border-gray-500 focus-visible:ring-blue-600',
+    accent: 'bg-blue-600 text-white hover:bg-blue-700 focus-visible:ring-blue-600 shadow-sm hover:shadow',
+    destructive: 'bg-red-700 text-white hover:bg-red-800 focus-visible:ring-red-600 shadow-sm hover:shadow'
+  };
+  const variantClasses = variantClassMap[variant as ButtonVariant] || variantClassMap.primary;
+
+  const sizeClassMap: Record<ButtonSize, string> = {
     sm: 'h-8 px-3 text-xs',    // Small: 32px height, 12px text
     default: 'h-11 px-6 text-sm', // Default: 44px height, 14px text
     lg: 'h-12 px-8 text-base'       // Large: 48px height, 16px text
-  }[size] || sizeClasses.default;
+  };
+  const sizeClasses = sizeClassMap[size as ButtonSize] || sizeClassMap.default;
   
   const finalClasses = `${baseClasses} ${variantClasses} ${sizeClasses} ${className}`.trim();
   
@@ -69,7 +74,7 @@ export const Button = ({
 
 // Subtle Button - Minimal Style
 export const SubtleButton = ({href, children, className='', ...props}: any) => {
-  const classes = `inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-normal border border-gray-300 bg-white text-gray-800 hover:bg-gray-50 hover:border-gray-400 transition-colors ${className}`;
+  const classes = `inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-normal border border-gray-400 bg-white text-gray-900 hover:bg-gray-50 hover:border-gray-500 transition-colors ${className}`;
 
   return href
     ? <a href={href} className={classes}>{children}</a>
@@ -89,7 +94,7 @@ export const Input = ({
   const baseClasses = `
     flex h-11 w-full rounded-lg border border-gray-300 bg-white px-3 py-2
     text-sm font-normal text-gray-900 placeholder:text-gray-500 transition-colors
-    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500
+    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600
     focus-visible:ring-offset-2 hover:border-gray-400
     disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-50
     file:border-0 file:bg-transparent file:text-sm file:font-normal
@@ -119,7 +124,7 @@ export const Label = ({
   <label 
     htmlFor={htmlFor}
     className={`
-      text-sm font-semibold leading-none text-gray-700
+      text-sm font-semibold leading-none text-gray-800
       peer-disabled:cursor-not-allowed peer-disabled:opacity-70
       ${className}
     `.trim()}
@@ -146,7 +151,7 @@ export const Textarea = ({
   const baseClasses = `
     flex min-h-24 w-full rounded-lg border border-gray-300 bg-white 
     px-3 py-2 text-sm font-normal placeholder:text-gray-500 transition-colors
-    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 
+    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 
     focus-visible:ring-offset-2 hover:border-gray-400 resize-vertical
     disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-50
   `;
@@ -166,16 +171,19 @@ export const Textarea = ({
 };
 
 // Badge Component - Effinity Design System
-export const Badge = ({className='', variant='default', ...props}: any) => {
-  const variantClasses = {
+type BadgeVariant = 'default' | 'secondary' | 'primary' | 'accent' | 'success' | 'warning' | 'danger';
+
+export const Badge = ({className='', variant='default' as BadgeVariant, ...props}: any) => {
+  const variantClassMap: Record<BadgeVariant, string> = {
     default: 'bg-gray-900 text-white',
-    secondary: 'bg-gray-100 text-gray-900',
-    primary: 'bg-blue-600 text-white',
+    secondary: 'bg-gray-200 text-gray-900',
+    primary: 'bg-blue-700 text-white',
     accent: 'bg-blue-500 text-white',
-    success: 'bg-green-600 text-white',
-    warning: 'bg-yellow-600 text-white',
-    danger: 'bg-red-600 text-white'
-  }[variant] || 'bg-gray-900 text-white';
+    success: 'bg-green-700 text-white',
+    warning: 'bg-yellow-700 text-white',
+    danger: 'bg-red-700 text-white'
+  };
+  const variantClasses = variantClassMap[variant as BadgeVariant] || variantClassMap.default;
   
   return <div className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold transition-colors ${variantClasses} ${className}`} {...props} />;
 };
@@ -183,24 +191,27 @@ export const Badge = ({className='', variant='default', ...props}: any) => {
 // Progress Component - Effinity Design System
 export const Progress = ({value = 0, className='', ...props}: any) =>
   <div className={`relative h-2 w-full overflow-hidden rounded-full bg-gray-200 ${className}`} {...props}>
-    <div className="h-full bg-blue-600 transition-all duration-300" style={{width: `${Math.min(100, Math.max(0, value))}%`}} />
+    <div className="h-full bg-blue-700 transition-all duration-300" style={{width: `${Math.min(100, Math.max(0, value))}%`}} />
   </div>;
 
 // Alert Component - Effinity Design System
+type AlertVariant = 'default' | 'destructive' | 'success' | 'warning';
+
 export const Alert = ({
-  className = '', 
-  variant = 'default', 
+  className = '',
+  variant = 'default' as AlertVariant,
   role = 'alert',
   'aria-live': ariaLive = 'polite',
   children,
   ...props
 }: any) => {
-  const variantClasses = {
-    default: 'border-blue-200 text-blue-800 bg-blue-50',
-    destructive: 'border-red-200 text-red-800 bg-red-50',
-    success: 'border-green-200 text-green-800 bg-green-50',
-    warning: 'border-yellow-200 text-yellow-800 bg-yellow-50'
-  }[variant] || 'border-gray-200 text-gray-800 bg-gray-50';
+  const variantClassMap: Record<AlertVariant, string> = {
+    default: 'border-blue-300 text-blue-900 bg-blue-50',
+    destructive: 'border-red-300 text-red-900 bg-red-50',
+    success: 'border-green-300 text-green-900 bg-green-50',
+    warning: 'border-yellow-400 text-yellow-900 bg-yellow-50'
+  };
+  const variantClasses = variantClassMap[variant as AlertVariant] || variantClassMap.default;
   
   return (
     <div 
@@ -228,7 +239,7 @@ export const SkipLink = ({ href = '#main-content', children = 'Skip to main cont
     href={href}
     className={`
       sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 
-      z-50 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white 
+      z-50 rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white 
       transition-all focus-visible:outline-none focus-visible:ring-2 
       focus-visible:ring-white focus-visible:ring-offset-2
       ${className}
@@ -277,23 +288,26 @@ export const FocusTrap = ({ children, className = '', ...props }: any) => (
 );
 
 // Modal Component - EFFINITY Design System
+type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
+
 export const Modal = ({
   isOpen = false,
   onClose,
   children,
   className = '',
-  size = 'md',
+  size = 'md' as ModalSize,
   closeOnOverlayClick = true,
   showCloseButton = true,
   ...props
 }: any) => {
-  const sizeClasses = {
+  const sizeClassMap: Record<ModalSize, string> = {
     sm: 'max-w-md',
     md: 'max-w-2xl',
     lg: 'max-w-4xl',
     xl: 'max-w-6xl',
     full: 'max-w-full mx-4'
-  }[size] || 'max-w-2xl';
+  };
+  const sizeClasses = sizeClassMap[size as ModalSize] || sizeClassMap.md;
 
   if (!isOpen) return null;
 
@@ -317,7 +331,7 @@ export const Modal = ({
           {showCloseButton && (
             <button
               onClick={onClose}
-              className="absolute right-4 top-4 z-10 rounded-lg p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
+              className="absolute right-4 top-4 z-10 rounded-lg p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
               aria-label="Close modal"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -357,10 +371,12 @@ export const ModalFooter = ({ className = '', children, ...props }: any) => (
 );
 
 // Tooltip Component - EFFINITY Design System
+type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
+
 export const Tooltip = ({
   children,
   content,
-  position = 'top',
+  position = 'top' as TooltipPosition,
   className = '',
   delay = 200,
   ...props
@@ -368,19 +384,21 @@ export const Tooltip = ({
   const [isVisible, setIsVisible] = React.useState(false);
   const [timeoutId, setTimeoutId] = React.useState<NodeJS.Timeout | null>(null);
 
-  const positionClasses = {
+  const positionClassMap: Record<TooltipPosition, string> = {
     top: 'bottom-full left-1/2 transform -translate-x-1/2 mb-2',
     bottom: 'top-full left-1/2 transform -translate-x-1/2 mt-2',
     left: 'right-full top-1/2 transform -translate-y-1/2 mr-2',
     right: 'left-full top-1/2 transform -translate-y-1/2 ml-2'
-  }[position] || 'bottom-full left-1/2 transform -translate-x-1/2 mb-2';
+  };
+  const positionClasses = positionClassMap[position as TooltipPosition] || positionClassMap.top;
 
-  const arrowClasses = {
+  const arrowClassMap: Record<TooltipPosition, string> = {
     top: 'top-full left-1/2 transform -translate-x-1/2 border-t-gray-900',
     bottom: 'bottom-full left-1/2 transform -translate-x-1/2 border-b-gray-900',
     left: 'left-full top-1/2 transform -translate-y-1/2 border-l-gray-900',
     right: 'right-full top-1/2 transform -translate-y-1/2 border-r-gray-900'
-  }[position] || 'top-full left-1/2 transform -translate-x-1/2 border-t-gray-900';
+  };
+  const arrowClasses = arrowClassMap[position as TooltipPosition] || arrowClassMap.top;
 
   const showTooltip = () => {
     const id = setTimeout(() => setIsVisible(true), delay);
@@ -419,21 +437,24 @@ export const Tooltip = ({
 };
 
 // Dropdown Component - EFFINITY Design System
+type DropdownPosition = 'bottom-left' | 'bottom-right' | 'top-left' | 'top-right';
+
 export const Dropdown = ({
   trigger,
   children,
   isOpen = false,
   onToggle,
-  position = 'bottom-left',
+  position = 'bottom-left' as DropdownPosition,
   className = '',
   ...props
 }: any) => {
-  const positionClasses = {
+  const positionClassMap: Record<DropdownPosition, string> = {
     'bottom-left': 'top-full left-0 mt-2',
     'bottom-right': 'top-full right-0 mt-2',
     'top-left': 'bottom-full left-0 mb-2',
     'top-right': 'bottom-full right-0 mb-2'
-  }[position] || 'top-full left-0 mt-2';
+  };
+  const positionClasses = positionClassMap[position as DropdownPosition] || positionClassMap['bottom-left'];
 
   return (
     <div className={`relative inline-block ${className}`} {...props}>
@@ -469,7 +490,7 @@ export const DropdownItem = ({
 }: any) => {
   const baseClasses = 'block w-full px-4 py-3 text-left text-sm transition-colors cursor-pointer';
   const stateClasses = disabled
-    ? 'text-gray-400 cursor-not-allowed'
+    ? 'text-gray-500 cursor-not-allowed'
     : destructive
     ? 'text-red-600 hover:bg-red-50'
     : 'text-gray-700 hover:bg-gray-50';
@@ -487,19 +508,24 @@ export const DropdownItem = ({
 };
 
 // Loading Spinner - EFFINITY Design System
-export const Spinner = ({ size = 'md', className = '', color = 'primary', ...props }: any) => {
-  const sizeClasses = {
+type SpinnerSize = 'sm' | 'md' | 'lg' | 'xl';
+type SpinnerColor = 'primary' | 'neutral' | 'white';
+
+export const Spinner = ({ size = 'md' as SpinnerSize, className = '', color = 'primary' as SpinnerColor, ...props }: any) => {
+  const sizeClassMap: Record<SpinnerSize, string> = {
     sm: 'h-4 w-4',
     md: 'h-6 w-6',
     lg: 'h-8 w-8',
     xl: 'h-12 w-12'
-  }[size] || 'h-6 w-6';
+  };
+  const sizeClasses = sizeClassMap[size as SpinnerSize] || sizeClassMap.md;
 
-  const colorClasses = {
+  const colorClassMap: Record<SpinnerColor, string> = {
     primary: 'text-blue-600',
     neutral: 'text-gray-600',
     white: 'text-white'
-  }[color] || 'text-blue-600';
+  };
+  const colorClasses = colorClassMap[color as SpinnerColor] || colorClassMap.primary;
 
   return (
     <div
@@ -560,10 +586,10 @@ export const Select = ({
           aria-expanded={isOpen}
           {...props}
         >
-          <span className={selectedOption ? 'text-gray-900' : 'text-gray-500'}>
+          <span className={selectedOption ? 'text-gray-900' : 'text-gray-600'}>
             {selectedOption?.label || placeholder}
           </span>
-          <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
           </svg>
         </button>

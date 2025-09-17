@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { LanguageProvider, useLanguage } from '@/lib/language-context';
 import { LanguageToggle } from '@/components/language-toggle';
+import NewCampaignModal from '@/components/modals/NewCampaignModal';
 
 type CampaignStatus = 'DRAFT' | 'READY' | 'SCHEDULED' | 'ACTIVE' | 'PAUSED' | 'ARCHIVED' | 'FAILED';
 type CampaignPlatform = 'META' | 'GOOGLE' | 'TIKTOK' | 'LINKEDIN';
@@ -80,6 +81,7 @@ const GOAL_LABELS = {
 function CampaignsClient({ ownerUid }: { ownerUid: string }) {
   const { language } = useLanguage();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [connections, setConnections] = useState<OAuthConnection[]>([]);
@@ -87,6 +89,7 @@ function CampaignsClient({ ownerUid }: { ownerUid: string }) {
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   
+  const [mounted, setMounted] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState<Campaign | null>(null);
   const [showActivationModal, setShowActivationModal] = useState<Campaign | null>(null);
@@ -104,14 +107,32 @@ function CampaignsClient({ ownerUid }: { ownerUid: string }) {
     }
   }, [ownerUid]);
 
+  // Handle client-side mounting
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Handle deep-link for new campaign modal
+  useEffect(() => {
+    if (mounted) {
+      const isNewParam = searchParams?.get('new');
+      if (isNewParam === '1') {
+        setShowCreateModal(true);
+      }
+    }
+  }, [mounted, searchParams]);
+
   const fetchCampaigns = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const response = await fetch(`/api/campaigns?ownerUid=${ownerUid}`, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-org-id': ownerUid,
+        },
       });
 
       if (!response.ok) {
@@ -126,6 +147,11 @@ function CampaignsClient({ ownerUid }: { ownerUid: string }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleNewCampaignSuccess = () => {
+    // Refresh campaigns list to show the new campaign
+    fetchCampaigns();
   };
 
   const fetchConnections = async () => {
@@ -713,14 +739,26 @@ function CampaignsClient({ ownerUid }: { ownerUid: string }) {
           </div>
         </div>
       )}
+
+      {/* New Campaign Modal */}
+      {mounted && (
+        <NewCampaignModal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={handleNewCampaignSuccess}
+          ownerUid={ownerUid}
+        />
+      )}
     </div>
   );
 }
 
-export default function CampaignsPage({ ownerUid }: { ownerUid: string }) {
-  return (
-    <LanguageProvider>
-      <CampaignsClient ownerUid={ownerUid} />
-    </LanguageProvider>
-  );
+interface CampaignsPageProps {
+  ownerUid: string;
+  isAuthLoading?: boolean;
+  user?: any;
+}
+
+export default function CampaignsPage({ ownerUid, isAuthLoading = false, user }: CampaignsPageProps) {
+  return <CampaignsClient ownerUid={ownerUid} />;
 }

@@ -152,13 +152,18 @@ function PropertyPageContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <EffinityHeader 
-        title={property.name}
-        subtitle={property.address && property.city 
-          ? `${property.address}, ${property.city}`
-          : property.city || property.address || (language === 'he' ? 'מיקום לא זמין' : 'Location not available')
-        }
-        rightContent={
+      <EffinityHeader variant="dashboard" />
+
+      {/* Property Header */}
+      <div className="bg-gradient-to-br from-blue-600 to-purple-700 px-6 py-8">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-3xl font-bold text-white mb-2">{property.name}</h1>
+          <p className="text-blue-100 mb-6">
+            {property.address && property.city
+              ? `${property.address}, ${property.city}`
+              : property.city || property.address || (language === 'he' ? 'מיקום לא זמין' : 'Location not available')
+            }
+          </p>
           <div className="flex items-center gap-4">
             <button
               onClick={() => setShowQR(!showQR)}
@@ -173,8 +178,8 @@ function PropertyPageContent() {
               ← {language === 'he' ? 'חזרה לנכסים' : 'Back to Properties'}
             </a>
           </div>
-        }
-      />
+        </div>
+      </div>
 
       <div className="max-w-4xl mx-auto px-6 py-8">
         

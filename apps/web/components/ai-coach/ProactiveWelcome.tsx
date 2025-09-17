@@ -79,7 +79,8 @@ const WELCOME_TRANSLATIONS = {
 };
 
 export default function ProactiveWelcome({ ownerUid, organizationId, onClose, className }: ProactiveWelcomeProps) {
-  const { language, dir } = useLanguage();
+  const { language } = useLanguage();
+  const dir = language === 'he' ? 'rtl' : 'ltr';
   const t = WELCOME_TRANSLATIONS[language];
 
   const [insights, setInsights] = useState<ProactiveInsight[]>([]);
@@ -92,6 +93,12 @@ export default function ProactiveWelcome({ ownerUid, organizationId, onClose, cl
   }, [ownerUid]);
 
   const loadProactiveInsights = async () => {
+    if (!ownerUid) {
+      console.warn('Cannot load proactive insights: ownerUid is required');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
 

@@ -1,6 +1,7 @@
 'use client';
 
-import { getCLS, getFID, getFCP, getLCP, getTTFB, Metric } from 'web-vitals';
+import React from 'react';
+import { onCLS, onFID, onFCP, onLCP, onTTFB, Metric } from 'web-vitals';
 
 interface PerformanceMetrics {
   cls?: number;
@@ -33,11 +34,11 @@ class PerformanceMonitor {
     };
 
     // Collect all Web Vitals
-    getCLS(handleMetric);
-    getFID(handleMetric);
-    getFCP(handleMetric);
-    getLCP(handleMetric);
-    getTTFB(handleMetric);
+    onCLS(handleMetric);
+    onFID(handleMetric);
+    onFCP(handleMetric);
+    onLCP(handleMetric);
+    onTTFB(handleMetric);
   }
 
   private initCustomMetrics() {
@@ -45,9 +46,9 @@ class PerformanceMonitor {
     if ('navigation' in performance) {
       const navTiming = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
       if (navTiming) {
-        const loadTime = navTiming.loadEventEnd - navTiming.navigationStart;
-        const domContentLoaded = navTiming.domContentLoadedEventEnd - navTiming.navigationStart;
-        const timeToInteractive = navTiming.loadEventEnd - navTiming.navigationStart;
+        const loadTime = navTiming.loadEventEnd - navTiming.startTime;
+        const domContentLoaded = navTiming.domContentLoadedEventEnd - navTiming.startTime;
+        const timeToInteractive = navTiming.loadEventEnd - navTiming.startTime;
 
         this.logMetric('Page Load Time', loadTime);
         this.logMetric('DOM Content Loaded', domContentLoaded);
@@ -85,8 +86,8 @@ class PerformanceMonitor {
     };
 
     // Example: send to Google Analytics 4
-    if (typeof gtag !== 'undefined') {
-      gtag('event', 'web_vitals', {
+    if (typeof window !== 'undefined' && 'gtag' in window) {
+      (window as any).gtag('event', 'web_vitals', {
         custom_parameter_1: metric.name,
         custom_parameter_2: metric.value,
         custom_parameter_3: this.getMetricRating(metric)
@@ -292,13 +293,18 @@ export async function trackFetch(url: string, options?: RequestInit) {
 // Bundle analyzer utilities for development
 export function analyzeBundleSize() {
   if (process.env.NODE_ENV === 'development') {
-    import('webpack-bundle-analyzer')
-      .then(({ BundleAnalyzerPlugin }) => {
-        console.log('Bundle analyzer loaded. Run npm run analyze to see bundle composition.');
-      })
-      .catch(() => {
-        console.log('Bundle analyzer not available in this environment.');
-      });
+    try {
+      // @ts-ignore
+      import('webpack-bundle-analyzer')
+        .then(({ BundleAnalyzerPlugin }: any) => {
+          console.log('Bundle analyzer loaded. Run npm run analyze to see bundle composition.');
+        })
+        .catch(() => {
+          console.log('Bundle analyzer not available in this environment.');
+        });
+    } catch {
+      console.log('Bundle analyzer not available in this environment.');
+    }
   }
 }
 

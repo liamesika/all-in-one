@@ -45,30 +45,37 @@ export function LanguageToggle() {
 
 // Alternative dropdown version for future enhancement
 export function LanguageDropdown() {
-  const { language, setLanguage } = useLanguage();
-  
+  const { language, toggleLanguage } = useLanguage();
+
   const languages = [
     { code: 'en', label: 'English', nativeLabel: 'English' },
     { code: 'he', label: 'Hebrew', nativeLabel: 'עברית' }
   ];
-  
+
+  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newLanguage = e.target.value as 'en' | 'he';
+    if (newLanguage !== language) {
+      toggleLanguage();
+    }
+  };
+
   return (
     <div className="relative">
       <select
         value={language}
-        onChange={(e) => setLanguage(e.target.value as 'en' | 'he')}
+        onChange={handleLanguageChange}
         className="
-          appearance-none bg-white/10 hover:bg-white/20 rounded-lg 
+          appearance-none bg-white/10 hover:bg-white/20 rounded-lg
           px-4 py-2 pr-8 text-white font-medium border border-white/20
-          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white 
+          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white
           focus-visible:ring-offset-2 focus-visible:ring-offset-blue-800
           cursor-pointer transition-all duration-200 min-h-[40px]
         "
         aria-label="Select language"
       >
         {languages.map((lang) => (
-          <option 
-            key={lang.code} 
+          <option
+            key={lang.code}
             value={lang.code}
             className="bg-blue-800 text-white"
           >
@@ -76,8 +83,8 @@ export function LanguageDropdown() {
           </option>
         ))}
       </select>
-      <ChevronDown 
-        className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 opacity-70 pointer-events-none" 
+      <ChevronDown
+        className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 opacity-70 pointer-events-none"
         aria-hidden="true"
       />
     </div>

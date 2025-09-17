@@ -1,13 +1,57 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '../components/ui';
 import EffinityHeader from '../components/effinity-header';
+import { useAuth } from '../lib/auth-context';
 
 type Industry = 'ecommerce' | 'realestate' | 'law';
 
 export default function LandingPage() {
   const [industry, setIndustry] = useState<Industry>('ecommerce');
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  // Redirect logged-in users to their dashboard
+  useEffect(() => {
+    if (!loading && user) {
+      // Determine dashboard based on user preferences or default to e-commerce
+      const userDashboard = determineUserDashboard(user);
+      router.replace(userDashboard);
+    }
+  }, [user, loading, router]);
+
+  // Helper function to determine which dashboard to redirect to
+  const determineUserDashboard = (user: any) => {
+    // You can extend this logic based on user preferences, roles, or other criteria
+    // For now, we'll check localStorage for the last visited dashboard or default to e-commerce
+    const lastDashboard = localStorage.getItem('lastDashboard');
+
+    if (lastDashboard && ['/e-commerce/dashboard', '/real-estate/dashboard', '/law/dashboard'].includes(lastDashboard)) {
+      return lastDashboard;
+    }
+
+    // Default to e-commerce dashboard
+    return '/e-commerce/dashboard';
+  };
+
+  // Show loading state while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Only render landing page for non-authenticated users
+  if (user) {
+    return null; // Will redirect in useEffect
+  }
 
   return (
     <div className="min-h-screen bg-white text-gray-900 flex flex-col">
@@ -40,7 +84,7 @@ export default function LandingPage() {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row justify-center gap-4 mb-16 animate-fade-in-3">
             <Button
-              href="#industries"
+              href="/register"
               variant="primary"
               size="lg"
               className="shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 px-8 py-4"
@@ -48,18 +92,18 @@ export default function LandingPage() {
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
-              Explore Solutions
+              Get Started Free
             </Button>
             <Button
-              href="#contact"
+              href="/login"
               variant="outline"
               size="lg"
               className="shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 px-8 py-4"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
               </svg>
-              Get Started
+              Sign In
             </Button>
           </div>
           

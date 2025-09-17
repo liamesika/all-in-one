@@ -25,8 +25,7 @@
     "jsx": "preserve",
     "types": [
       "node",
-      "jest",
-      "@testing-library/jest-dom"
+      "jest"
     ],
     "plugins": [
       {

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { memo, useCallback, useMemo, useState, useEffect } from 'react';
-import { FixedSizeList as List } from 'react-window';
+import { FixedSizeList } from 'react-window';
 import { useLanguage } from '@/lib/language-context';
 import { Pagination } from '@/components/ui/pagination';
 import { LazyImage, LoadingSpinner } from './lazy-loading';
@@ -378,23 +378,7 @@ export const OptimizedPropertiesTable = memo(function OptimizedPropertiesTable({
             </tr>
           </thead>
           
-          {virtualScrolling && properties.length > 10 ? (
-            <tbody>
-              <tr>
-                <td colSpan={6} className="p-0">
-                  <List
-                    height={Math.min(maxHeight, properties.length * itemHeight)}
-                    itemCount={properties.length}
-                    itemSize={itemHeight}
-                    itemData={virtualListData}
-                  >
-                    {VirtualRow}
-                  </List>
-                </td>
-              </tr>
-            </tbody>
-          ) : (
-            <tbody>
+          <tbody>
               {properties.map((property, index) => (
                 <PropertyRow
                   key={property.id}
@@ -408,7 +392,6 @@ export const OptimizedPropertiesTable = memo(function OptimizedPropertiesTable({
                 />
               ))}
             </tbody>
-          )}
         </table>
       </div>
 

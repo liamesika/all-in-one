@@ -102,6 +102,11 @@ function IntakeClient({ ownerUid }: { ownerUid: string }) {
   }, [ownerUid]);
 
   const fetchSourceHealth = async () => {
+    if (!ownerUid) {
+      console.warn('Cannot fetch source health: ownerUid is required');
+      return;
+    }
+
     try {
       const response = await fetch(`/api/leads/source-health?ownerUid=${ownerUid}`);
       if (response.ok) {
@@ -114,6 +119,11 @@ function IntakeClient({ ownerUid }: { ownerUid: string }) {
   };
 
   const fetchImportHistory = async () => {
+    if (!ownerUid) {
+      console.warn('Cannot fetch import history: ownerUid is required');
+      return;
+    }
+
     try {
       const response = await fetch(`/api/leads/import-history?ownerUid=${ownerUid}`);
       if (response.ok) {

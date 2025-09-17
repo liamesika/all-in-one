@@ -54,8 +54,47 @@ function LoginForm() {
       if (nextUrl) {
         router.push(nextUrl);
       } else {
-        // Default redirect to e-commerce dashboard
-        router.push('/e-commerce/dashboard');
+        // Get user's business vertical and redirect to correct dashboard
+        try {
+          const token = await getIdToken();
+          const response = await fetch('/api/user/profile', {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (response.ok) {
+            const profile = await response.json();
+            const vertical = profile.defaultVertical;
+
+            console.log('🔍 User business vertical:', vertical);
+
+            // Redirect based on user's chosen business vertical
+            if (vertical === 'REAL_ESTATE') {
+              console.log('🔍 Redirecting to: /real-estate/dashboard');
+              router.push('/real-estate/dashboard');
+            } else if (vertical === 'E_COMMERCE') {
+              console.log('🔍 Redirecting to: /e-commerce/dashboard');
+              router.push('/e-commerce/dashboard');
+            } else if (vertical === 'LAW') {
+              console.log('🔍 Redirecting to: /law/dashboard');
+              router.push('/law/dashboard');
+            } else {
+              // Fallback to e-commerce if vertical is unknown
+              console.warn('🔍 Unknown vertical, defaulting to e-commerce');
+              router.push('/e-commerce/dashboard');
+            }
+          } else {
+            // Fallback to e-commerce if profile fetch fails
+            console.warn('🔍 Failed to fetch user profile, defaulting to e-commerce');
+            router.push('/e-commerce/dashboard');
+          }
+        } catch (error) {
+          // Fallback to e-commerce if any error occurs
+          console.error('🔍 Error fetching user profile:', error);
+          router.push('/e-commerce/dashboard');
+        }
       }
     } catch (error: any) {
       console.error('Login error:', error);

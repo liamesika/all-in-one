@@ -40,8 +40,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const cookieStore = await cookies();
   const h = await headers();
 
-  // עדיפויות: cookie 'lang' -> Accept-Language -> 'he'
-  const cookieLang = (cookieStore.get('lang')?.value ?? '') as 'he' | 'en' | '';
+  // עדיפויות: cookie 'language' -> cookie 'lang' -> Accept-Language -> 'he'
+  const cookieLang = (cookieStore.get('language')?.value ?? cookieStore.get('lang')?.value ?? '') as 'he' | 'en' | '';
   const accept = (h.get('accept-language') || '').toLowerCase();
   const acceptLang = accept.startsWith('he') ? 'he' : accept.startsWith('en') ? 'en' : '';
 
@@ -53,7 +53,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const dir = lang === 'he' ? 'rtl' : 'ltr';
 
   return (
-    <html lang={lang} dir={dir}>
+    <html lang={lang} dir={dir} suppressHydrationWarning>
       <head>
         {/* Preconnect to external domains for better performance */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />

@@ -166,7 +166,7 @@ class ErrorBoundary extends React.Component<
     
     // Track error with performance monitoring
     if (typeof window !== 'undefined') {
-      import('../lib/performance').then(({ trackError }) => {
+      import('../../lib/performance').then(({ trackError }) => {
         trackError(error, 'lazy-component-boundary');
       });
     }
@@ -183,9 +183,7 @@ class ErrorBoundary extends React.Component<
 
 // Pre-configured lazy components with optimized loading
 export const LazyPropertyImport = dynamic(
-  () => import('../PropertyImport').catch(() => ({ 
-    default: () => <div>Failed to load PropertyImport</div> 
-  })),
+  () => import('../PropertyImport').then(mod => ({ default: mod.PropertyImport })),
   {
     loading: () => <ModalSkeleton />,
     ssr: false, // Don't render on server

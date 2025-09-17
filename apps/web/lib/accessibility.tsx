@@ -257,16 +257,8 @@ export function A11yTester({ enabled = process.env.NODE_ENV === 'development' }:
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.ctrlKey && event.shiftKey && event.key === 'A') {
         console.log('Running accessibility audit...');
-        // Manual axe audit trigger
-        import('@axe-core/core').then(axe => {
-          axe.default.run().then(results => {
-            if (results.violations.length === 0) {
-              console.log('✅ No accessibility violations found!');
-            } else {
-              console.log('❌ Accessibility violations:', results.violations);
-            }
-          });
-        });
+        // Manual axe audit trigger (install @axe-core/core to enable)
+        console.log('ℹ️ Install @axe-core/core to enable accessibility auditing');
       }
     };
     

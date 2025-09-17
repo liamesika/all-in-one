@@ -15,7 +15,23 @@ export default function RegisterForm() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setErr(null); setLoading(true);
+    setErr(null);
+
+    // Basic client-side validation
+    if (!email.trim()) {
+      setErr('Please enter your email address.');
+      return;
+    }
+    if (!password.trim()) {
+      setErr('Please enter a password.');
+      return;
+    }
+    if (password.length < 6) {
+      setErr('Password must be at least 6 characters long.');
+      return;
+    }
+
+    setLoading(true);
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       const idToken = await cred.user.getIdToken();
@@ -26,8 +42,25 @@ export default function RegisterForm() {
       });
       if (!r.ok) throw new Error('session');
       router.push(next);
-    } catch {
-      setErr('Registration failed');
+    } catch (error: any) {
+      console.error('Registration error:', error);
+
+      // Handle specific Firebase auth errors
+      if (error?.code === 'auth/email-already-in-use') {
+        setErr('This email is already registered. Please use a different email or try logging in.');
+      } else if (error?.code === 'auth/weak-password') {
+        setErr('Password is too weak. Please use at least 6 characters.');
+      } else if (error?.code === 'auth/invalid-email') {
+        setErr('Please enter a valid email address.');
+      } else if (error?.code === 'auth/operation-not-allowed') {
+        setErr('Email registration is not enabled. Please contact support.');
+      } else if (error?.message === 'session') {
+        setErr('Registration successful but session creation failed. Please try logging in.');
+      } else if (error?.message?.includes('Firebase authentication not configured')) {
+        setErr('Authentication service is not configured. Please contact support.');
+      } else {
+        setErr('Registration failed. Please try again.');
+      }
     } finally { setLoading(false); }
   }
 
@@ -40,12 +73,12 @@ export default function RegisterForm() {
           <label className="block text-sm">
             <span className="mb-1 block opacity-80">Email</span>
             <input className="w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2 outline-none focus:border-white/30"
-                   placeholder="you@example.com" value={email} onChange={e=>setEmail(e.target.value)} inputMode="email" />
+                   type="email" placeholder="you@example.com" value={email} onChange={e=>setEmail(e.target.value)} inputMode="email" required />
           </label>
           <label className="block text-sm">
             <span className="mb-1 block opacity-80">Password</span>
             <input className="w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2 outline-none focus:border-white/30"
-                   placeholder="Choose a password" type="password" value={password} onChange={e=>setPassword(e.target.value)} />
+                   placeholder="Choose a password" type="password" value={password} onChange={e=>setPassword(e.target.value)} minLength={6} required />
           </label>
           {err && <div className="text-sm text-rose-300">{err}</div>}
           <button disabled={loading} className="w-full rounded-xl bg-white text-black py-2.5 text-sm font-medium hover:opacity-90 disabled:opacity-60">

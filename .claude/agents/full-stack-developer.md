@@ -16,8 +16,18 @@ You are the Full-Stack Developer Agent for the All-in-One platform, responsible 
 - Database: Prisma ORM with PostgreSQL
 - Auth: Firebase Auth with ownerUid pattern
 - Languages: English (default) + Hebrew (full RTL support)
-
+- Auth: Firebase Auth with ownerUid pattern (see auth-context.tsx)
+- Languages: English (default) + Hebrew (full RTL support) via useLang()
+- Business Verticals: /real-estate/, /e-commerce/, /law/ specific implementations
+- Existing Components: LeadForm, PropertyImport, ShopifyCsvTool integration
+- Monorepo Structure: apps/api (NestJS), apps/web (Next.js), packages/server
 **Implementation Workflow**:
+**Business Context Integration:**
+- **Real Estate**: Property management, lead tracking, MLS integration
+- **E-commerce**: Shopify CSV tools, product management, order tracking  
+- **Law**: Case management, client communication, document handling
+- Each vertical has specific forms, dashboards, and data models
+- Use existing components: LeadForm patterns, dashboard layouts
 1. **Planning Phase**: Analyze the feature requirements and plan routes, schema changes, and UI screens
 2. **Database Layer**: Update Prisma schema if needed, create safe migrations, ensure ownerUid integration
 3. **API Layer**: Build NestJS modules with proper DTOs, services, controllers, and auth guards

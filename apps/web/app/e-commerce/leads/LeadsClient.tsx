@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { LanguageProvider, useLanguage } from '@/lib/language-context';
 import { LanguageToggle } from '@/components/language-toggle';
+import NewLeadModal from '@/components/modals/NewLeadModal';
 
 // Lead types based on our new schema
 type LeadScore = 'HOT' | 'WARM' | 'COLD';
@@ -91,10 +92,19 @@ const SOURCE_LABELS = {
   OTHER: 'Other',
 };
 
-function LeadsClient({ ownerUid }: { ownerUid: string }) {
+interface LeadsClientProps {
+  ownerUid: string;
+  isAuthLoading?: boolean;
+  user?: any;
+}
+
+function LeadsClient({ ownerUid, isAuthLoading = false, user }: LeadsClientProps) {
   const { language } = useLanguage();
   const router = useRouter();
-  
+  const searchParams = useSearchParams();
+
+  // Prevent hydration issues with modal
+  const [mounted, setMounted] = useState(false);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -104,11 +114,26 @@ function LeadsClient({ ownerUid }: { ownerUid: string }) {
   const [totalPages, setTotalPages] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const [showNewLeadModal, setShowNewLeadModal] = useState(false);
+
+  // Check for new=1 parameter after mounting
+  useEffect(() => {
+    setMounted(true);
+    if (searchParams?.get('new') === '1') {
+      setShowNewLeadModal(true);
+    }
+  }, [searchParams]);
 
   const fetchLeads = async (page = 1) => {
+    if (!ownerUid) {
+      console.warn('Cannot fetch leads: ownerUid is required');
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
-    
+
     try {
       const params = new URLSearchParams({
         ownerUid,
@@ -150,6 +175,11 @@ function LeadsClient({ ownerUid }: { ownerUid: string }) {
   };
 
   const updateLeadStatus = async (leadId: string, status: LeadStage) => {
+    if (!ownerUid) {
+      console.warn('Cannot update lead status: ownerUid is required');
+      return;
+    }
+
     try {
       const response = await fetch(`/api/leads/${leadId}/status`, {
         method: 'PUT',
@@ -169,6 +199,11 @@ function LeadsClient({ ownerUid }: { ownerUid: string }) {
   };
 
   const recordFirstContact = async (leadId: string) => {
+    if (!ownerUid) {
+      console.warn('Cannot record first contact: ownerUid is required');
+      return;
+    }
+
     try {
       const response = await fetch(`/api/leads/${leadId}/first-contact`, {
         method: 'POST',
@@ -191,7 +226,67 @@ function LeadsClient({ ownerUid }: { ownerUid: string }) {
     if (ownerUid) {
       fetchLeads(1);
     }
-  }, [ownerUid, filters]);
+  }, [ownerUid, filters.source, filters.status, filters.score, filters.search, filters.dateFrom, filters.dateTo, filters.isDuplicate, filters.campaignId, filters.hasFirstContact, filters.platform]);
+
+  // Handle deep-link for new lead modal with robust detection
+  useEffect(() => {
+    console.log('[DEBUG] LeadsClient useEffect triggered, searchParams:', searchParams?.toString());
+
+    const checkForNewParam = () => {
+      // Check searchParams first
+      const isNewParam = searchParams?.get('new');
+      console.log('[DEBUG] LeadsClient checking new param:', isNewParam, 'current showNewLeadModal:', showNewLeadModal);
+      if (isNewParam === '1') {
+        console.log('[DEBUG] LeadsClient setting modal to true');
+        setShowNewLeadModal(true);
+        return;
+      }
+
+      // Fallback: check window.location.search directly
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const newParam = urlParams.get('new');
+        console.log('[DEBUG] LeadsClient fallback check:', newParam);
+        if (newParam === '1') {
+          console.log('[DEBUG] LeadsClient setting modal to true via fallback');
+          setShowNewLeadModal(true);
+        }
+      }
+    };
+
+    // Check immediately
+    checkForNewParam();
+
+    // Also check after a short delay to handle navigation timing
+    const timer = setTimeout(checkForNewParam, 200);
+
+    return () => clearTimeout(timer);
+  }, [searchParams, showNewLeadModal]);
+
+  const handleOpenNewLeadModal = () => {
+    setShowNewLeadModal(true);
+    // Update URL to include ?new=1 for deep-linking
+    if (typeof window !== 'undefined') {
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set('new', '1');
+      window.history.pushState({}, '', newUrl.toString());
+    }
+  };
+
+  const handleCloseNewLeadModal = () => {
+    setShowNewLeadModal(false);
+    // Remove ?new=1 from URL
+    if (typeof window !== 'undefined') {
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('new');
+      window.history.pushState({}, '', newUrl.toString());
+    }
+  };
+
+  const handleNewLeadSuccess = () => {
+    // Refresh leads list to show the new lead
+    fetchLeads(currentPage);
+  };
 
   const filteredAndSortedLeads = useMemo(() => {
     return [...leads].sort((a, b) => {
@@ -232,16 +327,8 @@ function LeadsClient({ ownerUid }: { ownerUid: string }) {
     return `https://wa.me/${formatted}`;
   };
 
-  if (!ownerUid) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Authentication Required</h1>
-          <p className="text-gray-600 mt-2">Please log in to view leads</p>
-        </div>
-      </div>
-    );
-  }
+
+  const isPageDisabled = isAuthLoading || !ownerUid;
 
   return (
     <div className={`min-h-screen bg-gray-50 ${language === 'he' ? 'rtl' : 'ltr'}`}>
@@ -253,11 +340,20 @@ function LeadsClient({ ownerUid }: { ownerUid: string }) {
               <h1 className="text-2xl font-bold text-gray-900">
                 {language === 'he' ? 'לידים' : 'Leads'}
               </h1>
-              <span className="text-sm text-gray-500">
-                {leads.length} {language === 'he' ? 'לידים' : 'leads'}
-              </span>
+              {!isPageDisabled && (
+                <span className="text-sm text-gray-500">
+                  {leads.length} {language === 'he' ? 'לידים' : 'leads'}
+                </span>
+              )}
+              {/* Loading indicator in header */}
+              {isAuthLoading && (
+                <div className="flex items-center text-blue-600">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent mr-2"></div>
+                  <span className="text-sm font-medium">Loading...</span>
+                </div>
+              )}
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <LanguageToggle />
               
@@ -295,8 +391,9 @@ function LeadsClient({ ownerUid }: { ownerUid: string }) {
               
               {/* Add Lead Button */}
               <button
-                onClick={() => router.push('/e-commerce/leads/new')}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+                onClick={handleOpenNewLeadModal}
+                disabled={isPageDisabled}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm transition-opacity"
               >
                 {language === 'he' ? 'הוסף ליד' : 'Add Lead'}
               </button>
@@ -647,14 +744,31 @@ function LeadsClient({ ownerUid }: { ownerUid: string }) {
           </>
         )}
       </div>
+
+      {/* New Lead Form - Inline with opacity background */}
+      {showNewLeadModal && (
+        <div className="fixed inset-0 z-40 bg-black bg-opacity-40">
+          <div className="min-h-screen p-4 overflow-y-auto">
+            <NewLeadModal
+              isOpen={showNewLeadModal}
+              onClose={handleCloseNewLeadModal}
+              onSuccess={handleNewLeadSuccess}
+              ownerUid={ownerUid || 'test-owner'}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-export default function LeadsPage({ ownerUid }: { ownerUid: string }) {
-  return (
-    <LanguageProvider>
-      <LeadsClient ownerUid={ownerUid} />
-    </LanguageProvider>
-  );
+interface LeadsPageProps {
+  ownerUid: string;
+  isAuthLoading?: boolean;
+  user?: any;
+}
+
+export default function LeadsPage({ ownerUid, isAuthLoading = false, user }: LeadsPageProps) {
+  console.log('[DEBUG] LeadsPage wrapper rendering with ownerUid:', ownerUid);
+  return <LeadsClient ownerUid={ownerUid} isAuthLoading={isAuthLoading} user={user} />;
 }

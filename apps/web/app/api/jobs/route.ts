@@ -107,6 +107,12 @@ export async function GET(req: Request) {
     const totalCount = filteredJobs.length;
     const totalPages = Math.ceil(totalCount / limit);
 
+    // Check if client wants just the array (for dashboard compatibility)
+    const acceptHeader = req.headers.get('accept');
+    if (acceptHeader?.includes('application/json-array')) {
+      return NextResponse.json(paginatedJobs);
+    }
+
     return NextResponse.json({
       success: true,
       jobs: paginatedJobs,
@@ -121,6 +127,13 @@ export async function GET(req: Request) {
     });
   } catch (error: any) {
     console.error('Jobs API error:', error);
+
+    // Return empty array for compatible clients, error object for others
+    const acceptHeader = req.headers.get('accept');
+    if (acceptHeader?.includes('application/json-array')) {
+      return NextResponse.json([]);
+    }
+
     return NextResponse.json(
       { error: error?.message || 'Failed to fetch jobs' },
       { status: 500 }

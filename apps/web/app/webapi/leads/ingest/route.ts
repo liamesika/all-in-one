@@ -8,7 +8,7 @@ const LeadSchema = z.object({
   phone: z.string().optional().nullable(),
   interest: z.enum(['ecommerce','real_estate','law']).optional(),
   budget: z.number().int().optional(),
-  source: z.string().default('website'),
+  source: z.string().default('OTHER'),
   utm: z.record(z.string()).optional(),
   consent: z.boolean().default(true),
 });

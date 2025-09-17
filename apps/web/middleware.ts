@@ -2,7 +2,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
 // דפים ציבוריים שלא דורשים סשן
-const PUBLIC: string[] = ['/', '/login', '/register', '/_not-found', '/industries'];
+const PUBLIC: string[] = ['/login', '/register', '/_not-found', '/industries'];
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;

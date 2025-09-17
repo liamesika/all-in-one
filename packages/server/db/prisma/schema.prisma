@@ -1,4 +1,4 @@
-// apps/api/prisma/schema.prisma
+// packages/server/db/prisma/schema.prisma
 // Monorepo-friendly: generate client into root node_modules so all apps share it
 generator client {
   provider = "prisma-client-js"
@@ -254,12 +254,12 @@ model User {
   updatedAt    DateTime @updatedAt
 
   // Relations
-  memberships     Membership[]
-  userProfile     UserProfile?
-  ownedOrgs       Organization[]
+  memberships        Membership[]
+  userProfile        UserProfile?
+  ownedOrgs          Organization[]
   emailVerifications EmailVerification[]
-  tasks           Task[]
-  messages        Message[]
+  tasks              Task[]
+  messages           Message[]
 
   @@index([email])
 }
@@ -296,12 +296,12 @@ model Membership {
 }
 
 model UserProfile {
-  userId          String    @id
+  userId          String   @id
   defaultVertical Vertical
   termsConsentAt  DateTime
   termsVersion    String
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -335,13 +335,13 @@ model RealEstateLeadEvent {
 }
 
 model Property {
-  id       String  @id @default(cuid())
-  ownerUid String
-  name     String
-  address  String?
-  city     String?
+  id           String  @id @default(cuid())
+  ownerUid     String
+  name         String
+  address      String?
+  city         String?
   neighborhood String?
-  description String?
+  description  String?
 
   // חשוב: שיהיה מסוג enum ולא String:
   status PropertyStatus @default(DRAFT)
@@ -357,17 +357,17 @@ model Property {
   agentName  String?
   agentPhone String?
   photosJson Json?
-  
+
   // Import and sync tracking
-  provider       PropertyProvider @default(MANUAL)
-  externalId     String?          // Original listing ID from Yad2/Madlan
-  externalUrl    String?          // Original listing URL
-  syncStatus     SyncStatus       @default(IDLE)
-  lastSyncAt     DateTime?
-  lastSyncError  String?
-  syncData       Json?            // Store original scraped data
-  needsReview    Boolean          @default(false)
-  
+  provider      PropertyProvider @default(MANUAL)
+  externalId    String? // Original listing ID from Yad2/Madlan
+  externalUrl   String? // Original listing URL
+  syncStatus    SyncStatus       @default(IDLE)
+  lastSyncAt    DateTime?
+  lastSyncError String?
+  syncData      Json? // Store original scraped data
+  needsReview   Boolean          @default(false)
+
   // SEO fields
   seoTitle       String?
   seoDescription String?
@@ -394,7 +394,7 @@ model PropertyPhoto {
   id         String @id @default(cuid())
   url        String
   propertyId String
-  sortIndex  Int?     @default(0)
+  sortIndex  Int?   @default(0)
 
   // 🔽 ודא שם-יחס עקבי + opposite relation קיים ב-Property
   property Property @relation(name: "PropertyToPhotos", fields: [propertyId], references: [id], onDelete: Cascade)
@@ -434,36 +434,36 @@ model RealEstateLead {
 
 // Property import batch tracking
 model PropertyImportBatch {
-  id           String   @id @default(cuid())
-  ownerUid     String
-  
+  id       String @id @default(cuid())
+  ownerUid String
+
   // Import source and type
-  source       PropertyProvider // YAD2, MADLAN, MANUAL
-  importType   String           // 'single_url', 'bulk_urls', 'csv'
-  filename     String?          // For CSV uploads
-  
+  source     PropertyProvider // YAD2, MADLAN, MANUAL
+  importType String // 'single_url', 'bulk_urls', 'csv'
+  filename   String? // For CSV uploads
+
   // URLs being imported (for single/bulk URL imports)
-  urls         Json?            // Array of URLs for bulk imports
-  
+  urls Json? // Array of URLs for bulk imports
+
   // Import statistics
-  totalItems   Int              @default(0)
-  importedItems Int             @default(0)
-  updatedItems Int              @default(0)
-  duplicateItems Int            @default(0)
-  errorItems   Int              @default(0)
-  
+  totalItems     Int @default(0)
+  importedItems  Int @default(0)
+  updatedItems   Int @default(0)
+  duplicateItems Int @default(0)
+  errorItems     Int @default(0)
+
   // Status and error tracking
-  status       String           @default("pending") // pending, processing, completed, failed
-  errors       Json?            // Array of error messages with details
-  summary      Json?            // Detailed import results
-  
+  status  String @default("pending") // pending, processing, completed, failed
+  errors  Json? // Array of error messages with details
+  summary Json? // Detailed import results
+
   // Progress tracking
-  progress     Int              @default(0) // 0-100 percentage
-  currentItem  String?          // Currently processing item
-  
-  createdAt    DateTime         @default(now())
-  completedAt  DateTime?
-  
+  progress    Int     @default(0) // 0-100 percentage
+  currentItem String? // Currently processing item
+
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
   @@index([ownerUid])
   @@index([status])
   @@index([source])
@@ -486,70 +486,69 @@ model Client {
   @@index([ownerUid, stage])
 }
 
-
 // E-commerce Lead Management System
 model EcommerceLead {
-  id           String   @id @default(cuid())
-  ownerUid     String
-  externalId   String?  // For deduplication across sources
-  
+  id         String  @id @default(cuid())
+  ownerUid   String
+  externalId String? // For deduplication across sources
+
   // Contact Information
-  fullName     String?
-  firstName    String?
-  lastName     String?
-  phone        String?
-  email        String?
-  city         String?
-  address      String?
-  
+  fullName  String?
+  firstName String?
+  lastName  String?
+  phone     String?
+  email     String?
+  city      String?
+  address   String?
+
   // Lead Management
-  status       LeadStage  @default(NEW)
-  score        LeadScore  @default(COLD)
-  source       LeadSource @default(MANUAL)
-  sourceName   String?    // Campaign/Ad name or specific source identifier
-  assigneeId   String?    // User ID of assigned salesperson
-  
+  status     LeadStage  @default(NEW)
+  score      LeadScore  @default(COLD)
+  source     LeadSource @default(MANUAL)
+  sourceName String? // Campaign/Ad name or specific source identifier
+  assigneeId String? // User ID of assigned salesperson
+
   // Business Context
-  budget       Decimal?   @db.Decimal(12, 2)
-  interests    Json?      // Array of interests or product categories
-  notes        String?
-  
+  budget    Decimal? @db.Decimal(12, 2)
+  interests Json? // Array of interests or product categories
+  notes     String?
+
   // UTM and Tracking
-  utmSource    String?
-  utmMedium    String?
-  utmCampaign  String?
-  utmTerm      String?
-  utmContent   String?
-  
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  utmTerm     String?
+  utmContent  String?
+
   // Validation and Quality
-  phoneValid   FieldValidationStatus @default(PENDING)
-  emailValid   FieldValidationStatus @default(PENDING)
-  
+  phoneValid FieldValidationStatus @default(PENDING)
+  emailValid FieldValidationStatus @default(PENDING)
+
   // Timing
-  firstContactAt DateTime?  // When first outbound/inbound touch happened
+  firstContactAt DateTime? // When first outbound/inbound touch happened
   lastContactAt  DateTime?
-  
+
   // Deduplication
-  duplicateOfId  String?
-  duplicateOf    EcommerceLead? @relation("LeadDuplicates", fields: [duplicateOfId], references: [id])
-  duplicates     EcommerceLead[] @relation("LeadDuplicates")
-  isDuplicate    Boolean @default(false)
-  
+  duplicateOfId String?
+  duplicateOf   EcommerceLead?  @relation("LeadDuplicates", fields: [duplicateOfId], references: [id])
+  duplicates    EcommerceLead[] @relation("LeadDuplicates")
+  isDuplicate   Boolean         @default(false)
+
   // Timestamps
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Campaign Attribution
   campaignId      String?
-  platformAdSetId String?  // Platform-specific adset ID
-  
+  platformAdSetId String? // Platform-specific adset ID
+
   // Relations
-  events       LeadEvent[]
-  activities   LeadActivity[]
-  campaign     Campaign?   @relation("CampaignLeads", fields: [campaignId], references: [id])
-  followups    AutoFollowupExecution[]
-  sales        Sale[]
-  
+  events     LeadEvent[]
+  activities LeadActivity[]
+  campaign   Campaign?               @relation("CampaignLeads", fields: [campaignId], references: [id])
+  followups  AutoFollowupExecution[]
+  sales      Sale[]
+
   @@unique([ownerUid, externalId, source]) // Prevent exact duplicates
   // Performance-critical indexes for dashboard queries
   @@index([ownerUid, status])
@@ -570,15 +569,15 @@ model EcommerceLead {
 
 // Lead Event tracking (for timeline and analytics)
 model LeadEvent {
-  id        String         @id @default(cuid())
-  leadId    String
-  lead      EcommerceLead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  
-  type      String         // 'created', 'scored', 'contacted', 'status_changed', 'assigned', etc.
-  data      Json?          // Event-specific data
-  userId    String?        // User who triggered the event
-  createdAt DateTime       @default(now())
-  
+  id     String        @id @default(cuid())
+  leadId String
+  lead   EcommerceLead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  type      String // 'created', 'scored', 'contacted', 'status_changed', 'assigned', etc.
+  data      Json? // Event-specific data
+  userId    String? // User who triggered the event
+  createdAt DateTime @default(now())
+
   @@index([leadId])
   @@index([type])
   @@index([createdAt])
@@ -586,21 +585,21 @@ model LeadEvent {
 
 // Lead Activities (calls, emails, meetings)
 model LeadActivity {
-  id         String        @id @default(cuid())
-  leadId     String
-  lead       EcommerceLead @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  
-  type       String        // 'call', 'email', 'meeting', 'whatsapp', etc.
-  subject    String?
-  content    String?
-  direction  String?       // 'inbound' or 'outbound'
-  userId     String?       // User who performed the activity
-  
+  id     String        @id @default(cuid())
+  leadId String
+  lead   EcommerceLead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  type      String // 'call', 'email', 'meeting', 'whatsapp', etc.
+  subject   String?
+  content   String?
+  direction String? // 'inbound' or 'outbound'
+  userId    String? // User who performed the activity
+
   scheduledAt DateTime?
   completedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
   @@index([leadId])
   @@index([type])
   @@index([scheduledAt])
@@ -609,24 +608,24 @@ model LeadActivity {
 
 // Import batches for tracking CSV/Sheets imports
 model LeadImportBatch {
-  id           String   @id @default(cuid())
-  ownerUid     String
-  source       String   // 'csv', 'google_sheets', etc.
-  filename     String?
-  
-  totalRows    Int      @default(0)
-  validRows    Int      @default(0)
-  invalidRows  Int      @default(0)
-  duplicateRows Int     @default(0)
-  importedRows Int      @default(0)
-  
-  status       String   @default("pending") // pending, processing, completed, failed
-  errors       Json?    // Array of error messages
-  summary      Json?    // Detailed import results
-  
-  createdAt    DateTime @default(now())
-  completedAt  DateTime?
-  
+  id       String  @id @default(cuid())
+  ownerUid String
+  source   String // 'csv', 'google_sheets', etc.
+  filename String?
+
+  totalRows     Int @default(0)
+  validRows     Int @default(0)
+  invalidRows   Int @default(0)
+  duplicateRows Int @default(0)
+  importedRows  Int @default(0)
+
+  status  String @default("pending") // pending, processing, completed, failed
+  errors  Json? // Array of error messages
+  summary Json? // Detailed import results
+
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
   @@index([ownerUid])
   @@index([status])
   @@index([createdAt])
@@ -634,23 +633,23 @@ model LeadImportBatch {
 
 // Lead source health tracking
 model LeadSourceHealth {
-  id            String   @id @default(cuid())
-  ownerUid      String
-  source        LeadSource
-  
-  lastEventAt   DateTime?
-  lastErrorAt   DateTime?
-  lastError     String?
-  isHealthy     Boolean  @default(true)
-  
+  id       String     @id @default(cuid())
+  ownerUid String
+  source   LeadSource
+
+  lastEventAt DateTime?
+  lastErrorAt DateTime?
+  lastError   String?
+  isHealthy   Boolean   @default(true)
+
   // Counters
-  totalLeads    Int      @default(0)
-  todayLeads    Int      @default(0)
-  weekLeads     Int      @default(0)
-  monthLeads    Int      @default(0)
-  
-  updatedAt     DateTime @updatedAt
-  
+  totalLeads Int @default(0)
+  todayLeads Int @default(0)
+  weekLeads  Int @default(0)
+  monthLeads Int @default(0)
+
+  updatedAt DateTime @updatedAt
+
   @@unique([ownerUid, source])
   @@index([ownerUid])
   @@index([source])
@@ -658,22 +657,22 @@ model LeadSourceHealth {
 
 // Assignment rules for auto-assigning leads
 model LeadAssignmentRule {
-  id        String   @id @default(cuid())
-  ownerUid  String
-  
-  name      String
-  isActive  Boolean  @default(true)
-  priority  Int      @default(0)
-  
+  id       String @id @default(cuid())
+  ownerUid String
+
+  name     String
+  isActive Boolean @default(true)
+  priority Int     @default(0)
+
   // Conditions (JSON with criteria)
-  conditions Json    // e.g., {"source": "FACEBOOK", "score": "HOT"}
-  
+  conditions Json // e.g., {"source": "FACEBOOK", "score": "HOT"}
+
   // Assignment logic
   assigneeId String
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@index([ownerUid, isActive])
   @@index([priority])
 }
@@ -682,79 +681,79 @@ model LeadAssignmentRule {
 
 // OAuth connections for external platforms
 model OAuthConnection {
-  id            String           @id @default(cuid())
-  ownerUid      String
-  
-  platform      CampaignPlatform
-  status        ConnectionStatus @default(DISCONNECTED)
-  
+  id       String @id @default(cuid())
+  ownerUid String
+
+  platform CampaignPlatform
+  status   ConnectionStatus @default(DISCONNECTED)
+
   // OAuth data
-  accessToken   String?
-  refreshToken  String?
-  expiresAt     DateTime?
-  lastChecked   DateTime?
-  
+  accessToken  String?
+  refreshToken String?
+  expiresAt    DateTime?
+  lastChecked  DateTime?
+
   // Platform-specific IDs
-  accountId     String?
-  accountName   String?
-  
+  accountId   String?
+  accountName String?
+
   // Error tracking
-  lastError     String?
-  lastErrorAt   DateTime?
-  
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  
+  lastError   String?
+  lastErrorAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Relations
-  campaigns     Campaign[]
-  
+  campaigns Campaign[]
+
   @@unique([ownerUid, platform])
   @@index([ownerUid])
 }
 
 // Campaign management
 model Campaign {
-  id            String           @id @default(cuid())
-  ownerUid      String
-  
-  name          String
-  platform      CampaignPlatform
-  status        CampaignStatus   @default(DRAFT)
-  goal          CampaignGoal
-  
+  id       String @id @default(cuid())
+  ownerUid String
+
+  name     String
+  platform CampaignPlatform
+  status   CampaignStatus   @default(DRAFT)
+  goal     CampaignGoal
+
   // Campaign configuration
-  budget        Float?
-  dailyBudget   Float?
-  audience      Json?            // Platform-specific audience config
-  creative      Json?            // Ads creative data
-  
+  budget      Float?
+  dailyBudget Float?
+  audience    Json? // Platform-specific audience config
+  creative    Json? // Ads creative data
+
   // Platform-specific IDs
   platformCampaignId String?
   platformAdSetId    String?
-  
+
   // Attribution data
-  spend         Float           @default(0)
-  clicks        Int             @default(0)
-  impressions   Int             @default(0)
-  conversions   Int             @default(0)
-  
+  spend       Float @default(0)
+  clicks      Int   @default(0)
+  impressions Int   @default(0)
+  conversions Int   @default(0)
+
   // Scheduling
-  startDate     DateTime?
-  endDate       DateTime?
-  
+  startDate DateTime?
+  endDate   DateTime?
+
   // Pre-flight checks
-  preflightChecks Json?         // Status of various checks
-  lastCheckAt    DateTime?
-  
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  
+  preflightChecks Json? // Status of various checks
+  lastCheckAt     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Relations
-  connection    OAuthConnection @relation(fields: [connectionId], references: [id])
-  connectionId  String
-  leads         EcommerceLead[] @relation("CampaignLeads")
-  sales         Sale[]
-  
+  connection   OAuthConnection @relation(fields: [connectionId], references: [id])
+  connectionId String
+  leads        EcommerceLead[] @relation("CampaignLeads")
+  sales        Sale[]
+
   @@index([ownerUid])
   @@index([status])
   @@index([platform])
@@ -762,68 +761,68 @@ model Campaign {
 
 // Auto-followup templates
 model AutoFollowupTemplate {
-  id           String                @id @default(cuid())
-  ownerUid     String
-  
-  name         String
-  trigger      AutoFollowupTrigger
-  channel      AutoFollowupChannel
-  
+  id       String @id @default(cuid())
+  ownerUid String
+
+  name    String
+  trigger AutoFollowupTrigger
+  channel AutoFollowupChannel
+
   // Template content
-  subject      String?               // Email subject
-  content      String                // Message content with variables
-  variables    Json?                 // Available template variables
-  
+  subject   String? // Email subject
+  content   String // Message content with variables
+  variables Json? // Available template variables
+
   // Configuration
-  isActive     Boolean               @default(true)
-  delayMinutes Int                   @default(0)
-  
+  isActive     Boolean @default(true)
+  delayMinutes Int     @default(0)
+
   // Brand customization
-  brandName    String?
-  brandLogo    String?
-  brandColors  Json?
-  
-  createdAt    DateTime              @default(now())
-  updatedAt    DateTime              @updatedAt
-  
+  brandName   String?
+  brandLogo   String?
+  brandColors Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Relations
-  followups    AutoFollowupExecution[]
-  
+  followups AutoFollowupExecution[]
+
   @@index([ownerUid, trigger])
   @@index([isActive])
 }
 
 // Auto-followup execution tracking
 model AutoFollowupExecution {
-  id           String                @id @default(cuid())
-  leadId       String
-  templateId   String
-  
-  channel      AutoFollowupChannel
-  status       String                @default("PENDING") // PENDING, SENT, FAILED, SKIPPED
-  
+  id         String @id @default(cuid())
+  leadId     String
+  templateId String
+
+  channel AutoFollowupChannel
+  status  String              @default("PENDING") // PENDING, SENT, FAILED, SKIPPED
+
   // Content sent
-  subject      String?
-  content      String
-  
+  subject String?
+  content String
+
   // Delivery tracking
-  sentAt       DateTime?
-  deliveredAt  DateTime?
-  readAt       DateTime?
-  clickedAt    DateTime?
-  
+  sentAt      DateTime?
+  deliveredAt DateTime?
+  readAt      DateTime?
+  clickedAt   DateTime?
+
   // Error tracking
-  error        String?
-  retryCount   Int                   @default(0)
-  maxRetries   Int                   @default(3)
-  
-  createdAt    DateTime              @default(now())
-  updatedAt    DateTime              @updatedAt
-  
+  error      String?
+  retryCount Int     @default(0)
+  maxRetries Int     @default(3)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Relations
-  lead         EcommerceLead         @relation(fields: [leadId], references: [id])
-  template     AutoFollowupTemplate  @relation(fields: [templateId], references: [id])
-  
+  lead     EcommerceLead        @relation(fields: [leadId], references: [id])
+  template AutoFollowupTemplate @relation(fields: [templateId], references: [id])
+
   @@index([leadId])
   @@index([status])
   @@index([sentAt])
@@ -831,36 +830,36 @@ model AutoFollowupExecution {
 
 // Sales tracking (manual/CSV input initially)
 model Sale {
-  id           String        @id @default(cuid())
-  ownerUid     String
-  leadId       String?
-  
+  id       String  @id @default(cuid())
+  ownerUid String
+  leadId   String?
+
   // Sale data
-  amount       Float
-  currency     String        @default("USD")
-  description  String?
-  
+  amount      Float
+  currency    String  @default("USD")
+  description String?
+
   // Attribution
-  campaignId   String?
-  source       LeadSource?
-  utmSource    String?
-  utmMedium    String?
-  utmCampaign  String?
-  
+  campaignId  String?
+  source      LeadSource?
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+
   // Timing
-  saleDate     DateTime      @default(now())
-  
+  saleDate DateTime @default(now())
+
   // Manual entry tracking
-  enteredBy    String?       // User ID who entered
-  importBatchId String?      // CSV import batch
-  
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  
+  enteredBy     String? // User ID who entered
+  importBatchId String? // CSV import batch
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Relations
-  lead         EcommerceLead? @relation(fields: [leadId], references: [id])
-  campaign     Campaign?      @relation(fields: [campaignId], references: [id])
-  
+  lead     EcommerceLead? @relation(fields: [leadId], references: [id])
+  campaign Campaign?      @relation(fields: [campaignId], references: [id])
+
   @@index([ownerUid])
   @@index([leadId])
   @@index([campaignId])
@@ -871,58 +870,58 @@ model Sale {
 
 // Search jobs for tracking AI-assisted property searches
 model SearchJob {
-  id          String          @id @default(cuid())
-  ownerUid    String
-  
+  id       String @id @default(cuid())
+  ownerUid String
+
   // Search parameters
-  location    String?         // City/neighborhood
+  location    String? // City/neighborhood
   minRooms    Int?
   maxRooms    Int?
-  minSize     Int?            // sqm
-  maxSize     Int?            // sqm
-  minPrice    Int?            // ILS
-  maxPrice    Int?            // ILS
-  keywords    String?         // Free text search terms
-  listingType ListingType?    @default(FOR_SALE)
-  
+  minSize     Int? // sqm
+  maxSize     Int? // sqm
+  minPrice    Int? // ILS
+  maxPrice    Int? // ILS
+  keywords    String? // Free text search terms
+  listingType ListingType? @default(FOR_SALE)
+
   // Job status and progress
   status      SearchJobStatus @default(QUEUED)
-  progress    Int             @default(0)    // 0-100
-  currentStep String?         // Current processing step
-  
+  progress    Int             @default(0) // 0-100
+  currentStep String? // Current processing step
+
   // Results tracking
-  totalListings     Int       @default(0)
-  processedListings Int       @default(0)
-  validListings     Int       @default(0)
-  duplicateListings Int       @default(0)
-  errorListings     Int       @default(0)
-  
+  totalListings     Int @default(0)
+  processedListings Int @default(0)
+  validListings     Int @default(0)
+  duplicateListings Int @default(0)
+  errorListings     Int @default(0)
+
   // Provider breakdown
-  providersUsed     Json?     // Array of providers queried
-  providerResults   Json?     // Results count per provider
-  
+  providersUsed   Json? // Array of providers queried
+  providerResults Json? // Results count per provider
+
   // AI usage tracking
-  openaiTokensUsed  Int       @default(0)
-  openaiCost        Float     @default(0)
-  
+  openaiTokensUsed Int   @default(0)
+  openaiCost       Float @default(0)
+
   // Error tracking
-  errors      Json?           // Array of error messages
+  errors      Json? // Array of error messages
   lastError   String?
   lastErrorAt DateTime?
-  
+
   // Performance metrics
-  searchDuration    Int?      // milliseconds
-  enrichmentDuration Int?     // milliseconds
-  
-  createdAt   DateTime        @default(now())
+  searchDuration     Int? // milliseconds
+  enrichmentDuration Int? // milliseconds
+
+  createdAt   DateTime  @default(now())
   startedAt   DateTime?
   completedAt DateTime?
-  updatedAt   DateTime        @updatedAt
-  
+  updatedAt   DateTime  @updatedAt
+
   // Relations
   listings    Listing[]
   savedSearch SavedSearch?
-  
+
   // Performance indexes for dashboard and status queries
   @@index([ownerUid, status])
   @@index([ownerUid, createdAt])
@@ -936,64 +935,64 @@ model SearchJob {
 
 // Individual property listings found by search
 model Listing {
-  id            String        @id @default(cuid())
-  searchJobId   String
-  ownerUid      String        // For direct queries
-  
+  id          String @id @default(cuid())
+  searchJobId String
+  ownerUid    String // For direct queries
+
   // Basic property info
-  title         String
-  description   String?
-  location      String?
-  city          String?
-  neighborhood  String?
-  
+  title        String
+  description  String?
+  location     String?
+  city         String?
+  neighborhood String?
+
   // Property details  
-  rooms         Int?
-  size          Int?          // sqm
-  price         Int?          // ILS
-  pricePerSqm   Int?          // Calculated price per sqm
-  currency      String        @default("ILS")
-  listingType   ListingType   @default(FOR_SALE)
-  
+  rooms       Int?
+  size        Int? // sqm
+  price       Int? // ILS
+  pricePerSqm Int? // Calculated price per sqm
+  currency    String      @default("ILS")
+  listingType ListingType @default(FOR_SALE)
+
   // Source info
-  provider      SearchProvider
-  sourceUrl     String
-  sourceId      String?       // External listing ID
-  
+  provider  SearchProvider
+  sourceUrl String
+  sourceId  String? // External listing ID
+
   // AI extracted/enhanced data
-  aiScore       Float?        // AI relevance score 0-1
-  aiSummary     String?       // AI-generated summary
-  aiTags        Json?         // AI-extracted tags/features
-  
+  aiScore   Float? // AI relevance score 0-1
+  aiSummary String? // AI-generated summary
+  aiTags    Json? // AI-extracted tags/features
+
   // Contact info (if available)
-  agentName     String?
-  agentPhone    String?
-  agentEmail    String?
-  
+  agentName  String?
+  agentPhone String?
+  agentEmail String?
+
   // Media
-  images        Json?         // Array of image URLs
-  primaryImage  String?
-  
+  images       Json? // Array of image URLs
+  primaryImage String?
+
   // Metadata
-  postedAt      DateTime?     // When originally posted
-  scrapedAt     DateTime      @default(now())
-  
+  postedAt  DateTime? // When originally posted
+  scrapedAt DateTime  @default(now())
+
   // Deduplication
-  dedupeHash    String        // Stable hash for deduplication
-  isDuplicate   Boolean       @default(false)
-  duplicateOf   String?       // ID of original listing
-  
+  dedupeHash  String // Stable hash for deduplication
+  isDuplicate Boolean @default(false)
+  duplicateOf String? // ID of original listing
+
   // Raw data
-  rawData       Json?         // Original scraped data
-  
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  
+  rawData Json? // Original scraped data
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Relations
-  searchJob     SearchJob     @relation(fields: [searchJobId], references: [id], onDelete: Cascade)
-  
+  searchJob SearchJob @relation(fields: [searchJobId], references: [id], onDelete: Cascade)
+
   @@unique([provider, sourceId]) // Prevent exact duplicates from same source
-  @@unique([dedupeHash])         // Global deduplication
+  @@unique([dedupeHash]) // Global deduplication
   @@index([searchJobId])
   @@index([ownerUid])
   @@index([provider, sourceId])
@@ -1005,14 +1004,14 @@ model Listing {
 
 // Saved searches for recurring AI searches
 model SavedSearch {
-  id          String     @id @default(cuid())
+  id          String @id @default(cuid())
   ownerUid    String
-  searchJobId String     @unique
-  
+  searchJobId String @unique
+
   // Search configuration
   name        String
   description String?
-  
+
   // Search parameters (duplicated from SearchJob for quick access)
   location    String?
   minRooms    Int?
@@ -1023,24 +1022,24 @@ model SavedSearch {
   maxPrice    Int?
   keywords    String?
   listingType ListingType? @default(FOR_SALE)
-  
+
   // Automation settings
-  isActive    Boolean    @default(true)
-  frequency   String?    // 'daily', 'weekly', 'monthly'
-  lastRunAt   DateTime?
-  nextRunAt   DateTime?
-  
+  isActive  Boolean   @default(true)
+  frequency String? // 'daily', 'weekly', 'monthly'
+  lastRunAt DateTime?
+  nextRunAt DateTime?
+
   // Notification settings
-  emailAlerts Boolean    @default(false)
+  emailAlerts Boolean @default(false)
   alertEmail  String?
-  minScore    Float?     // Minimum AI score for alerts
-  
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  
+  minScore    Float? // Minimum AI score for alerts
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Relations
-  originalJob SearchJob  @relation(fields: [searchJobId], references: [id])
-  
+  originalJob SearchJob @relation(fields: [searchJobId], references: [id])
+
   @@index([ownerUid, isActive])
   @@index([ownerUid, nextRunAt])
   @@index([isActive, nextRunAt])
@@ -1050,36 +1049,36 @@ model SavedSearch {
 
 // Platform OAuth connections (replaces existing OAuthConnection)
 model Connection {
-  id            String             @id @default(cuid())
-  ownerUid      String
-  organizationId String?           // For org-level connections
+  id             String  @id @default(cuid())
+  ownerUid       String
+  organizationId String? // For org-level connections
 
-  provider      ConnectionProvider
-  status        ConnectionStatus   @default(DISCONNECTED)
+  provider ConnectionProvider
+  status   ConnectionStatus   @default(DISCONNECTED)
 
   // Display info
-  displayName   String?            // User-friendly connection name
-  accountEmail  String?            // Connected account email
+  displayName  String? // User-friendly connection name
+  accountEmail String? // Connected account email
 
   // Health tracking
-  lastSyncAt    DateTime?
-  lastErrorAt   DateTime?
-  lastError     String?
-  accountCount  Int               @default(0)
+  lastSyncAt   DateTime?
+  lastErrorAt  DateTime?
+  lastError    String?
+  accountCount Int       @default(0)
 
   // Metadata
-  metadata      Json?             // Provider-specific metadata
+  metadata Json? // Provider-specific metadata
 
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  oauthTokens   OAuthToken[]
-  adAccounts    AdAccount[]
-  campaigns     ExternalCampaign[]
-  jobs          Job[]
-  insights      Insight[]
-  auditLogs     ApiAuditLog[]
+  oauthTokens OAuthToken[]
+  adAccounts  AdAccount[]
+  campaigns   ExternalCampaign[]
+  jobs        Job[]
+  insights    Insight[]
+  auditLogs   ApiAuditLog[]
 
   @@unique([ownerUid, provider])
   @@index([ownerUid])
@@ -1089,27 +1088,27 @@ model Connection {
 
 // Encrypted OAuth tokens
 model OAuthToken {
-  id             String     @id @default(cuid())
-  connectionId   String
+  id           String @id @default(cuid())
+  connectionId String
 
   // Encrypted token data
-  accessToken    String     // AES-GCM encrypted
-  refreshToken   String?    // AES-GCM encrypted
-  tokenType      String     @default("Bearer")
+  accessToken  String // AES-GCM encrypted
+  refreshToken String? // AES-GCM encrypted
+  tokenType    String  @default("Bearer")
 
   // Token lifecycle
-  expiresAt      DateTime?
-  scope          String?    // OAuth scopes granted
+  expiresAt DateTime?
+  scope     String? // OAuth scopes granted
 
   // Refresh tracking
-  lastRefreshAt  DateTime?
-  refreshCount   Int        @default(0)
+  lastRefreshAt DateTime?
+  refreshCount  Int       @default(0)
 
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  connection     Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  connection Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
 
   @@unique([connectionId]) // One token per connection
   @@index([connectionId])
@@ -1118,35 +1117,35 @@ model OAuthToken {
 
 // Ad accounts discovered from platforms
 model AdAccount {
-  id               String     @id @default(cuid())
-  connectionId     String
-  ownerUid         String
+  id           String @id @default(cuid())
+  connectionId String
+  ownerUid     String
 
   // Platform account info
-  externalId       String     // Platform's account ID
-  name             String     // Account display name
-  currency         String?    // Account currency
-  timezone         String?    // Account timezone
+  externalId String // Platform's account ID
+  name       String // Account display name
+  currency   String? // Account currency
+  timezone   String? // Account timezone
 
   // Account status and permissions
-  status           String     @default("ACTIVE") // ACTIVE, DISABLED, PENDING
-  permissions      Json?      // Available permissions
-  spendCap         Float?     // Account spend limit
+  status      String @default("ACTIVE") // ACTIVE, DISABLED, PENDING
+  permissions Json? // Available permissions
+  spendCap    Float? // Account spend limit
 
   // Sync tracking
-  lastSyncAt       DateTime?
-  isActive         Boolean    @default(true)
+  lastSyncAt DateTime?
+  isActive   Boolean   @default(true)
 
   // Metadata
-  metadata         Json?      // Provider-specific data
+  metadata Json? // Provider-specific data
 
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  connection       Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
-  campaigns        ExternalCampaign[]
-  insights         Insight[]
+  connection Connection         @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  campaigns  ExternalCampaign[]
+  insights   Insight[]
 
   @@unique([connectionId, externalId])
   @@index([ownerUid])
@@ -1157,48 +1156,48 @@ model AdAccount {
 
 // External campaigns created through platforms
 model ExternalCampaign {
-  id               String     @id @default(cuid())
-  connectionId     String
-  adAccountId      String
-  ownerUid         String
+  id           String @id @default(cuid())
+  connectionId String
+  adAccountId  String
+  ownerUid     String
 
   // Campaign identification
-  externalId       String     // Platform's campaign ID
-  name             String
+  externalId String // Platform's campaign ID
+  name       String
 
   // Campaign configuration
-  objective        String     // Platform-specific objective
-  status           String     @default("PAUSED") // ACTIVE, PAUSED, ARCHIVED
-  dailyBudget      Float?
-  totalBudget      Float?
+  objective   String // Platform-specific objective
+  status      String @default("PAUSED") // ACTIVE, PAUSED, ARCHIVED
+  dailyBudget Float?
+  totalBudget Float?
 
   // Scheduling
-  startDate        DateTime?
-  endDate          DateTime?
+  startDate DateTime?
+  endDate   DateTime?
 
   // Creative and targeting (minimal for MVP)
-  creativeData     Json?      // Ad creative configuration
-  targetingData    Json?      // Audience targeting
+  creativeData  Json? // Ad creative configuration
+  targetingData Json? // Audience targeting
 
   // Performance tracking
-  spend            Float      @default(0)
-  impressions      Int        @default(0)
-  clicks           Int        @default(0)
-  cpc              Float?     // Cost per click
-  ctr              Float?     // Click-through rate
-  conversions      Int        @default(0)
+  spend       Float  @default(0)
+  impressions Int    @default(0)
+  clicks      Int    @default(0)
+  cpc         Float? // Cost per click
+  ctr         Float? // Click-through rate
+  conversions Int    @default(0)
 
   // Sync tracking
-  lastSyncAt       DateTime?
-  lastSyncError    String?
+  lastSyncAt    DateTime?
+  lastSyncError String?
 
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  connection       Connection @relation(fields: [connectionId], references: [id])
-  adAccount        AdAccount  @relation(fields: [adAccountId], references: [id])
-  insights         Insight[]
+  connection Connection @relation(fields: [connectionId], references: [id])
+  adAccount  AdAccount  @relation(fields: [adAccountId], references: [id])
+  insights   Insight[]
 
   @@unique([connectionId, externalId])
   @@index([ownerUid])
@@ -1210,34 +1209,34 @@ model ExternalCampaign {
 
 // Daily insights from platforms (normalized structure)
 model Insight {
-  id               String     @id @default(cuid())
-  connectionId     String
-  adAccountId      String?    // Account-level insights
-  campaignId       String?    // Campaign-level insights
-  ownerUid         String
+  id           String  @id @default(cuid())
+  connectionId String
+  adAccountId  String? // Account-level insights
+  campaignId   String? // Campaign-level insights
+  ownerUid     String
 
   // Time dimension
-  date             DateTime   // Insight date (UTC)
+  date DateTime // Insight date (UTC)
 
   // Core metrics (normalized across platforms)
-  spend            Float      @default(0)
-  impressions      Int        @default(0)
-  clicks           Int        @default(0)
-  cpc              Float?     // Cost per click
-  ctr              Float?     // Click-through rate (%)
-  conversions      Int        @default(0)
-  conversionValue  Float?     // Total conversion value
+  spend           Float  @default(0)
+  impressions     Int    @default(0)
+  clicks          Int    @default(0)
+  cpc             Float? // Cost per click
+  ctr             Float? // Click-through rate (%)
+  conversions     Int    @default(0)
+  conversionValue Float? // Total conversion value
 
   // Platform-specific metrics
-  platformMetrics  Json?      // Additional platform-specific data
+  platformMetrics Json? // Additional platform-specific data
 
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  connection       Connection       @relation(fields: [connectionId], references: [id])
-  adAccount        AdAccount?       @relation(fields: [adAccountId], references: [id])
-  campaign         ExternalCampaign? @relation(fields: [campaignId], references: [id])
+  connection Connection        @relation(fields: [connectionId], references: [id])
+  adAccount  AdAccount?        @relation(fields: [adAccountId], references: [id])
+  campaign   ExternalCampaign? @relation(fields: [campaignId], references: [id])
 
   @@unique([connectionId, adAccountId, campaignId, date])
   @@index([ownerUid, date])
@@ -1249,38 +1248,38 @@ model Insight {
 
 // Background job system
 model Job {
-  id               String     @id @default(cuid())
-  connectionId     String?    // Associated connection (if applicable)
-  ownerUid         String
+  id           String  @id @default(cuid())
+  connectionId String? // Associated connection (if applicable)
+  ownerUid     String
 
   // Job definition
-  type             JobType
-  status           JobStatus  @default(PENDING)
+  type   JobType
+  status JobStatus @default(PENDING)
 
   // Job data
-  inputData        Json?      // Job input parameters
-  outputData       Json?      // Job results
-  errorData        Json?      // Error details
+  inputData  Json? // Job input parameters
+  outputData Json? // Job results
+  errorData  Json? // Error details
 
   // Execution tracking
-  startedAt        DateTime?
-  completedAt      DateTime?
-  retryCount       Int        @default(0)
-  maxRetries       Int        @default(3)
+  startedAt   DateTime?
+  completedAt DateTime?
+  retryCount  Int       @default(0)
+  maxRetries  Int       @default(3)
 
   // Scheduling
-  scheduledFor     DateTime?  // For scheduled jobs
-  priority         Int        @default(0) // Higher = more priority
+  scheduledFor DateTime? // For scheduled jobs
+  priority     Int       @default(0) // Higher = more priority
 
   // Progress tracking
-  progress         Int        @default(0) // 0-100 percentage
-  statusMessage    String?    // Current status description
+  progress      Int     @default(0) // 0-100 percentage
+  statusMessage String? // Current status description
 
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  connection       Connection? @relation(fields: [connectionId], references: [id])
+  connection Connection? @relation(fields: [connectionId], references: [id])
 
   @@index([ownerUid])
   @@index([type, status])
@@ -1291,36 +1290,36 @@ model Job {
 
 // Audit log for external API calls
 model ApiAuditLog {
-  id               String     @id @default(cuid())
-  connectionId     String?
-  ownerUid         String?
+  id           String  @id @default(cuid())
+  connectionId String?
+  ownerUid     String?
 
   // Request details
-  provider         ConnectionProvider
-  method           String     // GET, POST, PUT, DELETE
-  path             String     // API endpoint path
+  provider ConnectionProvider
+  method   String // GET, POST, PUT, DELETE
+  path     String // API endpoint path
 
   // Response details
-  statusCode       Int
-  responseTime     Int        // milliseconds
+  statusCode   Int
+  responseTime Int // milliseconds
 
   // Error tracking
-  errorCode        String?    // Platform-specific error code
-  errorMessage     String?    // Error description
+  errorCode    String? // Platform-specific error code
+  errorMessage String? // Error description
 
   // Cost tracking (if available)
-  cost             Float?     // API call cost
-  quotaUsed        Int?       // Quota consumption
+  cost      Float? // API call cost
+  quotaUsed Int? // Quota consumption
 
   // Request metadata
-  jobId            String?    // Associated job ID
-  userAgent        String?
-  ipAddress        String?
+  jobId     String? // Associated job ID
+  userAgent String?
+  ipAddress String?
 
-  createdAt        DateTime   @default(now())
+  createdAt DateTime @default(now())
 
   // Relations
-  connection       Connection? @relation(fields: [connectionId], references: [id])
+  connection Connection? @relation(fields: [connectionId], references: [id])
 
   @@index([provider, createdAt])
   @@index([connectionId, createdAt])
@@ -1331,26 +1330,26 @@ model ApiAuditLog {
 
 // Task management for users
 model Task {
-  id              String       @id @default(cuid())
-  title           String
-  description     String?
-  priority        Priority     @default(MEDIUM)
-  status          TaskStatus   @default(PENDING)
-  dueDate         DateTime?
-  completedDate   DateTime?
-  category        String?
-  tags            String[]     @default([])
+  id            String     @id @default(cuid())
+  title         String
+  description   String?
+  priority      Priority   @default(MEDIUM)
+  status        TaskStatus @default(PENDING)
+  dueDate       DateTime?
+  completedDate DateTime?
+  category      String?
+  tags          String[]   @default([])
 
   // Multi-tenant fields
-  ownerUid        String
-  organizationId  String?
+  ownerUid       String
+  organizationId String?
 
   // Timestamps
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  user            User         @relation(fields: [ownerUid], references: [id], onDelete: Cascade)
+  user User @relation(fields: [ownerUid], references: [id], onDelete: Cascade)
 
   @@index([ownerUid])
   @@index([status])
@@ -1361,28 +1360,28 @@ model Task {
 
 // Message queue for outbound communications
 model Message {
-  id               String           @id @default(cuid())
-  recipientType    String           // LEAD, CONTACT, USER
-  recipientId      String
-  message          String           // Message content
-  channel          MessageChannel  @default(EMAIL)
-  status           MessageStatus   @default(QUEUED)
-  sentAt           DateTime?
-  deliveredAt      DateTime?
-  readAt           DateTime?
-  errorMessage     String?
-  metadata         Json?            // Additional message data (template vars, etc.)
+  id            String         @id @default(cuid())
+  recipientType String // LEAD, CONTACT, USER
+  recipientId   String
+  message       String // Message content
+  channel       MessageChannel @default(EMAIL)
+  status        MessageStatus  @default(QUEUED)
+  sentAt        DateTime?
+  deliveredAt   DateTime?
+  readAt        DateTime?
+  errorMessage  String?
+  metadata      Json? // Additional message data (template vars, etc.)
 
   // Multi-tenant fields
-  ownerUid         String
-  organizationId   String?
+  ownerUid       String
+  organizationId String?
 
   // Timestamps
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  user             User             @relation(fields: [ownerUid], references: [id], onDelete: Cascade)
+  user User @relation(fields: [ownerUid], references: [id], onDelete: Cascade)
 
   @@index([ownerUid])
   @@index([status])

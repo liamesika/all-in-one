@@ -1,3 +1,4 @@
+import React from 'react';
 import dynamic from 'next/dynamic';
 import { LoadingSpinner } from '@/components/performance/lazy-loading';
 
@@ -11,22 +12,24 @@ export const PropertyImportModal = dynamic(
 );
 
 export const ChartComponents = {
-  LineChart: dynamic(() => import('recharts').then(mod => ({ default: mod.LineChart })), {
+  LineChart: dynamic(() => (import('recharts') as any).then((mod: any) => ({ default: mod.LineChart })).catch(() => ({ default: () => <div>Install recharts for charts</div> })), {
     loading: () => <LoadingSpinner size="small" />,
     ssr: false
   }),
-  BarChart: dynamic(() => import('recharts').then(mod => ({ default: mod.BarChart })), {
+  BarChart: dynamic(() => (import('recharts') as any).then((mod: any) => ({ default: mod.BarChart })).catch(() => ({ default: () => <div>Install recharts for charts</div> })), {
     loading: () => <LoadingSpinner size="small" />,
     ssr: false
   }),
-  PieChart: dynamic(() => import('recharts').then(mod => ({ default: mod.PieChart })), {
+  PieChart: dynamic(() => (import('recharts') as any).then((mod: any) => ({ default: mod.PieChart })).catch(() => ({ default: () => <div>Install recharts for charts</div> })), {
     loading: () => <LoadingSpinner size="small" />,
     ssr: false
   })
 };
 
 export const RichTextEditor = dynamic(
-  () => import('@/components/ui/rich-text-editor'),
+  () => import('@/components/ui/rich-text-editor').catch(() => ({
+    default: () => <div className="p-4 border rounded bg-gray-50 text-gray-600">Rich Text Editor not available</div>
+  })),
   {
     loading: () => <LoadingSpinner message="Loading editor..." />,
     ssr: false

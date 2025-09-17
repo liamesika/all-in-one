@@ -1,7 +1,7 @@
 {
-  "buildCommand": "npx prisma generate --schema packages/server/db/prisma/schema.prisma && cd apps/web && npm run build",
+  "buildCommand": "yarn prisma:generate && cd apps/web && yarn build",
   "outputDirectory": "apps/web/.next",
-  "installCommand": "npm install --force",
+  "installCommand": "yarn install --frozen-lockfile",
   "framework": "nextjs",
   "env": {
     "NEXT_DISABLE_SWC_TOOLS_PATCHING": "1"

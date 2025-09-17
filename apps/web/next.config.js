@@ -223,49 +223,7 @@ const nextConfig = {
     ignoreDuringBuilds: false,
   },
 
-  // PWA and Service Worker (if using next-pwa)
-  ...(process.env.NODE_ENV === 'production' && {
-    pwa: {
-      dest: 'public',
-      register: true,
-      skipWaiting: true,
-      runtimeCaching: [
-        {
-          urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-          handler: 'CacheFirst',
-          options: {
-            cacheName: 'google-fonts',
-            expiration: {
-              maxEntries: 4,
-              maxAgeSeconds: 365 * 24 * 60 * 60 // 365 days
-            }
-          }
-        },
-        {
-          urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-          handler: 'CacheFirst',
-          options: {
-            cacheName: 'google-fonts-webfonts',
-            expiration: {
-              maxEntries: 4,
-              maxAgeSeconds: 365 * 24 * 60 * 60 // 365 days
-            }
-          }
-        },
-        {
-          urlPattern: /\/api\/.*$/i,
-          handler: 'StaleWhileRevalidate',
-          options: {
-            cacheName: 'api-cache',
-            expiration: {
-              maxEntries: 16,
-              maxAgeSeconds: 24 * 60 * 60 // 24 hours
-            }
-          }
-        }
-      ]
-    }
-  }),
+  // PWA support would require next-pwa package - removed for Next.js 15 compatibility
 
   // Output configuration
   output: 'standalone',

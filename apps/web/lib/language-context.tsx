@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 type Language = 'en' | 'he';
 
@@ -113,12 +113,48 @@ const translations = {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>('he'); // Default to Hebrew
+export function LanguageProvider({
+  children,
+  initialLang
+}: {
+  children: ReactNode;
+  initialLang?: Language;
+}) {
+  // Always start with the same state on server and client to prevent hydration mismatch
+  const [language, setLanguage] = useState<Language>(initialLang || 'en');
+  const [hydrated, setHydrated] = useState(false);
+
+  // Initialize language from localStorage only on client side after hydration
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const savedLanguage = localStorage.getItem('language') as Language;
+        if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'he')) {
+          setLanguage(savedLanguage);
+        }
+      } catch (error) {
+        console.warn('Failed to load language preference:', error);
+      }
+      setHydrated(true);
+    }
+  }, []);
 
   const toggleLanguage = () => {
     setLanguage(prev => prev === 'en' ? 'he' : 'en');
   };
+
+  // Update localStorage when language changes (only after hydration)
+  useEffect(() => {
+    if (hydrated) {
+      try {
+        localStorage.setItem('language', language);
+        // Set cookie for SSR language detection
+        document.cookie = `language=${language}; path=/; max-age=${60 * 60 * 24 * 365}`;
+      } catch (error) {
+        console.warn('Failed to save language preference:', error);
+      }
+    }
+  }, [language, hydrated]);
 
   const t = (key: string): string => {
     return translations[language][key as keyof typeof translations['en']] || key;
@@ -126,9 +162,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   return (
     <LanguageContext.Provider value={{ language, toggleLanguage, t }}>
-      <div dir={language === 'he' ? 'rtl' : 'ltr'} lang={language}>
-        {children}
-      </div>
+      {children}
     </LanguageContext.Provider>
   );
 }

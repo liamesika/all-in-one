@@ -8,4 +8,4 @@ dist
 package-lock.json
 apps/*/node_modules
 apps/*/package-lock.json
-yarn.lock
+functions/

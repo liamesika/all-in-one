@@ -248,7 +248,7 @@ describe('OAuthService', () => {
       });
 
       await expect(
-        service.revokeTokens(ConnectionProvider.META, 'test_access_token')
+        service.revokeToken(ConnectionProvider.META, 'test_access_token')
       ).resolves.not.toThrow();
     });
 
@@ -259,7 +259,7 @@ describe('OAuthService', () => {
 
       // Should not throw, just log the error
       await expect(
-        service.revokeTokens(ConnectionProvider.META, 'test_access_token')
+        service.revokeToken(ConnectionProvider.META, 'test_access_token')
       ).resolves.not.toThrow();
     });
   });

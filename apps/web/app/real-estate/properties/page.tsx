@@ -593,10 +593,13 @@ function PropertiesPageContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <EffinityHeader 
-        title={`${t('properties.title')} (${total ?? rows.length})`}
-        subtitle={language === 'he' ? 'ניהול נכסים מתקדם' : 'Advanced Property Management'}
-        rightContent={
+      <EffinityHeader variant="dashboard" />
+
+      {/* Page Header */}
+      <div className="bg-gradient-to-br from-blue-600 to-purple-700 px-6 py-8">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-3xl font-bold text-white mb-2">{`${t('properties.title')} (${total ?? rows.length})`}</h1>
+          <p className="text-blue-100 mb-6">{language === 'he' ? 'ניהול נכסים מתקדם' : 'Advanced Property Management'}</p>
           <div className="flex gap-3 items-center">
             <input
               dir={language === 'he' ? 'rtl' : 'ltr'}
@@ -643,8 +646,8 @@ function PropertiesPageContent() {
               + {language === 'he' ? 'חדש' : 'New'}
             </button>
           </div>
-        }
-      />
+        </div>
+      </div>
       
       <motion.main
         className="p-6 max-w-7xl mx-auto"

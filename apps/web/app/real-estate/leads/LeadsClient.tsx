@@ -3,8 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import LanguageToggle from '../../../components/LanguageToggle';
-import { useLang } from '../../../components/i18n/LangProvider';
+import { LanguageToggle } from '@/components/language-toggle';
 import { EffinityHeader } from '@/components/effinity-header';
 import { LanguageProvider, useLanguage } from '@/lib/language-context';
 
@@ -62,7 +61,7 @@ function statusClasses(s?: string) {
     default:           return 'bg-gray-100 text-gray-700 border-gray-300';
   }
 }
-function tStatusRE(s: string, lang: 'he' | 'en') {
+function tStatusRE(s: string, language: 'he' | 'en') {
   const he: Record<string, string> = {
     NEW: 'חדש',
     CONTACTED: 'יצירת קשר',
@@ -77,15 +76,15 @@ function tStatusRE(s: string, lang: 'he' | 'en') {
     OFFER: 'OFFER',
     DEAL: 'DEAL',
   };
-  return (lang === 'he' ? he : en)[s] ?? s;
+  return (language === 'he' ? he : en)[s] ?? s;
 }
 
 // ===== תפריט סטטוס קטן =====
 function StatusMenu({
-  onPick, lang,
+  onPick, language,
 }: {
   onPick: (s: (typeof STATUS_VALUES)[number]) => void;
-  lang: 'he' | 'en';
+  language: 'he' | 'en';
 }) {
   return (
     <div className="status-menu z-50 mt-2 w-44 overflow-hidden rounded-lg border bg-white shadow-lg">
@@ -95,7 +94,7 @@ function StatusMenu({
           className="block w-full px-3 py-2 text-left text-sm hover:bg-gray-50"
           onClick={() => onPick(s)}
         >
-          {tStatusRE(s, lang)}
+          {tStatusRE(s, language)}
         </button>
       ))}
     </div>
@@ -112,7 +111,7 @@ function ImportCsvModal({
   onClose: () => void;
   onDone: (summary: { created?: number; skipped?: number; errors?: number } | null) => void;
 }) {
-  const { lang } = useLang();
+  const { language } = useLanguage();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -130,7 +129,7 @@ function ImportCsvModal({
       onDone(json);
       onClose();
     } catch {
-      setErr(lang === 'he' ? 'העלאה נכשלה' : 'Upload failed');
+      setErr(language === 'he' ? 'העלאה נכשלה' : 'Upload failed');
     } finally {
       setBusy(false);
     }
@@ -162,7 +161,7 @@ function ImportCsvModal({
           >✕</button>
 
           <h3 className="mb-4 text-lg font-semibold">
-            {lang === 'he' ? 'ייבוא CSV' : 'Import CSV'}
+            {language === 'he' ? 'ייבוא CSV' : 'Import CSV'}
           </h3>
 
           <div
@@ -174,14 +173,14 @@ function ImportCsvModal({
             }`}
           >
             <p className="text-sm text-gray-600">
-              {lang === 'he' ? 'גררי לכאן קובץ CSV או' : 'Drag a CSV file here or'}
+              {language === 'he' ? 'גררי לכאן קובץ CSV או' : 'Drag a CSV file here or'}
             </p>
             <button
               onClick={() => inputRef.current?.click()}
               className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50"
               disabled={busy}
             >
-              {lang === 'he' ? 'בחרי קובץ מהמחשב' : 'Choose file'}
+              {language === 'he' ? 'בחרי קובץ מהמחשב' : 'Choose file'}
             </button>
             <input
               ref={inputRef}
@@ -193,11 +192,11 @@ function ImportCsvModal({
             />
           </div>
 
-          {busy && <div className="mt-3 text-sm text-gray-500">{lang === 'he' ? 'מעלה…' : 'Uploading…'}</div>}
+          {busy && <div className="mt-3 text-sm text-gray-500">{language === 'he' ? 'מעלה…' : 'Uploading…'}</div>}
           {err && <div className="mt-3 text-sm text-red-600">{err}</div>}
 
           <div className="mt-4 text-xs text-gray-500">
-            {lang === 'he'
+            {language === 'he'
               ? 'תבנית עמודות מומלצת: clientName,email,phone,propertyType,city,budgetMin,budgetMax,source,status,notes'
               : 'Columns: clientName,email,phone,propertyType,city,budgetMin,budgetMax,source,status,notes'}
           </div>
@@ -253,7 +252,6 @@ function CreateLeadModal({
   onClose: () => void;
   onCreated: () => void;
 }) {
-  const { lang } = useLang();
   const { language } = useLanguage();
   const [values, setValues] = useState<Record<string, any>>({
     clientName: '',
@@ -298,7 +296,7 @@ function CreateLeadModal({
 
   async function submit() {
     if (!values.clientName.trim()) {
-      setError(lang === 'he' ? 'שם לקוח חובה' : 'Client name is required');
+      setError(language === 'he' ? 'שם לקוח חובה' : 'Client name is required');
       return;
     }
     setBusy(true);
@@ -326,7 +324,7 @@ function CreateLeadModal({
       onClose();
       resetForm();
     } catch {
-      setError(lang === 'he' ? 'יצירת ליד נכשלה' : 'Failed to create lead');
+      setError(language === 'he' ? 'יצירת ליד נכשלה' : 'Failed to create lead');
     } finally {
       setBusy(false);
     }
@@ -336,7 +334,7 @@ function CreateLeadModal({
     <Modal
       isOpen={open}
       onClose={onClose}
-      title={lang === 'he' ? 'ליד חדש — נדל״ן' : 'New Real-Estate Lead'}
+      title={language === 'he' ? 'ליד חדש — נדל״ן' : 'New Real-Estate Lead'}
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Form */}
@@ -351,7 +349,7 @@ function CreateLeadModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {lang === 'he' ? 'שם לקוח *' : 'Client Name *'}
+                {language === 'he' ? 'שם לקוח *' : 'Client Name *'}
               </label>
               <input
                 className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-300 focus:outline-none"
@@ -375,7 +373,7 @@ function CreateLeadModal({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {lang === 'he' ? 'טלפון' : 'Phone'}
+                {language === 'he' ? 'טלפון' : 'Phone'}
               </label>
               <input
                 type="tel"
@@ -388,14 +386,14 @@ function CreateLeadModal({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {lang === 'he' ? 'סוג נכס' : 'Property Type'}
+                {language === 'he' ? 'סוג נכס' : 'Property Type'}
               </label>
               <select
                 className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-300 focus:outline-none"
                 value={values.propertyType}
                 onChange={e => set('propertyType', e.target.value)}
               >
-                <option value="">{lang === 'he' ? 'בחר סוג נכס' : 'Select property type'}</option>
+                <option value="">{language === 'he' ? 'בחר סוג נכס' : 'Select property type'}</option>
                 {['דירה', 'בית', 'מגרש', 'מסחרי', 'אחר'].map(o => 
                   <option key={o} value={o}>{o}</option>
                 )}
@@ -404,7 +402,7 @@ function CreateLeadModal({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {lang === 'he' ? 'עיר' : 'City'}
+                {language === 'he' ? 'עיר' : 'City'}
               </label>
               <input
                 className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-300 focus:outline-none"
@@ -416,20 +414,20 @@ function CreateLeadModal({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {lang === 'he' ? 'מקור' : 'Source'}
+                {language === 'he' ? 'מקור' : 'Source'}
               </label>
               <input
                 className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-300 focus:outline-none"
                 value={values.source}
                 onChange={e => set('source', e.target.value)}
-                placeholder={lang === 'he' ? 'פייסבוק, גוגל, המלצה...' : 'Facebook, Google, referral...'}
+                placeholder={language === 'he' ? 'פייסבוק, גוגל, המלצה...' : 'Facebook, Google, referral...'}
                 dir={language === 'he' ? 'rtl' : 'ltr'}
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {lang === 'he' ? 'תקציב מינימלי' : 'Budget Min'}
+                {language === 'he' ? 'תקציב מינימלי' : 'Budget Min'}
               </label>
               <input
                 type="number"
@@ -442,7 +440,7 @@ function CreateLeadModal({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {lang === 'he' ? 'תקציב מקסימלי' : 'Budget Max'}
+                {language === 'he' ? 'תקציב מקסימלי' : 'Budget Max'}
               </label>
               <input
                 type="number"
@@ -455,7 +453,7 @@ function CreateLeadModal({
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {lang === 'he' ? 'סטטוס' : 'Status'}
+                {language === 'he' ? 'סטטוס' : 'Status'}
               </label>
               <select
                 className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-300 focus:outline-none"
@@ -463,21 +461,21 @@ function CreateLeadModal({
                 onChange={e => set('status', e.target.value)}
               >
                 {['NEW', 'CONTACTED', 'MEETING', 'OFFER', 'DEAL'].map(s => 
-                  <option key={s} value={s}>{tStatusRE(s, lang)}</option>
+                  <option key={s} value={s}>{tStatusRE(s, language)}</option>
                 )}
               </select>
             </div>
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {lang === 'he' ? 'הערות' : 'Notes'}
+                {language === 'he' ? 'הערות' : 'Notes'}
               </label>
               <textarea
                 className="w-full rounded-xl border border-gray-200 px-3 py-2 focus:border-blue-300 focus:outline-none resize-none"
                 value={values.notes}
                 onChange={e => set('notes', e.target.value)}
                 rows={3}
-                placeholder={lang === 'he' ? 'הערות נוספות...' : 'Additional notes...'}
+                placeholder={language === 'he' ? 'הערות נוספות...' : 'Additional notes...'}
                 dir={language === 'he' ? 'rtl' : 'ltr'}
               />
             </div>
@@ -493,14 +491,14 @@ function CreateLeadModal({
               disabled={busy}
               className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50"
             >
-              {lang === 'he' ? 'ביטול' : 'Cancel'}
+              {language === 'he' ? 'ביטול' : 'Cancel'}
             </button>
             <button
               onClick={submit}
               disabled={busy || !values.clientName.trim()}
               className="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {busy ? (lang === 'he' ? 'שומר...' : 'Saving...') : (lang === 'he' ? 'שמירה' : 'Save')}
+              {busy ? (language === 'he' ? 'שומר...' : 'Saving...') : (language === 'he' ? 'שמירה' : 'Save')}
             </button>
           </div>
         </div>
@@ -509,30 +507,30 @@ function CreateLeadModal({
         <div>
           <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              {lang === 'he' ? 'תצוגה מקדימה' : 'Lead Preview'}
+              {language === 'he' ? 'תצוגה מקדימה' : 'Lead Preview'}
             </h3>
             <div className="space-y-3">
               {values.clientName && (
                 <div>
-                  <div className="text-sm text-gray-600">{lang === 'he' ? 'לקוח' : 'Client'}</div>
+                  <div className="text-sm text-gray-600">{language === 'he' ? 'לקוח' : 'Client'}</div>
                   <div className="font-medium">{values.clientName}</div>
                 </div>
               )}
               {values.propertyType && (
                 <div>
-                  <div className="text-sm text-gray-600">{lang === 'he' ? 'סוג נכס' : 'Property Type'}</div>
+                  <div className="text-sm text-gray-600">{language === 'he' ? 'סוג נכס' : 'Property Type'}</div>
                   <div className="font-medium">{values.propertyType}</div>
                 </div>
               )}
               {values.city && (
                 <div>
-                  <div className="text-sm text-gray-600">{lang === 'he' ? 'עיר' : 'City'}</div>
+                  <div className="text-sm text-gray-600">{language === 'he' ? 'עיר' : 'City'}</div>
                   <div className="font-medium">{values.city}</div>
                 </div>
               )}
               {(values.budgetMin || values.budgetMax) && (
                 <div>
-                  <div className="text-sm text-gray-600">{lang === 'he' ? 'תקציב' : 'Budget'}</div>
+                  <div className="text-sm text-gray-600">{language === 'he' ? 'תקציב' : 'Budget'}</div>
                   <div className="font-medium">
                     {values.budgetMin && values.budgetMax 
                       ? `₪${Number(values.budgetMin).toLocaleString()} - ₪${Number(values.budgetMax).toLocaleString()}`
@@ -545,13 +543,13 @@ function CreateLeadModal({
               )}
               {values.source && (
                 <div>
-                  <div className="text-sm text-gray-600">{lang === 'he' ? 'מקור' : 'Source'}</div>
+                  <div className="text-sm text-gray-600">{language === 'he' ? 'מקור' : 'Source'}</div>
                   <div className="font-medium">{values.source}</div>
                 </div>
               )}
               <div>
-                <div className="text-sm text-gray-600">{lang === 'he' ? 'סטטוס' : 'Status'}</div>
-                <div className="font-medium">{tStatusRE(values.status, lang)}</div>
+                <div className="text-sm text-gray-600">{language === 'he' ? 'סטטוס' : 'Status'}</div>
+                <div className="font-medium">{tStatusRE(values.status, language)}</div>
               </div>
             </div>
           </div>
@@ -564,7 +562,6 @@ function CreateLeadModal({
 // ===== הקומפוננטה הראשית =====
 function LeadsClientContent({ items }: { items: Lead[] }) {
   const router = useRouter();
-  const { lang } = useLang();
   const { language } = useLanguage();
 
   // חיפוש + פילטר
@@ -667,7 +664,7 @@ function LeadsClientContent({ items }: { items: Lead[] }) {
       setDetail(await res.json());
       router.refresh();
     } catch {
-      alert(lang === 'he' ? 'שמירת סטטוס נכשלה' : 'Failed to save status');
+      alert(language === 'he' ? 'שמירת סטטוס נכשלה' : 'Failed to save status');
     } finally {
       setOpenStatusForId(null);
     }
@@ -682,7 +679,7 @@ function LeadsClientContent({ items }: { items: Lead[] }) {
       closeModal();
       router.refresh();
     } catch {
-      alert(lang === 'he' ? 'מחיקה נכשלה' : 'Delete failed');
+      alert(language === 'he' ? 'מחיקה נכשלה' : 'Delete failed');
     } finally {
       setDeleting(false);
     }
@@ -750,7 +747,7 @@ function LeadsClientContent({ items }: { items: Lead[] }) {
                 onClick={() => setShowCreate(true)}
                 className="rounded-xl bg-blue-600 text-white px-3 py-2 text-sm hover:bg-blue-700"
               >
-                {lang === 'he' ? '+ ליד חדש' : '+ New lead'}
+                {language === 'he' ? '+ ליד חדש' : '+ New lead'}
               </button>
 
               <select
@@ -760,7 +757,7 @@ function LeadsClientContent({ items }: { items: Lead[] }) {
               >
                 {STATUS_OPTIONS.map((s) => (
                   <option key={s} value={s}>
-                    {s === 'All' ? (lang === 'he' ? 'הכל' : 'All') : tStatusRE(s, lang)}
+                    {s === 'All' ? (language === 'he' ? 'הכל' : 'All') : tStatusRE(s, language)}
                   </option>
                 ))}
               </select>
@@ -770,7 +767,7 @@ function LeadsClientContent({ items }: { items: Lead[] }) {
                 href="/webapi/real-estate/leads/template"
                 className="rounded-xl border px-3 py-2 text-sm hover:bg-gray-50"
               >
-                {lang === 'he' ? 'הורדת תבנית CSV' : 'Download CSV template'}
+                {language === 'he' ? 'הורדת תבנית CSV' : 'Download CSV template'}
               </a>
 
               {/* ייבוא CSV */}
@@ -778,23 +775,23 @@ function LeadsClientContent({ items }: { items: Lead[] }) {
                 onClick={() => setShowImport(true)}
                 className="rounded-xl border px-3 py-2 text-sm hover:bg-gray-50"
               >
-                {lang === 'he' ? 'ייבוא CSV' : 'Import CSV'}
+                {language === 'he' ? 'ייבוא CSV' : 'Import CSV'}
               </button>
             </div>
 
             {/* הודעת סיכום אחרי ייבוא */}
             {importSummary && (
               <div className="mb-4 rounded-xl border bg-green-50 p-3 text-sm text-green-700">
-                {(lang === 'he' ? 'ייבוא הושלם. ' : 'Import complete. ') +
-                  `${lang === 'he' ? 'נוצרו' : 'Created'}: ${importSummary.created ?? 0}, ` +
-                  `${lang === 'he' ? 'דילוגים' : 'Skipped'}: ${importSummary.skipped ?? 0}, ` +
-                  `${lang === 'he' ? 'שגיאות' : 'Errors'}: ${importSummary.errors ?? 0}`}
+                {(language === 'he' ? 'ייבוא הושלם. ' : 'Import complete. ') +
+                  `${language === 'he' ? 'נוצרו' : 'Created'}: ${importSummary.created ?? 0}, ` +
+                  `${language === 'he' ? 'דילוגים' : 'Skipped'}: ${importSummary.skipped ?? 0}, ` +
+                  `${language === 'he' ? 'שגיאות' : 'Errors'}: ${importSummary.errors ?? 0}`}
               </div>
             )}
 
             {visible.length === 0 ? (
               <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center text-gray-500 shadow-sm">
-                {lang === 'he' ? 'אין נתונים' : 'No data'}
+                {language === 'he' ? 'אין נתונים' : 'No data'}
               </div>
             ) : (
               <>
@@ -802,15 +799,15 @@ function LeadsClientContent({ items }: { items: Lead[] }) {
                   <table className="min-w-full text-sm">
                     <thead className="bg-gray-50">
                       <tr className="text-left">
-                        <th className="px-4 py-3 font-semibold text-gray-700">{lang==='he'?'לקוח':'Client'}</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">{language==='he'?'לקוח':'Client'}</th>
                         <th className="px-4 py-3 font-semibold text-gray-700">Email</th>
-                        <th className="px-4 py-3 font-semibold text-gray-700">{lang==='he'?'טלפון':'Phone'}</th>
-                        <th className="px-4 py-3 font-semibold text-gray-700">{lang==='he'?'סוג נכס':'Type'}</th>
-                        <th className="px-4 py-3 font-semibold text-gray-700">{lang==='he'?'עיר':'City'}</th>
-                        <th className="px-4 py-3 font-semibold text-gray-700">{lang==='he'?'תקציב':'Budget'}</th>
-                        <th className="px-4 py-3 font-semibold text-gray-700">{lang==='he'?'סטטוס':'Status'}</th>
-                        <th className="px-4 py-3 font-semibold text-gray-700">{lang==='he'?'מקור':'Source'}</th>
-                        <th className="px-4 py-3 font-semibold text-gray-700">{lang==='he'?'נוצר':'Created'}</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">{language==='he'?'טלפון':'Phone'}</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">{language==='he'?'סוג נכס':'Type'}</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">{language==='he'?'עיר':'City'}</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">{language==='he'?'תקציב':'Budget'}</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">{language==='he'?'סטטוס':'Status'}</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">{language==='he'?'מקור':'Source'}</th>
+                        <th className="px-4 py-3 font-semibold text-gray-700">{language==='he'?'נוצר':'Created'}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
@@ -832,7 +829,7 @@ function LeadsClientContent({ items }: { items: Lead[] }) {
                           </td>
                           <td className="px-4 py-3">
                             <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs ${statusClasses(l.status)}`}>
-                              {tStatusRE(l.status, lang)}
+                              {tStatusRE(l.status, language)}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-gray-900">{l.source || '-'}</td>
@@ -846,14 +843,14 @@ function LeadsClientContent({ items }: { items: Lead[] }) {
                 {/* פוטר עימוד */}
                 <div className="flex items-center justify-between py-3 text-sm text-gray-600">
                   <span>
-                    {lang==='he' ? 'מציג' : 'Showing'} {Math.min(shown, filtered.length)} {lang==='he' ? 'מתוך' : 'of'} {filtered.length}
+                    {language==='he' ? 'מציג' : 'Showing'} {Math.min(shown, filtered.length)} {language==='he' ? 'מתוך' : 'of'} {filtered.length}
                   </span>
                   <button
                     onClick={() => setShown((n) => n + PAGE_SIZE)}
                     disabled={!canLoadMore}
                     className={`rounded-xl border px-3 py-2 ${canLoadMore ? 'hover:bg-gray-50' : 'opacity-50'}`}
                   >
-                    {canLoadMore ? (lang==='he' ? 'טען עוד' : 'Load more') : (lang==='he' ? 'הכל נטען' : 'All loaded')}
+                    {canLoadMore ? (language==='he' ? 'טען עוד' : 'Load more') : (language==='he' ? 'הכל נטען' : 'All loaded')}
                   </button>
                 </div>
               </>
@@ -869,7 +866,7 @@ function LeadsClientContent({ items }: { items: Lead[] }) {
           <div className="absolute inset-0 flex items-center justify-center p-4">
             <div className="relative w-full max-w-xl rounded-2xl bg-white p-6 shadow-2xl">
               <div className="mb-2 text-center">
-                <h2 className="text-xl font-semibold">{lang==='he'?'פרטי ליד':'Lead details'}</h2>
+                <h2 className="text-xl font-semibold">{language==='he'?'פרטי ליד':'Lead details'}</h2>
               </div>
               <button
                 onClick={closeModal}
@@ -880,16 +877,16 @@ function LeadsClientContent({ items }: { items: Lead[] }) {
               </button>
 
               {loading && <div className="p-6 text-center text-gray-500">Loading…</div>}
-              {!loading && !detail && <div className="p-6 text-center text-red-600">{lang==='he'?'שגיאה בטעינה':'Failed to load lead.'}</div>}
+              {!loading && !detail && <div className="p-6 text-center text-red-600">{language==='he'?'שגיאה בטעינה':'Failed to load lead.'}</div>}
               {!loading && detail && (
                 <div className="space-y-3">
                   <p><strong>ID:</strong> {detail.id}</p>
-                  <p><strong>{lang==='he'?'לקוח':'Client'}:</strong> {detail.clientName ?? '-'}</p>
+                  <p><strong>{language==='he'?'לקוח':'Client'}:</strong> {detail.clientName ?? '-'}</p>
                   <p><strong>Email:</strong> {detail.email ?? '-'}</p>
-                  <p><strong>{lang==='he'?'טלפון':'Phone'}:</strong> {detail.phone ?? '-'}</p>
-                  <p><strong>{lang==='he'?'סוג נכס':'Type'}:</strong> {detail.propertyType ?? '-'}</p>
-                  <p><strong>{lang==='he'?'עיר':'City'}:</strong> {detail.city ?? '-'}</p>
-                  <p><strong>{lang==='he'?'תקציב':'Budget'}:</strong> {(detail.budgetMin ?? '') || (detail.budgetMax ?? '') ? `${detail.budgetMin ?? ''}${detail.budgetMin && detail.budgetMax ? ' - ' : ''}${detail.budgetMax ?? ''}` : '-'}</p>
+                  <p><strong>{language==='he'?'טלפון':'Phone'}:</strong> {detail.phone ?? '-'}</p>
+                  <p><strong>{language==='he'?'סוג נכס':'Type'}:</strong> {detail.propertyType ?? '-'}</p>
+                  <p><strong>{language==='he'?'עיר':'City'}:</strong> {detail.city ?? '-'}</p>
+                  <p><strong>{language==='he'?'תקציב':'Budget'}:</strong> {(detail.budgetMin ?? '') || (detail.budgetMax ?? '') ? `${detail.budgetMin ?? ''}${detail.budgetMin && detail.budgetMax ? ' - ' : ''}${detail.budgetMax ?? ''}` : '-'}</p>
 
                   {/* סטטוס */}
                   <div className="relative flex items-center gap-3">
@@ -899,7 +896,7 @@ function LeadsClientContent({ items }: { items: Lead[] }) {
                       aria-haspopup="menu"
                       aria-expanded={openStatusForId === detail.id}
                     >
-                      {tStatusRE(detail.status, lang)}
+                      {tStatusRE(detail.status, language)}
                       <svg className="ml-1 h-3 w-3 opacity-70" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                         <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 011.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
                       </svg>
@@ -907,7 +904,7 @@ function LeadsClientContent({ items }: { items: Lead[] }) {
 
                     {openStatusForId === detail.id && (
                       <div className="absolute left-0 top-full">
-                        <StatusMenu lang={lang} onPick={(s) => updateLeadStatus(detail.id, s)} />
+                        <StatusMenu language={language} onPick={(s) => updateLeadStatus(detail.id, s)} />
                       </div>
                     )}
                   </div>
@@ -927,7 +924,7 @@ function LeadsClientContent({ items }: { items: Lead[] }) {
                           aria-disabled={disabled}
                           className={`rounded-lg px-4 py-2 text-white ${disabled ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600'}`}
                         >
-                          {lang==='he'?'ווטסאפ':'WhatsApp'}
+                          {language==='he'?'ווטסאפ':'WhatsApp'}
                         </a>
                       );
                     })()}
@@ -938,7 +935,7 @@ function LeadsClientContent({ items }: { items: Lead[] }) {
                       disabled={deleting}
                       className="rounded-lg border border-red-200 text-red-600 px-4 py-2 text-sm hover:bg-red-50 disabled:opacity-60"
                     >
-                      {deleting ? (lang==='he'?'מוחק…':'Deleting…') : (lang==='he'?'מחיקה':'Delete')}
+                      {deleting ? (language==='he'?'מוחק…':'Deleting…') : (language==='he'?'מחיקה':'Delete')}
                     </button>
                   </div>
                 </div>

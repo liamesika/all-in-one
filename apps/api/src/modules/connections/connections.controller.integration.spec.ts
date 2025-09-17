@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import { ConnectionsModule } from './connections.module';
 import { PrismaService } from '../../lib/prisma.service';
 import { ConnectionProvider, ConnectionStatus } from '@prisma/client';

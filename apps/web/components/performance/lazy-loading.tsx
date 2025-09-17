@@ -115,16 +115,16 @@ export function withLazyLoading<T extends Record<string, any>>(
   } = {}
 ) {
   const LazyComponent = lazy(() => Promise.resolve({ default: Component }));
-  
+
   return memo(function LazyLoadedComponent(props: T) {
     const [shouldPreload, setShouldPreload] = React.useState(false);
-    
+
     const handleMouseEnter = React.useCallback(() => {
       if (options.preload && !shouldPreload) {
         setShouldPreload(true);
       }
     }, [shouldPreload]);
-    
+
     return (
       <div
         onMouseEnter={handleMouseEnter}
@@ -134,7 +134,7 @@ export function withLazyLoading<T extends Record<string, any>>(
           fallback={options.fallback}
           errorFallback={options.errorFallback}
         >
-          <LazyComponent {...props} />
+          <LazyComponent {...(props as any)} />
         </LazyWrapper>
       </div>
     );

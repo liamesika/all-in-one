@@ -1,16 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 import { BotDataService, UserDataSnapshot } from './bot-data.service';
-// Temporarily comment out Prisma enum imports for compilation check
-// import {
-//   CampaignStatus,
-//   RealEstateLeadStatus,
-//   EcommerceLeadStatus,
-//   TaskStatus,
-//   Priority,
-//   MessageStatus,
-//   MessageChannel
-// } from '@prisma/client';
+import {
+  CampaignStatus,
+  RealEstateLeadStatus,
+  EcommerceLeadStatus,
+  TaskStatus,
+  Priority,
+  MessageStatus,
+  MessageChannel
+} from '@prisma/client';
 
 export interface BotToolResult {
   success: boolean;

@@ -9,13 +9,13 @@
     "lint": "echo 'lint worker'"
   },
   "dependencies": {
-    "@aws-sdk/client-sqs": "^3.645.0",
     "@aws-sdk/client-s3": "^3.645.0",
+    "@aws-sdk/client-sqs": "^3.645.0",
     "mime-types": "^2.1.35"
   },
   "devDependencies": {
-    "typescript": "^5.5.4",
+    "@types/node": "^20.14.11",
     "ts-node": "^10.9.2",
-    "@types/node": "^20.14.11"
+    "typescript": "^5.5.4"
   }
 }

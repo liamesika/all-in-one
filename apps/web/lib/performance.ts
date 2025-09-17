@@ -1,11 +1,11 @@
 // Performance monitoring utilities
-import { getCLS, getFID, getFCP, getLCP, getTTFB, Metric } from 'web-vitals';
+import { onCLS, onINP, onFCP, onLCP, onTTFB, Metric } from 'web-vitals';
 
 // Performance configuration
 export const PERFORMANCE_CONFIG = {
   // Core Web Vitals thresholds (good/needs-improvement/poor)
   LCP_THRESHOLDS: [2500, 4000], // Largest Contentful Paint
-  FID_THRESHOLDS: [100, 300],   // First Input Delay
+  INP_THRESHOLDS: [200, 500],   // Interaction to Next Paint (replaced FID)
   CLS_THRESHOLDS: [0.1, 0.25],  // Cumulative Layout Shift
   FCP_THRESHOLDS: [1800, 3000], // First Contentful Paint
   TTFB_THRESHOLDS: [800, 1800], // Time to First Byte
@@ -59,11 +59,11 @@ export function initPerformanceMonitoring() {
   if (typeof window === 'undefined') return;
 
   // Core Web Vitals
-  getCLS(sendToAnalytics);
-  getFID(sendToAnalytics);
-  getFCP(sendToAnalytics);
-  getLCP(sendToAnalytics);
-  getTTFB(sendToAnalytics);
+  onCLS(sendToAnalytics);
+  onINP(sendToAnalytics);
+  onFCP(sendToAnalytics);
+  onLCP(sendToAnalytics);
+  onTTFB(sendToAnalytics);
 
   // Custom performance marks
   if (performance.mark) {
@@ -97,7 +97,7 @@ function monitorResourceTiming() {
             rating: getRating(resourceEntry.duration, [500, 1000]),
             delta: 0,
             id: resourceEntry.name,
-          } as Metric, {
+          } as unknown as Metric, {
             resourceType: getResourceType(resourceEntry.name),
             transferSize: resourceEntry.transferSize,
             decodedBodySize: resourceEntry.decodedBodySize,
@@ -139,7 +139,7 @@ function monitorMemoryUsage() {
       rating: getRating(memory.usedJSHeapSize / 1024 / 1024, [50, 100]), // MB
       delta: 0,
       id: 'heap-size',
-    } as Metric, {
+    } as unknown as Metric, {
       totalJSHeapSize: memory.totalJSHeapSize,
       jsHeapSizeLimit: memory.jsHeapSizeLimit,
     });
@@ -164,7 +164,7 @@ function monitorNetworkInfo() {
     rating: 'good',
     delta: 0,
     id: 'connection',
-  } as Metric, networkInfo);
+  } as unknown as Metric, networkInfo);
 
   // Listen for network changes
   connection.addEventListener('change', () => {
@@ -174,7 +174,7 @@ function monitorNetworkInfo() {
       rating: 'good',
       delta: 0,
       id: 'connection-change',
-    } as Metric, {
+    } as unknown as Metric, {
       effectiveType: connection.effectiveType,
       downlink: connection.downlink,
       rtt: connection.rtt,
@@ -216,7 +216,7 @@ export class PerformanceMeasurer {
         rating: getRating(duration, [100, 500]),
         delta: 0,
         id: label,
-      } as Metric);
+      } as unknown as Metric);
     }
 
     return duration;
@@ -240,7 +240,7 @@ export function trackAPICall(url: string, method: string = 'GET') {
         rating: getRating(duration, [500, 1500]),
         delta: 0,
         id: url,
-      } as Metric, {
+      } as unknown as Metric, {
         method,
         success,
         statusCode,
@@ -276,7 +276,7 @@ function measurePageLoad(pageName: string, additionalData: Record<string, any>) 
     rating: getRating(pageLoadTime, [2000, 4000]),
     delta: 0,
     id: pageName,
-  } as Metric, {
+  } as unknown as Metric, {
     domContentLoaded,
     firstByte,
     ...additionalData,
@@ -291,7 +291,7 @@ export function trackError(error: Error, context: string = '') {
     rating: 'poor',
     delta: 0,
     id: error.name,
-  } as Metric, {
+  } as unknown as Metric, {
     message: error.message,
     stack: error.stack,
     context,
@@ -307,5 +307,5 @@ export function reportBundleSize(bundleName: string, size: number) {
     rating: getRating(size / 1024, [250, 500]), // KB
     delta: 0,
     id: bundleName,
-  } as Metric);
+  } as unknown as Metric);
 }

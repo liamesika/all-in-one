@@ -11,7 +11,8 @@ module.exports = {
     '<rootDir>/test-setup.ts'
   ],
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/$1'
+    '^@/(.*)$': '<rootDir>/$1',
+    '@prisma/client': '<rootDir>/../../../node_modules/@prisma/client/index.js'
   },
   coverageDirectory: '../coverage',
   collectCoverageFrom: [

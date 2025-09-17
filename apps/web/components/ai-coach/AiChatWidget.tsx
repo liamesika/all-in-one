@@ -84,7 +84,8 @@ const CHAT_TRANSLATIONS = {
 };
 
 export default function AiChatWidget({ ownerUid, organizationId, className }: AiChatWidgetProps) {
-  const { language, dir } = useLanguage();
+  const { language } = useLanguage();
+  const dir = language === 'he' ? 'rtl' : 'ltr';
   const t = CHAT_TRANSLATIONS[language];
 
   const [isOpen, setIsOpen] = useState(false);
@@ -119,6 +120,12 @@ export default function AiChatWidget({ ownerUid, organizationId, className }: Ai
   }, [isOpen, ownerUid]);
 
   const loadChatHistory = async () => {
+    if (!ownerUid) {
+      console.warn('Cannot load chat: ownerUid is required');
+      setConnectionStatus('offline');
+      return;
+    }
+
     try {
       setConnectionStatus('connecting');
 
@@ -136,6 +143,7 @@ export default function AiChatWidget({ ownerUid, organizationId, className }: Ai
           'x-org-id': ownerUid,
         },
         body: JSON.stringify({
+          organizationId: ownerUid,
           language,
         }),
       });
@@ -482,7 +490,7 @@ export default function AiChatWidget({ ownerUid, organizationId, className }: Ai
                 <Input
                   ref={inputRef}
                   value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInputMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder={t.typePlaceholder}
                   disabled={isLoading || connectionStatus !== 'online'}

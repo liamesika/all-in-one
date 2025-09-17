@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import LangProvider from '../components/i18n/LangProvider';
+import { LanguageProvider } from '../lib/language-context';
 import { AuthProvider } from '../lib/auth-context';
 
 export default function AppProviders({
@@ -13,7 +13,7 @@ export default function AppProviders({
 }) {
   return (
     <AuthProvider>
-      <LangProvider initialLang={initialLang}>{children}</LangProvider>
+      <LanguageProvider initialLang={initialLang}>{children}</LanguageProvider>
     </AuthProvider>
   );
 }

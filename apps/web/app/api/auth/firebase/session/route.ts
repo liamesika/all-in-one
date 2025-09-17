@@ -5,7 +5,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
     // Proxy to the NestJS API server
-    const response = await fetch('http://localhost:4001/api/auth/firebase/session', {
+    const response = await fetch('http://localhost:4000/api/auth/firebase/session', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

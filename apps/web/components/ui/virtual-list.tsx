@@ -2,8 +2,14 @@
 'use client';
 
 import React, { useMemo, useCallback, useState, useRef, useEffect } from 'react';
-import { FixedSizeList as List, VariableSizeList, ListChildComponentProps } from 'react-window';
+import { FixedSizeList, VariableSizeList, ListChildComponentProps } from 'react-window';
+
+// @ts-ignore - Type issue with react-window
+const List = FixedSizeList as any;
 import InfiniteLoader from 'react-window-infinite-loader';
+
+// @ts-ignore - Type issue with react-window-infinite-loader
+const InfiniteLoaderComponent = InfiniteLoader as any;
 
 // Virtual table component for large datasets
 interface VirtualTableProps<T> {
@@ -38,7 +44,7 @@ export function VirtualTable<T extends { id: string | number }>({
   rowClassName = '',
   onRowClick,
 }: VirtualTableProps<T>) {
-  const listRef = useRef<List>(null);
+  const listRef = useRef<any>(null);
   
   // Calculate total width
   const totalWidth = useMemo(() => 
@@ -79,7 +85,7 @@ export function VirtualTable<T extends { id: string | number }>({
       >
         {columns.map((col, colIndex) => (
           <div
-            key={`${item.id}-${col.key}`}
+            key={`${item.id}-${String(col.key)}`}
             className="flex items-center px-4 py-2 text-sm truncate"
             style={{ width: col.width, minWidth: col.width }}
           >
@@ -115,14 +121,14 @@ export function VirtualTable<T extends { id: string | number }>({
     return (
       <div className={`rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden ${className}`}>
         {Header}
-        <InfiniteLoader
+        <InfiniteLoaderComponent
           isItemLoaded={isItemLoaded}
           itemCount={itemCount}
           loadMoreItems={onLoadMore}
         >
-          {({ onItemsRendered, ref }) => (
+          {({ onItemsRendered, ref }: any) => (
             <List
-              ref={(list) => {
+              ref={(list: any) => {
                 listRef.current = list;
                 if (typeof ref === 'function') ref(list);
                 else if (ref) (ref as any).current = list;
@@ -137,7 +143,7 @@ export function VirtualTable<T extends { id: string | number }>({
               {Row}
             </List>
           )}
-        </InfiniteLoader>
+        </InfiniteLoaderComponent>
       </div>
     );
   }
@@ -252,12 +258,12 @@ export function VirtualGrid<T extends { id: string | number }>({
   if (onLoadMore) {
     return (
       <div ref={containerRef} className={className}>
-        <InfiniteLoader
+        <InfiniteLoaderComponent
           isItemLoaded={isItemLoaded}
           itemCount={itemCount}
           loadMoreItems={onLoadMore}
         >
-          {({ onItemsRendered, ref }) => (
+          {({ onItemsRendered, ref }: any) => (
             <List
               ref={ref}
               height={height}
@@ -269,7 +275,7 @@ export function VirtualGrid<T extends { id: string | number }>({
               {Row}
             </List>
           )}
-        </InfiniteLoader>
+        </InfiniteLoaderComponent>
       </div>
     );
   }
@@ -325,12 +331,12 @@ export function OptimizedList<T extends { id: string | number }>({
     return (
       <div className={className}>
         {onLoadMore ? (
-          <InfiniteLoader
-            isItemLoaded={(index) => !!items[index]}
+          <InfiniteLoaderComponent
+            isItemLoaded={(index: number) => !!items[index]}
             itemCount={hasNextPage ? items.length + 1 : items.length}
             loadMoreItems={onLoadMore}
           >
-            {({ onItemsRendered, ref }) => (
+            {({ onItemsRendered, ref }: any) => (
               <List
                 ref={ref}
                 height={Math.min(itemHeight * 10, itemHeight * items.length)}
@@ -338,7 +344,7 @@ export function OptimizedList<T extends { id: string | number }>({
                 itemSize={itemHeight}
                 onItemsRendered={onItemsRendered}
               >
-                {({ index, style }) => {
+                {({ index, style }: any) => {
                   const item = items[index];
                   return (
                     <div style={style}>
@@ -348,14 +354,14 @@ export function OptimizedList<T extends { id: string | number }>({
                 }}
               </List>
             )}
-          </InfiniteLoader>
+          </InfiniteLoaderComponent>
         ) : (
           <List
             height={Math.min(itemHeight * 10, itemHeight * items.length)}
             itemCount={items.length}
             itemSize={itemHeight}
           >
-            {({ index, style }) => (
+            {({ index, style }: any) => (
               <div style={style}>
                 {renderItem(items[index], index)}
               </div>
