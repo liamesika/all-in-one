@@ -1,30 +1,47 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Line, Bar } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ChartOptions,
-} from 'chart.js';
+// Temporary fallback to avoid chart.js SSR issues
+// TODO: Re-enable after fixing SSR
+// import { Line, Bar } from 'react-chartjs-2';
+// import {
+//   Chart as ChartJS,
+//   CategoryScale,
+//   LinearScale,
+//   PointElement,
+//   LineElement,
+//   BarElement,
+//   Title,
+//   Tooltip,
+//   Legend,
+//   ChartOptions,
+// } from 'chart.js';
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
+// Simple chart fallbacks
+const Line = ({ data, options }: any) => (
+  <div className="bg-gray-100 h-64 flex items-center justify-center rounded">
+    <div className="text-gray-500">Chart temporarily disabled for deployment</div>
+  </div>
 );
+
+const Bar = ({ data, options }: any) => (
+  <div className="bg-gray-100 h-64 flex items-center justify-center rounded">
+    <div className="text-gray-500">Chart temporarily disabled for deployment</div>
+  </div>
+);
+
+type ChartOptions = any;
+
+// ChartJS.register(
+//   CategoryScale,
+//   LinearScale,
+//   PointElement,
+//   LineElement,
+//   BarElement,
+//   Title,
+//   Tooltip,
+//   Legend
+// );
 
 interface InsightData {
   date: string;
@@ -195,7 +212,7 @@ export default function InsightsDashboard({ userToken, className = '' }: Insight
     ],
   };
 
-  const chartOptions: ChartOptions<'line'> = {
+  const chartOptions: ChartOptions = {
     responsive: true,
     plugins: {
       legend: {

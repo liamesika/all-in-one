@@ -1,7 +1,18 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+// Temporary fallback to avoid framer-motion SSR issues
+// TODO: Re-enable after fixing SSR
+// import { motion, AnimatePresence } from 'framer-motion';
+
+// Temporary motion fallback
+const motion = {
+  div: (props: any) => <div {...props} />,
+  button: (props: any) => <button {...props} />,
+  span: (props: any) => <span {...props} />,
+} as any;
+
+const AnimatePresence = ({ children }: { children: React.ReactNode }) => <>{children}</>;
 import { MessageCircle, X, Send, Bot, User, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { useLanguage } from '../../lib/language-context';
 import { Button, Input, Card, CardContent, CardHeader, Badge } from '../ui';
@@ -529,7 +540,7 @@ export default function AiChatWidget({ ownerUid, organizationId, className }: Ai
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
               className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md mx-4"
               dir={dir}
             >

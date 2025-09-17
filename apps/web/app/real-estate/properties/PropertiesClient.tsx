@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+// Temporary fallback: replaced framer-motion for Vercel build compatibility
+// import { motion } from "framer-motion";
 import { ArrowUp, Phone } from "lucide-react"
 
 const brand = {
@@ -11,13 +12,7 @@ const brand = {
 
 export default function PropertiesClient({ initialData }: { initialData: any[] }) {
   return (
-    <motion.main
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="p-8 max-w-6xl mx-auto"
-      dir="rtl"
-    >
+    <main className="p-8 max-w-6xl mx-auto" dir="rtl">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-extrabold" style={{ color: brand.primary }}>
           נכסים
@@ -50,11 +45,8 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
             <tbody>
               {initialData.length > 0 ? (
                 initialData.map((r) => (
-                  <motion.tr
+                  <tr
                     key={r.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
                     className="border-t hover:bg-gray-50 transition"
                   >
                     <td className="p-3 font-semibold">{r.name}</td>
@@ -90,7 +82,7 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
                         ) : null}
                       </div>
                     </td>
-                  </motion.tr>
+                  </tr>
                 ))
               ) : (
                 <tr>
@@ -103,6 +95,6 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
           </table>
         </div>
       </div>
-    </motion.main>
+    </main>
   );
 }

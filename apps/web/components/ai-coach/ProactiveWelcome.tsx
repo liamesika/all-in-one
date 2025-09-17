@@ -1,7 +1,18 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+// Temporary fallback to avoid framer-motion SSR issues
+// TODO: Re-enable after fixing SSR
+// import { motion, AnimatePresence } from 'framer-motion';
+
+// Temporary motion fallback
+const motion = {
+  div: (props: any) => <div {...props} />,
+  button: (props: any) => <button {...props} />,
+  span: (props: any) => <span {...props} />,
+} as any;
+
+const AnimatePresence = ({ children }: { children: React.ReactNode }) => <>{children}</>;
 import { X, Bot, AlertTriangle, TrendingUp, Calendar, CheckCircle, XCircle, ExternalLink } from 'lucide-react';
 import { useLanguage } from '../../lib/language-context';
 import { Button, Card, CardContent, CardHeader, CardTitle, Badge } from '../ui';

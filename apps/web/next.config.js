@@ -8,13 +8,15 @@ const nextConfig = {
   generateEtags: true,
   
 
-  // External packages for server components
-  serverExternalPackages: [
-    'framer-motion',
-    'react-window',
-    'chart.js',
-    'react-chartjs-2'
-  ],
+  // External packages for server components (temporarily disabled for build)
+  // serverExternalPackages: [
+  //   'framer-motion',
+  //   'react-window',
+  //   'react-window-infinite-loader',
+  //   'chart.js',
+  //   'react-chartjs-2',
+  //   'recharts'
+  // ],
 
   // Experimental features for performance
   experimental: {
@@ -35,6 +37,16 @@ const nextConfig = {
 
   // Webpack optimization
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
+    // CRITICAL: Fix "self is not defined" error by changing webpack's global object
+    config.output.globalObject = 'this';
+
+    // Additional webpack runtime safety - disable complex optimizations
+    if (!dev) {
+      config.optimization.runtimeChunk = false; // Disable runtime chunk splitting to avoid undefined issues
+      // Disable splitChunks to avoid webpack runtime dependency issues
+      config.optimization.splitChunks = false;
+    }
+
     // Node.js polyfills for browser globals
     if (!isServer) {
       config.resolve.fallback = {
@@ -44,13 +56,17 @@ const nextConfig = {
         tls: false,
         crypto: false,
       };
-    } else {
-      // For server-side, define self globally
-      config.plugins.push(
-        new webpack.DefinePlugin({
-          self: 'global'
-        })
-      );
+
+      // Externalize problematic packages to prevent bundling
+      config.externals = config.externals || [];
+      config.externals.push({
+        'framer-motion': 'framer-motion',
+        'react-window': 'react-window',
+        'react-window-infinite-loader': 'react-window-infinite-loader',
+        'chart.js': 'chart.js',
+        'react-chartjs-2': 'react-chartjs-2',
+        'recharts': 'recharts'
+      });
     }
     // Bundle analyzer (only in production build with ANALYZE=true)
     if (process.env.ANALYZE === 'true') {
@@ -68,68 +84,11 @@ const nextConfig = {
       }
     }
 
-    // Production optimizations
+    // Minimal production optimizations to avoid webpack runtime errors
     if (!dev) {
-      // Tree shaking
+      // Only basic tree shaking - let Next.js handle the rest
       config.optimization.usedExports = true;
       config.optimization.sideEffects = false;
-
-      // Split chunks optimization
-      config.optimization.splitChunks = {
-        chunks: 'all',
-        cacheGroups: {
-          default: {
-            minChunks: 2,
-            priority: -20,
-            reuseExistingChunk: true,
-          },
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            priority: -10,
-            chunks: 'all',
-            enforce: true,
-          },
-          common: {
-            name: 'common',
-            minChunks: 2,
-            priority: -30,
-            reuseExistingChunk: true,
-          },
-          // Separate chunks for large libraries
-          react: {
-            test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
-            name: 'react',
-            chunks: 'all',
-            priority: 20,
-          },
-          framerMotion: {
-            test: /[\\/]node_modules[\\/]framer-motion[\\/]/,
-            name: 'framer-motion',
-            chunks: 'all',
-            priority: 15,
-          },
-          firebase: {
-            test: /[\\/]node_modules[\\/]firebase[\\/]/,
-            name: 'firebase',
-            chunks: 'all',
-            priority: 10,
-          },
-        },
-      };
-
-      // Minimize CSS
-      try {
-        const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-        config.plugins.push(
-          new MiniCssExtractPlugin({
-            filename: 'static/css/[contenthash].css',
-            chunkFilename: 'static/css/[contenthash].css',
-          })
-        );
-      } catch (error) {
-        console.warn('mini-css-extract-plugin not available, using default CSS handling');
-      }
     }
 
     // Performance budgets (warnings)
@@ -169,11 +128,11 @@ const nextConfig = {
 
   // PWA support would require next-pwa package - removed for Next.js 15 compatibility
 
-  // Output configuration - static export to avoid SSR issues
-  output: 'export',
+  // Output configuration - temporarily disabled static export for debugging
+  // output: 'export',
   trailingSlash: false,
   images: {
-    unoptimized: true, // Required for static export
+    unoptimized: false, // Re-enabled for SSR build
     formats: ['image/webp', 'image/avif'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],

@@ -11,19 +11,11 @@ export const PropertyImportModal = dynamic(
   }
 );
 
+// Temporary fallback: replaced recharts for Vercel build compatibility
 export const ChartComponents = {
-  LineChart: dynamic(() => (import('recharts') as any).then((mod: any) => ({ default: mod.LineChart })).catch(() => ({ default: () => <div>Install recharts for charts</div> })), {
-    loading: () => <LoadingSpinner size="small" />,
-    ssr: false
-  }),
-  BarChart: dynamic(() => (import('recharts') as any).then((mod: any) => ({ default: mod.BarChart })).catch(() => ({ default: () => <div>Install recharts for charts</div> })), {
-    loading: () => <LoadingSpinner size="small" />,
-    ssr: false
-  }),
-  PieChart: dynamic(() => (import('recharts') as any).then((mod: any) => ({ default: mod.PieChart })).catch(() => ({ default: () => <div>Install recharts for charts</div> })), {
-    loading: () => <LoadingSpinner size="small" />,
-    ssr: false
-  })
+  LineChart: () => <div className="p-4 border rounded bg-gray-50 text-gray-600">Charts temporarily disabled for build compatibility</div>,
+  BarChart: () => <div className="p-4 border rounded bg-gray-50 text-gray-600">Charts temporarily disabled for build compatibility</div>,
+  PieChart: () => <div className="p-4 border rounded bg-gray-50 text-gray-600">Charts temporarily disabled for build compatibility</div>
 };
 
 export const RichTextEditor = dynamic(

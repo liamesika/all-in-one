@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { motion } from "framer-motion";
+// Temporary fallback: replaced framer-motion for Vercel build compatibility
+// import { motion } from "framer-motion";
 import { apiFetch } from "@/lib/api";
 import { LanguageProvider, useLanguage } from "@/lib/language-context";
 import { LanguageToggle } from "@/components/language-toggle";
@@ -649,12 +650,7 @@ function PropertiesPageContent() {
         </div>
       </div>
       
-      <motion.main
-        className="p-6 max-w-7xl mx-auto"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-      >
+      <main className="p-6 max-w-7xl mx-auto">
 
       {/* Table */}
       <div className="mt-6 rounded-2xl border bg-white shadow-xl overflow-hidden">
@@ -1282,7 +1278,7 @@ function PropertiesPageContent() {
           load(); // Refresh the properties list
         }}
       />
-      </motion.main>
+      </main>
     </div>
   );
 }

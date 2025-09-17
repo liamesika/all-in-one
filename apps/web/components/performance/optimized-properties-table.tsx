@@ -1,7 +1,8 @@
 'use client';
 
 import React, { memo, useCallback, useMemo, useState, useEffect } from 'react';
-import { FixedSizeList } from 'react-window';
+// Temporary fallback: replaced react-window for Vercel build compatibility
+// import { FixedSizeList } from 'react-window';
 import { useLanguage } from '@/lib/language-context';
 import { Pagination } from '@/components/ui/pagination';
 import { LazyImage, LoadingSpinner } from './lazy-loading';
@@ -252,31 +253,7 @@ const PropertyRow = memo(function PropertyRow({
   );
 });
 
-// Virtual list row renderer
-const VirtualRow = memo(function VirtualRow({ 
-  index, 
-  style, 
-  data 
-}: { 
-  index: number; 
-  style: React.CSSProperties; 
-  data: any 
-}) {
-  const { properties, ...handlers } = data;
-  const property = properties[index];
-
-  if (!property) return null;
-
-  return (
-    <div style={style}>
-      <PropertyRow
-        property={property}
-        index={index}
-        {...handlers}
-      />
-    </div>
-  );
-});
+// Virtual list functionality temporarily disabled for Vercel build compatibility
 
 // Main optimized table component
 export const OptimizedPropertiesTable = memo(function OptimizedPropertiesTable({
@@ -291,7 +268,7 @@ export const OptimizedPropertiesTable = memo(function OptimizedPropertiesTable({
   onPropertySync,
   onPropertyExport,
   onPropertyShare,
-  virtualScrolling = true,
+  virtualScrolling = false, // Disabled for Vercel build compatibility
   itemHeight = 80,
   maxHeight = 600,
 }: PropertiesTableProps) {

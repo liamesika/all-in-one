@@ -2,12 +2,18 @@ import { NextResponse, NextRequest } from 'next/server';
 import OpenAI from 'openai';
 import { resolveTenantContext, logTenantOperation } from '../../../../lib/auth/tenant-guard';
 
-// Initialize OpenAI with proper configuration
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  timeout: 30000, // 30 seconds timeout
-  maxRetries: 2,
-});
+// Lazy-initialize OpenAI only when needed to avoid build-time errors
+function getOpenAIClient() {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY is not configured');
+  }
+
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+    timeout: 30000, // 30 seconds timeout
+    maxRetries: 2,
+  });
+}
 
 interface ChatRequest {
   message: string;
@@ -120,6 +126,7 @@ Provide helpful, accurate, and actionable responses. When users ask about specif
     const userMessage = body.message.trim();
 
     // Call OpenAI API with timeout and error handling
+    const openai = getOpenAIClient();
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini', // Use the more cost-effective model
       messages: [

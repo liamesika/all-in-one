@@ -2,14 +2,11 @@
 'use client';
 
 import React, { useMemo, useCallback, useState, useRef, useEffect } from 'react';
-import { FixedSizeList, VariableSizeList, ListChildComponentProps } from 'react-window';
 
-// @ts-ignore - Type issue with react-window
-const List = FixedSizeList as any;
-import InfiniteLoader from 'react-window-infinite-loader';
-
-// @ts-ignore - Type issue with react-window-infinite-loader
-const InfiniteLoaderComponent = InfiniteLoader as any;
+// Temporary fallback to avoid react-window SSR issues
+// TODO: Re-enable after fixing SSR
+// import { FixedSizeList, VariableSizeList, ListChildComponentProps } from 'react-window';
+// import InfiniteLoader from 'react-window-infinite-loader';
 
 // Virtual table component for large datasets
 interface VirtualTableProps<T> {
@@ -31,6 +28,7 @@ interface VirtualTableProps<T> {
   onRowClick?: (item: T, index: number) => void;
 }
 
+// Simple fallback table component (non-virtualized)
 export function VirtualTable<T extends { id: string | number }>({
   items,
   itemHeight = 60,
@@ -44,347 +42,129 @@ export function VirtualTable<T extends { id: string | number }>({
   rowClassName = '',
   onRowClick,
 }: VirtualTableProps<T>) {
-  const listRef = useRef<any>(null);
-  
-  // Calculate total width
-  const totalWidth = useMemo(() => 
-    columns.reduce((sum, col) => sum + col.width, 0), 
-    [columns]
-  );
 
-  // Infinite loading setup
-  const itemCount = hasNextPage ? items.length + 1 : items.length;
-  const isItemLoaded = useCallback((index: number) => !!items[index], [items]);
-
-  // Row renderer
-  const Row = useCallback(({ index, style }: ListChildComponentProps) => {
-    const item = items[index];
-    
-    // Loading row
-    if (!item) {
-      return (
-        <div style={style} className="flex items-center justify-center border-b">
-          <div className="animate-pulse flex space-x-4 w-full p-4">
-            {columns.map((col, i) => (
-              <div
-                key={i}
-                className="h-4 bg-gray-200 rounded animate-shimmer"
-                style={{ width: col.width }}
-              />
-            ))}
-          </div>
-        </div>
-      );
+  const handleLoadMore = useCallback(async () => {
+    if (onLoadMore && hasNextPage && !isLoadingMore) {
+      await onLoadMore();
     }
+  }, [onLoadMore, hasNextPage, isLoadingMore]);
 
-    return (
-      <div
-        style={style}
-        className={`flex border-b border-gray-200 hover:bg-gray-50 transition-all duration-200 cursor-pointer hover-lift ${rowClassName}`}
-        onClick={() => onRowClick?.(item, index)}
-      >
-        {columns.map((col, colIndex) => (
+  return (
+    <div className={`border rounded-lg overflow-hidden ${className}`} style={{ width, maxHeight: height }}>
+      {/* Header */}
+      <div className="bg-gray-50 border-b flex">
+        {columns.map((column, index) => (
           <div
-            key={`${item.id}-${String(col.key)}`}
-            className="flex items-center px-4 py-2 text-sm truncate"
-            style={{ width: col.width, minWidth: col.width }}
+            key={index}
+            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            style={{ width: column.width, minWidth: column.width }}
           >
-            {col.render 
-              ? col.render(item, index)
-              : String((item as any)[col.key] || '-')
-            }
+            {column.header}
           </div>
         ))}
       </div>
-    );
-  }, [items, columns, rowClassName, onRowClick]);
 
-  // Header component
-  const Header = useMemo(() => (
-    <div 
-      className="flex bg-gray-50 border-b border-gray-200 sticky top-0 z-10"
-      style={{ width: totalWidth }}
-    >
-      {columns.map((col) => (
-        <div
-          key={String(col.key)}
-          className="flex items-center px-4 py-3 text-sm font-semibold text-gray-700"
-          style={{ width: col.width, minWidth: col.width }}
-        >
-          {col.header}
-        </div>
-      ))}
-    </div>
-  ), [columns, totalWidth]);
-
-  if (onLoadMore) {
-    return (
-      <div className={`rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden ${className}`}>
-        {Header}
-        <InfiniteLoaderComponent
-          isItemLoaded={isItemLoaded}
-          itemCount={itemCount}
-          loadMoreItems={onLoadMore}
-        >
-          {({ onItemsRendered, ref }: any) => (
-            <List
-              ref={(list: any) => {
-                listRef.current = list;
-                if (typeof ref === 'function') ref(list);
-                else if (ref) (ref as any).current = list;
-              }}
-              height={height}
-              itemCount={itemCount}
-              itemSize={itemHeight}
-              onItemsRendered={onItemsRendered}
-              width={totalWidth}
-              style={{ minWidth: width }}
-            >
-              {Row}
-            </List>
-          )}
-        </InfiniteLoaderComponent>
-      </div>
-    );
-  }
-
-  return (
-    <div className={`rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden ${className}`}>
-      {Header}
-      <List
-        ref={listRef}
-        height={height}
-        itemCount={items.length}
-        itemSize={itemHeight}
-        width={totalWidth}
-        style={{ minWidth: width }}
-      >
-        {Row}
-      </List>
-    </div>
-  );
-}
-
-// Virtual grid component for card-based layouts
-interface VirtualGridProps<T> {
-  items: T[];
-  itemHeight: number;
-  itemWidth: number;
-  gap?: number;
-  height?: number;
-  className?: string;
-  renderItem: (item: T, index: number) => React.ReactNode;
-  onLoadMore?: () => Promise<void>;
-  hasNextPage?: boolean;
-}
-
-export function VirtualGrid<T extends { id: string | number }>({
-  items,
-  itemHeight,
-  itemWidth,
-  gap = 16,
-  height = 400,
-  className = '',
-  renderItem,
-  onLoadMore,
-  hasNextPage = false,
-}: VirtualGridProps<T>) {
-  const [containerWidth, setContainerWidth] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  // Calculate columns based on container width
-  const columnsCount = useMemo(() => {
-    if (containerWidth === 0) return 1;
-    return Math.floor((containerWidth + gap) / (itemWidth + gap)) || 1;
-  }, [containerWidth, itemWidth, gap]);
-
-  // Calculate rows count
-  const rowsCount = Math.ceil(items.length / columnsCount);
-  const itemCount = hasNextPage ? rowsCount + 1 : rowsCount;
-
-  // Resize observer
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      const { width } = entries[0].contentRect;
-      setContainerWidth(width);
-    });
-
-    resizeObserver.observe(container);
-    return () => resizeObserver.disconnect();
-  }, []);
-
-  // Row renderer
-  const Row = useCallback(({ index, style }: ListChildComponentProps) => {
-    const startIndex = index * columnsCount;
-    const endIndex = Math.min(startIndex + columnsCount, items.length);
-    const rowItems = items.slice(startIndex, endIndex);
-
-    // Loading row
-    if (rowItems.length === 0 && hasNextPage) {
-      return (
-        <div style={style} className="flex justify-center items-center">
-          <div className="animate-pulse">Loading more...</div>
-        </div>
-      );
-    }
-
-    return (
-      <div style={style} className="flex" role="row">
-        {rowItems.map((item, colIndex) => (
+      {/* Body */}
+      <div className="overflow-y-auto" style={{ maxHeight: height - 50 }}>
+        {items.map((item, index) => (
           <div
             key={item.id}
-            className="flex-shrink-0"
-            style={{
-              width: itemWidth,
-              marginRight: colIndex < rowItems.length - 1 ? gap : 0,
-            }}
-            role="gridcell"
+            className={`flex border-b hover:bg-gray-50 cursor-pointer ${rowClassName}`}
+            style={{ minHeight: itemHeight }}
+            onClick={() => onRowClick?.(item, index)}
           >
-            {renderItem(item, startIndex + colIndex)}
+            {columns.map((column, colIndex) => (
+              <div
+                key={colIndex}
+                className="px-4 py-3 text-sm text-gray-900 flex items-center"
+                style={{ width: column.width, minWidth: column.width }}
+              >
+                {column.render
+                  ? column.render(item, index)
+                  : String(item[column.key as keyof T] || '')
+                }
+              </div>
+            ))}
           </div>
         ))}
-      </div>
-    );
-  }, [items, columnsCount, itemWidth, gap, renderItem, hasNextPage]);
 
-  const isItemLoaded = useCallback((index: number) => {
-    const startIndex = index * columnsCount;
-    return startIndex < items.length;
-  }, [items.length, columnsCount]);
+        {/* Loading indicator */}
+        {isLoadingMore && (
+          <div className="flex items-center justify-center p-4">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+            <span className="ml-2 text-sm text-gray-500">Loading more...</span>
+          </div>
+        )}
 
-  if (onLoadMore) {
-    return (
-      <div ref={containerRef} className={className}>
-        <InfiniteLoaderComponent
-          isItemLoaded={isItemLoaded}
-          itemCount={itemCount}
-          loadMoreItems={onLoadMore}
-        >
-          {({ onItemsRendered, ref }: any) => (
-            <List
-              ref={ref}
-              height={height}
-              itemCount={itemCount}
-              itemSize={itemHeight + gap}
-              onItemsRendered={onItemsRendered}
-              width="100%"
+        {/* Load more button */}
+        {hasNextPage && !isLoadingMore && (
+          <div className="flex items-center justify-center p-4">
+            <button
+              onClick={handleLoadMore}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
-              {Row}
-            </List>
-          )}
-        </InfiniteLoaderComponent>
+              Load More
+            </button>
+          </div>
+        )}
       </div>
-    );
-  }
-
-  return (
-    <div ref={containerRef} className={className}>
-      <List
-        height={height}
-        itemCount={rowsCount}
-        itemSize={itemHeight + gap}
-        width="100%"
-      >
-        {Row}
-      </List>
     </div>
   );
 }
 
-// Optimized list component with automatic virtualization threshold
-interface OptimizedListProps<T> {
+// Simple virtualized list component fallback
+interface VirtualListProps<T> {
   items: T[];
-  renderItem: (item: T, index: number) => React.ReactNode;
   itemHeight?: number;
-  virtualizationThreshold?: number;
-  className?: string;
-  emptyMessage?: string;
+  height?: number;
+  width?: string | number;
+  renderItem: (item: T, index: number) => React.ReactNode;
   onLoadMore?: () => Promise<void>;
   hasNextPage?: boolean;
+  isLoadingMore?: boolean;
+  className?: string;
 }
 
-export function OptimizedList<T extends { id: string | number }>({
+export function VirtualList<T extends { id: string | number }>({
   items,
-  renderItem,
   itemHeight = 60,
-  virtualizationThreshold = 50,
-  className = '',
-  emptyMessage = 'No items found',
+  height = 400,
+  width = '100%',
+  renderItem,
   onLoadMore,
   hasNextPage = false,
-}: OptimizedListProps<T>) {
-  // Use virtualization for large lists
-  const shouldVirtualize = items.length > virtualizationThreshold;
+  isLoadingMore = false,
+  className = '',
+}: VirtualListProps<T>) {
 
-  if (items.length === 0) {
-    return (
-      <div className={`flex items-center justify-center h-32 text-gray-500 ${className}`}>
-        {emptyMessage}
-      </div>
-    );
-  }
+  const handleLoadMore = useCallback(async () => {
+    if (onLoadMore && hasNextPage && !isLoadingMore) {
+      await onLoadMore();
+    }
+  }, [onLoadMore, hasNextPage, isLoadingMore]);
 
-  if (shouldVirtualize) {
-    return (
-      <div className={className}>
-        {onLoadMore ? (
-          <InfiniteLoaderComponent
-            isItemLoaded={(index: number) => !!items[index]}
-            itemCount={hasNextPage ? items.length + 1 : items.length}
-            loadMoreItems={onLoadMore}
-          >
-            {({ onItemsRendered, ref }: any) => (
-              <List
-                ref={ref}
-                height={Math.min(itemHeight * 10, itemHeight * items.length)}
-                itemCount={hasNextPage ? items.length + 1 : items.length}
-                itemSize={itemHeight}
-                onItemsRendered={onItemsRendered}
-              >
-                {({ index, style }: any) => {
-                  const item = items[index];
-                  return (
-                    <div style={style}>
-                      {item ? renderItem(item, index) : <div>Loading...</div>}
-                    </div>
-                  );
-                }}
-              </List>
-            )}
-          </InfiniteLoaderComponent>
-        ) : (
-          <List
-            height={Math.min(itemHeight * 10, itemHeight * items.length)}
-            itemCount={items.length}
-            itemSize={itemHeight}
-          >
-            {({ index, style }: any) => (
-              <div style={style}>
-                {renderItem(items[index], index)}
-              </div>
-            )}
-          </List>
-        )}
-      </div>
-    );
-  }
-
-  // Regular rendering for small lists
   return (
-    <div className={className}>
+    <div className={`overflow-y-auto ${className}`} style={{ height, width }}>
       {items.map((item, index) => (
-        <div key={item.id}>
+        <div key={item.id} style={{ minHeight: itemHeight }}>
           {renderItem(item, index)}
         </div>
       ))}
-      {hasNextPage && onLoadMore && (
-        <div className="p-4 text-center">
+
+      {/* Loading indicator */}
+      {isLoadingMore && (
+        <div className="flex items-center justify-center p-4">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+          <span className="ml-2 text-sm text-gray-500">Loading more...</span>
+        </div>
+      )}
+
+      {/* Load more button */}
+      {hasNextPage && !isLoadingMore && (
+        <div className="flex items-center justify-center p-4">
           <button
-            onClick={onLoadMore}
-            className="btn-primary"
+            onClick={handleLoadMore}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
             Load More
           </button>
@@ -393,3 +173,5 @@ export function OptimizedList<T extends { id: string | number }>({
     </div>
   );
 }
+
+export default VirtualTable;

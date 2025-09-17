@@ -3,7 +3,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+// Temporary fallback: replaced framer-motion for Vercel build compatibility
+// import { motion } from "framer-motion";
 import { apiFetch } from "@/lib/api";
 
 type Property = {

@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { AnimatePresence } from 'framer-motion';
+// Temporary fallback: replaced framer-motion for Vercel build compatibility
+// import { AnimatePresence } from 'framer-motion';
 import AiChatWidget from './AiChatWidget';
 import ProactiveWelcome from './ProactiveWelcome';
 import { useAiCoach, useLoginDetection } from '../../lib/ai-coach-context';
@@ -51,15 +52,13 @@ export default function AiCoachIntegration({
   return (
     <div className={className}>
       {/* Proactive Welcome Messages */}
-      <AnimatePresence>
-        {enableProactive && shouldShowWelcome && isWelcomeEnabled && (
-          <ProactiveWelcome
-            ownerUid={ownerUid}
-            organizationId={organizationId}
-            onClose={dismissWelcome}
-          />
-        )}
-      </AnimatePresence>
+      {enableProactive && shouldShowWelcome && isWelcomeEnabled && (
+        <ProactiveWelcome
+          ownerUid={ownerUid}
+          organizationId={organizationId}
+          onClose={dismissWelcome}
+        />
+      )}
 
       {/* Chat Widget */}
       {enableChat && (
