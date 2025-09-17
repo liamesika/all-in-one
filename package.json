@@ -1,7 +1,9 @@
 {
   "name": "mvp-base",
   "private": true,
-  "packageManager": "yarn@4.9.4",
+  "engines": {
+    "node": "20.x"
+  },
   "workspaces": [
     "apps/*",
     "packages/*",

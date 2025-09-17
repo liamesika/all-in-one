@@ -1,7 +1,17 @@
 {
   "hosting": {
-    "source": "apps/web",
-    "frameworksBackend": { "region": "europe-west1", "runtime": "nodejs20" }
+    "public": "apps/web/out",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
   },
   "functions": {
     "source": "functions",

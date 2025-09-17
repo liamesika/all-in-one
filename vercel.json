@@ -4,6 +4,13 @@
   "installCommand": "yarn install --frozen-lockfile",
   "framework": "nextjs",
   "env": {
-    "NEXT_DISABLE_SWC_TOOLS_PATCHING": "1"
+    "NEXT_DISABLE_SWC_TOOLS_PATCHING": "1",
+    "HUSKY": "0",
+    "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "1"
+  },
+  "functions": {
+    "apps/web/app/api/**": {
+      "runtime": "nodejs20.x"
+    }
   }
 }
