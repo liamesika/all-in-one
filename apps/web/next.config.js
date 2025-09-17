@@ -40,6 +40,16 @@ const nextConfig = {
     // CRITICAL: Fix "self is not defined" error by changing webpack's global object
     config.output.globalObject = 'this';
 
+    // Additional global polyfills for SSR compatibility
+    config.plugins.push(
+      new webpack.DefinePlugin({
+        'typeof self': '"undefined"',
+        'typeof window': isServer ? '"undefined"' : '"object"',
+        'typeof document': isServer ? '"undefined"' : '"object"',
+        'typeof navigator': isServer ? '"undefined"' : '"object"',
+      })
+    );
+
     // Additional webpack runtime safety - disable complex optimizations
     if (!dev) {
       config.optimization.runtimeChunk = false; // Disable runtime chunk splitting to avoid undefined issues
@@ -65,7 +75,8 @@ const nextConfig = {
         'react-window-infinite-loader': 'react-window-infinite-loader',
         'chart.js': 'chart.js',
         'react-chartjs-2': 'react-chartjs-2',
-        'recharts': 'recharts'
+        'recharts': 'recharts',
+        'qrcode.react': 'qrcode.react'
       });
     }
     // Bundle analyzer (only in production build with ANALYZE=true)
