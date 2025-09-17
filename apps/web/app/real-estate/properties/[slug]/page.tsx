@@ -6,7 +6,20 @@ import { apiFetch } from '@/lib/api';
 import { LanguageProvider, useLanguage } from '@/lib/language-context';
 import { LanguageToggle } from '@/components/language-toggle';
 import { EffinityHeader } from '@/components/effinity-header';
-import { QRCodeSVG } from 'qrcode.react';
+import dynamic from 'next/dynamic';
+
+// Dynamically import QRCode to avoid SSR issues with canvas/browser APIs
+const QRCodeSVG = dynamic(
+  () => import('qrcode.react').then((mod) => ({ default: mod.QRCodeSVG })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-[150px] h-[150px] bg-gray-100 animate-pulse rounded flex items-center justify-center">
+        <span className="text-gray-500 text-sm">Loading QR...</span>
+      </div>
+    )
+  }
+);
 
 type Property = {
   id: string;
