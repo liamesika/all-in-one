@@ -1,7 +1,7 @@
 // apps/web/app/register/page.tsx
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { LanguageProvider, useLanguage } from '@/lib/language-context';
 import { LanguageToggle } from '@/components/language-toggle';
@@ -28,7 +28,8 @@ function RegisterForm() {
   const router = useRouter();
   const { language, toggleLanguage, t } = useLanguage();
   const qp = useSearchParams();
-  
+  const [mounted, setMounted] = useState(false);
+
   const [formData, setFormData] = useState<FormData>({
     fullName: '',
     email: '',
@@ -37,6 +38,10 @@ function RegisterForm() {
     termsConsent: false,
     lang: language,
   });
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -189,6 +194,14 @@ function RegisterForm() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (!mounted) {
+    return (
+      <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50/30 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </main>
+    );
   }
 
   return (
