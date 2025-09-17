@@ -1,15 +1,19 @@
 {
-  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "target": "es2017",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "downlevelIteration": true,
     "baseUrl": ".",
     "typeRoots": [
-      "../../node_modules/@types",
       "./node_modules/@types"
     ],
     "paths": {
-      "@ui/*": [
-        "../../packages/ui/src/*"
-      ],
        "@/*": ["./*"]
     },
     "lib": [
@@ -23,10 +27,6 @@
     "esModuleInterop": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "types": [
-      "node",
-      "jest"
-    ],
     "plugins": [
       {
         "name": "next"
