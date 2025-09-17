@@ -5,6 +5,11 @@ import { NextResponse, type NextRequest } from 'next/server';
 const PUBLIC: string[] = ['/login', '/register', '/_not-found', '/industries'];
 
 export function middleware(req: NextRequest) {
+  // Temporarily disable middleware for deployment troubleshooting
+  // TODO: Re-enable after fixing deployment issues
+  return NextResponse.next();
+
+  /*
   const { pathname } = req.nextUrl;
 
   // ---- ALWAYS SKIP: נתיבי Next פנימיים, סטטיים ו-API ----
@@ -38,6 +43,7 @@ export function middleware(req: NextRequest) {
   }
 
   return NextResponse.next();
+  */
 }
 
 // התאמת ראוטים: כל מה שלא קובץ סטטי (אין נקודה בשם הקובץ)
