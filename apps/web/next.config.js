@@ -7,23 +7,20 @@ const nextConfig = {
   poweredByHeader: false,
   generateEtags: true,
   
-  // Image optimization
-  images: {
-    formats: ['image/webp', 'image/avif'],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
-    dangerouslyAllowSVG: true,
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-  },
+
+  // External packages for server components
+  serverExternalPackages: [
+    'framer-motion',
+    'react-window',
+    'chart.js',
+    'react-chartjs-2'
+  ],
 
   // Experimental features for performance
   experimental: {
     optimizeCss: true,
     optimizePackageImports: [
-      'lucide-react',
-      'react-window',
-      'framer-motion'
+      'lucide-react'
     ],
   },
 
@@ -38,6 +35,23 @@ const nextConfig = {
 
   // Webpack optimization
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
+    // Node.js polyfills for browser globals
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+      };
+    } else {
+      // For server-side, define self globally
+      config.plugins.push(
+        new webpack.DefinePlugin({
+          self: 'global'
+        })
+      );
+    }
     // Bundle analyzer (only in production build with ANALYZE=true)
     if (process.env.ANALYZE === 'true') {
       try {
@@ -137,77 +151,7 @@ const nextConfig = {
     return config;
   },
 
-  // Headers for security and performance
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'X-DNS-Prefetch-Control',
-            value: 'on'
-          },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block'
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'SAMEORIGIN'
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff'
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin'
-          },
-        ],
-      },
-      // Cache static assets
-      {
-        source: '/static/(.*)',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
-      // Cache images
-      {
-        source: '/_next/image(.*)',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
-      // Cache API responses (short-lived)
-      {
-        source: '/api/(.*)',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, s-maxage=60, stale-while-revalidate=300',
-          },
-        ],
-      },
-    ];
-  },
-
-  // Redirects for performance (avoid client-side redirects)
-  async redirects() {
-    return [
-      {
-        source: '/dashboard',
-        destination: '/real-estate',
-        permanent: true,
-      },
-    ];
-  },
+  // Headers and redirects not supported in static export
 
   // Environment variables
   env: {
@@ -225,9 +169,17 @@ const nextConfig = {
 
   // PWA support would require next-pwa package - removed for Next.js 15 compatibility
 
-  // Output configuration
-  output: 'standalone',
+  // Output configuration - static export to avoid SSR issues
+  output: 'export',
   trailingSlash: false,
+  images: {
+    unoptimized: true, // Required for static export
+    formats: ['image/webp', 'image/avif'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+  },
 
   // Development optimizations
   ...(process.env.NODE_ENV === 'development' && {
