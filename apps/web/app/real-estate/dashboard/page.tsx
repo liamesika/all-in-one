@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import { RealEstateDashboard } from './RealEstateDashboard';
+import { LangProvider } from '@/components/i18n/LangProvider';
 
 export const dynamic = 'force-dynamic';
 
@@ -114,14 +115,16 @@ export default async function RealEstateDashboardPage({
   const data = await getDashboardData(resolvedSearchParams);
   
   return (
-    <div className="min-h-screen bg-white">
-      <Suspense fallback={<DashboardSkeleton />}>
-        <RealEstateDashboard
-          data={data}
-          initialFilters={resolvedSearchParams}
-        />
-      </Suspense>
-    </div>
+    <LangProvider initialLang="en">
+      <div className="min-h-screen bg-white">
+        <Suspense fallback={<DashboardSkeleton />}>
+          <RealEstateDashboard
+            data={data}
+            initialFilters={resolvedSearchParams}
+          />
+        </Suspense>
+      </div>
+    </LangProvider>
   );
 }
 

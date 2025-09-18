@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import { LawDashboard } from './LawDashboard';
+import { LangProvider } from '@/components/i18n/LangProvider';
 
 export const dynamic = 'force-dynamic';
 
@@ -107,14 +108,16 @@ export default async function LawDashboardPage({
   const data = await getDashboardData(searchParams);
   
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Suspense fallback={<DashboardSkeleton />}>
-        <LawDashboard 
-          data={data} 
-          initialFilters={searchParams}
-        />
-      </Suspense>
-    </div>
+    <LangProvider initialLang="en">
+      <div className="min-h-screen bg-gray-50">
+        <Suspense fallback={<DashboardSkeleton />}>
+          <LawDashboard
+            data={data}
+            initialFilters={searchParams}
+          />
+        </Suspense>
+      </div>
+    </LangProvider>
   );
 }
 
