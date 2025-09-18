@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../../lib/firebaseClient';
+import { getFirebaseAuth } from '../../../lib/firebaseClient';
 
 export default function LoginForm() {
   const qp = useSearchParams();
@@ -29,7 +29,12 @@ export default function LoginForm() {
 
     setLoading(true);
     try {
-      const cred = await signInWithEmailAndPassword(auth, email, password);
+      const firebaseAuth = getFirebaseAuth();
+      if (!firebaseAuth) {
+        throw new Error('Firebase not initialized');
+      }
+
+      const cred = await signInWithEmailAndPassword(firebaseAuth, email, password);
       const idToken = await cred.user.getIdToken();
       const r = await fetch('/api/auth/firebase/session', {
         method: 'POST',
