@@ -25,23 +25,23 @@ export default function DashboardRedirect() {
           // Redirect based on user's default vertical
           switch (vertical) {
             case 'REAL_ESTATE':
-              router.replace('/real-estate/dashboard');
+              router.replace('/dashboard/real-estate/dashboard');
               break;
             case 'LAW':
-              router.replace('/law/dashboard');
+              router.replace('/dashboard/law/dashboard');
               break;
             case 'E_COMMERCE':
             default:
-              router.replace('/e-commerce/dashboard');
+              router.replace('/dashboard/e-commerce/dashboard');
               break;
           }
         } else {
           // Default fallback
-          router.replace('/e-commerce/dashboard');
+          router.replace('/dashboard/e-commerce/dashboard');
         }
       } catch (error) {
         console.error('Error fetching user data for redirect:', error);
-        router.replace('/e-commerce/dashboard');
+        router.replace('/dashboard/e-commerce/dashboard');
       }
     };
 

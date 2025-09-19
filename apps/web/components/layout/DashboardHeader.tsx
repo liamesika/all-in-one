@@ -44,32 +44,32 @@ const DashboardHeader: React.FC = () => {
 
   // Navigation items based on user's vertical and current features
   const navigationItems = [
-    { href: '/e-commerce/dashboard', label: 'E-commerce', vertical: 'e-commerce' },
-    { href: '/real-estate/dashboard', label: 'Real Estate', vertical: 'real-estate' },
-    { href: '/law/dashboard', label: 'Law', vertical: 'law' },
+    { href: '/dashboard/e-commerce/dashboard', label: 'E-commerce', vertical: 'e-commerce' },
+    { href: '/dashboard/real-estate/dashboard', label: 'Real Estate', vertical: 'real-estate' },
+    { href: '/dashboard/law/dashboard', label: 'Law', vertical: 'law' },
   ];
 
   // Sub-navigation for current vertical
   const getSubNavigation = () => {
-    if (pathname.startsWith('/e-commerce/')) {
+    if (pathname.startsWith('/dashboard/e-commerce/')) {
       return [
-        { href: '/e-commerce/dashboard', label: 'Dashboard' },
-        { href: '/e-commerce/leads', label: 'Leads' },
-        { href: '/e-commerce/campaigns', label: 'Campaigns' },
-        { href: '/e-commerce/templates', label: 'Templates' },
+        { href: '/dashboard/e-commerce/dashboard', label: 'Dashboard' },
+        { href: '/dashboard/e-commerce/leads', label: 'Leads' },
+        { href: '/dashboard/e-commerce/campaigns', label: 'Campaigns' },
+        { href: '/dashboard/e-commerce/templates', label: 'Templates' },
       ];
     }
-    if (pathname.startsWith('/real-estate/')) {
+    if (pathname.startsWith('/dashboard/real-estate/')) {
       return [
-        { href: '/real-estate/dashboard', label: 'Dashboard' },
-        { href: '/real-estate/properties', label: 'Properties' },
-        { href: '/real-estate/leads', label: 'Leads' },
-        { href: '/real-estate/ai-searcher', label: 'AI Search' },
+        { href: '/dashboard/real-estate/dashboard', label: 'Dashboard' },
+        { href: '/dashboard/real-estate/properties', label: 'Properties' },
+        { href: '/dashboard/real-estate/leads', label: 'Leads' },
+        { href: '/dashboard/real-estate/ai-searcher', label: 'AI Search' },
       ];
     }
-    if (pathname.startsWith('/law/')) {
+    if (pathname.startsWith('/dashboard/law/')) {
       return [
-        { href: '/law/dashboard', label: 'Dashboard' },
+        { href: '/dashboard/law/dashboard', label: 'Dashboard' },
       ];
     }
     return [];
@@ -94,7 +94,7 @@ const DashboardHeader: React.FC = () => {
           {/* Main Navigation - Desktop */}
           <nav className={`hidden md:flex items-center space-x-8 ${isRTL ? 'order-1 space-x-reverse' : 'order-2'}`}>
             {navigationItems.map((item) => {
-              const isActive = pathname.startsWith(`/${item.vertical}/`);
+              const isActive = pathname.startsWith(`/dashboard/${item.vertical}/`);
               return (
                 <Link
                   key={item.href}
@@ -167,7 +167,7 @@ const DashboardHeader: React.FC = () => {
             {/* Main Navigation */}
             <div className="space-y-2">
               {navigationItems.map((item) => {
-                const isActive = pathname.startsWith(`/${item.vertical}/`);
+                const isActive = pathname.startsWith(`/dashboard/${item.vertical}/`);
                 return (
                   <Link
                     key={item.href}
