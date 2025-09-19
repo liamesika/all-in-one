@@ -2,6 +2,19 @@
 
 /* ===== Effinity Design System - Modern Blue & White Theme ===== */
 
+/* ===== Dashboard Header Gradient Animation ===== */
+@keyframes gradientMove {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.header-gradient {
+  background: linear-gradient(90deg, #0f5fff, #4a7dff, #0f5fff);
+  background-size: 200% 200%;
+  animation: gradientMove 18s ease infinite;
+}
+
 /* ===== Base Styles - Clean White Background ===== */
 html, body {
   background: white;

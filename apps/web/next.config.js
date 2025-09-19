@@ -38,17 +38,24 @@ const nextConfig = {
   // Webpack optimization
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
     // CRITICAL: Fix "self is not defined" error by changing webpack's global object
-    config.output.globalObject = 'this';
+    // Apply to both client and server to prevent self references in any bundles
+    config.output.globalObject = '(typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : this)';
 
-    // Additional global polyfills for SSR compatibility
-    config.plugins.push(
-      new webpack.DefinePlugin({
-        'typeof self': '"undefined"',
-        'typeof window': isServer ? '"undefined"' : '"object"',
-        'typeof document': isServer ? '"undefined"' : '"object"',
-        'typeof navigator': isServer ? '"undefined"' : '"object"',
-      })
-    );
+    // Additional global polyfills for SSR compatibility - apply to server only
+    if (isServer) {
+      config.plugins.push(
+        new webpack.DefinePlugin({
+          'typeof self': '"undefined"',
+          'typeof window': '"undefined"',
+          'typeof document': '"undefined"',
+          'typeof navigator': '"undefined"',
+          'self': 'globalThis',
+          'window': 'globalThis',
+          'document': 'undefined',
+          'navigator': 'undefined',
+        })
+      );
+    }
 
     // Additional webpack runtime safety - disable complex optimizations
     if (!dev) {

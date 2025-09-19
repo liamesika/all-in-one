@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { prisma } from '../../../../../packages/server/db/client';
+import { prisma } from '@/lib/db';
 import { resolveTenantContext, logTenantOperation } from '../../../lib/auth/tenant-guard';
 import { CreateLeadSchema } from '../../../lib/validation/leads';
 

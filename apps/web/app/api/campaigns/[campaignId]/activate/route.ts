@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '../../../../../../../packages/server/db/client';
+import { prisma } from '@/lib/db';
 
 export async function POST(req: Request, { params }: { params: { campaignId: string } }) {
   try {

@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../../lib/firebaseClient';
+import { getFirebaseAuth } from '../../../lib/firebaseClient';
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -33,7 +33,12 @@ export default function RegisterForm() {
 
     setLoading(true);
     try {
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      const firebaseAuth = getFirebaseAuth();
+      if (!firebaseAuth) {
+        throw new Error('Firebase not initialized');
+      }
+
+      const cred = await createUserWithEmailAndPassword(firebaseAuth, email, password);
       const idToken = await cred.user.getIdToken();
       const r = await fetch('/api/auth/firebase/session', {
         method: 'POST', credentials: 'include',
