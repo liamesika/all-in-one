@@ -1,31 +1,65 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get cookies from the request
-    const cookies = request.headers.get('cookie');
-    
-    // Proxy to the NestJS API server
-    const response = await fetch('http://localhost:4001/api/auth/me', {
-      method: 'GET',
-      headers: {
-        'Cookie': cookies || '',
-        'Content-Type': 'application/json',
-      },
-    });
+    // Get Authorization header
+    const authorization = request.headers.get('authorization');
 
-    if (!response.ok) {
-      const errorText = await response.text();
+    if (!authorization || !authorization.startsWith('Bearer ')) {
       return NextResponse.json(
-        { error: 'Failed to get user profile' },
-        { status: response.status }
+        { error: 'No authorization token provided' },
+        { status: 401 }
       );
     }
 
-    const result = await response.json();
-    return NextResponse.json(result);
+    const token = authorization.substring(7); // Remove 'Bearer ' prefix
+
+    try {
+      // Basic JWT decode to extract email from payload
+      const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+      const email = payload.email;
+
+      if (!email) {
+        return NextResponse.json(
+          { error: 'Invalid token: no email found' },
+          { status: 401 }
+        );
+      }
+
+      // Fetch user with profile to get default vertical
+      const user = await prisma.user.findUnique({
+        where: { email },
+        include: {
+          userProfile: true
+        }
+      });
+
+      if (!user) {
+        return NextResponse.json(
+          { error: 'User not found' },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        defaultVertical: user.userProfile?.defaultVertical,
+        message: 'User data retrieved successfully'
+      });
+
+    } catch (tokenError) {
+      console.error('Error decoding token:', tokenError);
+      return NextResponse.json(
+        { error: 'Invalid token format' },
+        { status: 401 }
+      );
+    }
+
   } catch (error) {
-    console.error('User profile error:', error);
+    console.error('Auth error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

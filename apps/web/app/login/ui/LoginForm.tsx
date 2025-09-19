@@ -43,6 +43,22 @@ export default function LoginForm() {
         body: JSON.stringify({ idToken }),
       });
       if (!r.ok) throw new Error('session');
+
+      // Fetch user data to get default vertical and log to browser console
+      try {
+        const userResponse = await fetch('/api/auth/me', {
+          headers: { 'Authorization': `Bearer ${idToken}` }
+        });
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          if (userData.defaultVertical) {
+            console.log(`User logged in with default vertical: ${userData.defaultVertical.toLowerCase().replace('_', '-')}`);
+          }
+        }
+      } catch (userError) {
+        console.error('Error fetching user data:', userError);
+      }
+
       router.push(next);
     } catch (error: any) {
       console.error('Login error:', error);
