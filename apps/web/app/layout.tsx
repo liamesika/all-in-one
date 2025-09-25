@@ -85,6 +85,75 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       >
         <AppProviders initialLang={lang}>{children}</AppProviders>
         
+        {/* Global logout helper for console debugging */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Global logout function for console debugging
+              window.logoutUser = async function() {
+                try {
+                  console.log('🔄 Initiating logout from console...');
+
+                  // Manual logout implementation for console use
+                  // Clear all Firebase Auth state
+                  const authKeys = [];
+                  for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && key.includes('firebase')) {
+                      authKeys.push(key);
+                    }
+                  }
+                  authKeys.forEach(key => localStorage.removeItem(key));
+
+                  // Clear all storage
+                  localStorage.clear();
+                  sessionStorage.clear();
+
+                  // Clear IndexedDB
+                  if ('indexedDB' in window) {
+                    try {
+                      indexedDB.deleteDatabase('firebase-auth-database');
+                      indexedDB.deleteDatabase('firebase-app-config');
+                      indexedDB.deleteDatabase('firebase:authUser:AIzaSyDtZJA6SxMsWcDOJDHQrKGOmVLkMaInLaI:[DEFAULT]');
+                    } catch (e) {
+                      console.warn('IndexedDB clear failed:', e);
+                    }
+                  }
+
+                  // Clear cookies
+                  document.cookie.split(";").forEach(function(cookie) {
+                    const eqPos = cookie.indexOf("=");
+                    const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+                    if (name) {
+                      document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+                      document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=" + window.location.hostname;
+                      document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=." + window.location.hostname;
+                    }
+                  });
+
+                  // Clear specific app data
+                  localStorage.removeItem('user');
+                  localStorage.removeItem('lastDashboard');
+                  localStorage.removeItem('language');
+                  localStorage.removeItem('lang');
+
+                  console.log('✅ Console logout successful! Redirecting to homepage...');
+                  window.location.href = '/';
+
+                } catch (error) {
+                  console.error('❌ Console logout failed:', error);
+                  console.log('🔄 Forcing redirect to homepage...');
+                  localStorage.clear();
+                  sessionStorage.clear();
+                  window.location.href = '/';
+                }
+              };
+
+              console.log('💡 Debug helper available: logoutUser() - Use this to force logout from console');
+            `,
+          }}
+        />
+
         {/* Performance monitoring client-side initialization */}
         {process.env.NODE_ENV === 'development' && (
           <script

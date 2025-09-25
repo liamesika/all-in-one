@@ -36,6 +36,58 @@ export const signOut = () => {
   return firebaseSignOut(auth);
 };
 
+// Comprehensive logout function that clears all session data
+export const logout = async () => {
+  try {
+    // Sign out from Firebase Auth
+    await firebaseSignOut(auth);
+
+    // Clear all localStorage data
+    localStorage.clear();
+
+    // Clear all sessionStorage data
+    sessionStorage.clear();
+
+    // Clear Firebase-specific IndexedDB data
+    if ('indexedDB' in window) {
+      try {
+        // Clear Firebase Auth IndexedDB
+        const authDB = indexedDB.deleteDatabase('firebase-auth-database');
+        const configDB = indexedDB.deleteDatabase('firebase-app-config');
+        await Promise.allSettled([authDB, configDB]);
+      } catch (error) {
+        console.warn('Failed to clear IndexedDB:', error);
+      }
+    }
+
+    // Clear all cookies related to Firebase and the app
+    document.cookie.split(";").forEach((cookie) => {
+      const eqPos = cookie.indexOf("=");
+      const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+      // Clear cookie for current domain and all parent domains
+      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname}`;
+      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=.${window.location.hostname}`;
+    });
+
+    // Clear any cached user preferences
+    localStorage.removeItem('user');
+    localStorage.removeItem('lastDashboard');
+    localStorage.removeItem('language');
+    localStorage.removeItem('lang');
+
+    console.log('✅ Complete logout successful - all session data cleared');
+
+    // Redirect to homepage
+    window.location.href = '/';
+
+  } catch (error) {
+    console.error('❌ Logout error:', error);
+    // Even if there's an error, redirect to homepage
+    window.location.href = '/';
+  }
+};
+
 export const onAuthChange = (callback: (user: User | null) => void) => {
   return onAuthStateChanged(auth, callback);
 };

@@ -3,13 +3,14 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User } from 'firebase/auth';
-import { onAuthChange, getIdToken } from './firebase';
+import { onAuthChange, getIdToken, logout } from './firebase';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   getToken: () => Promise<string | null>;
   ownerUid: string | null;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -17,6 +18,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   getToken: async () => null,
   ownerUid: null,
+  logout: async () => {},
 });
 
 export const useAuth = () => {
@@ -75,6 +77,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     loading,
     getToken,
     ownerUid: user?.uid || null,
+    logout,
   };
 
   return (

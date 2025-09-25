@@ -3,8 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { User } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import { getFirebaseAuth } from '@/lib/firebaseClient';
-import { signOut } from 'firebase/auth';
+import { useAuth } from '@/lib/auth-context';
 
 interface UserMenuProps {
   user: User;
@@ -16,6 +15,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ user, userData, isRTL }) => {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const menuRef = useRef<HTMLDivElement>(null);
+  const { logout } = useAuth();
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -31,15 +31,13 @@ const UserMenu: React.FC<UserMenuProps> = ({ user, userData, isRTL }) => {
 
   const handleSignOut = async () => {
     try {
-      const auth = getFirebaseAuth();
-      if (auth) {
-        await signOut(auth);
-        // Clear any session cookies
-        document.cookie = 'session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-        router.push('/login');
-      }
+      setIsOpen(false); // Close the menu immediately
+      console.log('🔄 Initiating comprehensive logout...');
+      await logout(); // This will handle all logout logic and redirect
     } catch (error) {
-      console.error('Sign out error:', error);
+      console.error('❌ Sign out error:', error);
+      // Fallback redirect if logout fails
+      window.location.href = '/';
     }
   };
 
