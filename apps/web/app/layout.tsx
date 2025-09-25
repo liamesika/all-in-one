@@ -92,64 +92,98 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               // Global logout function for console debugging
               window.logoutUser = async function() {
                 try {
-                  console.log('🔄 Initiating logout from console...');
+                  console.log('🔄 Initiating console logout - comprehensive session clearing...');
 
-                  // Manual logout implementation for console use
-                  // Clear all Firebase Auth state
-                  const authKeys = [];
-                  for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key && key.includes('firebase')) {
-                      authKeys.push(key);
-                    }
-                  }
-                  authKeys.forEach(key => localStorage.removeItem(key));
-
-                  // Clear all storage
+                  // Clear all localStorage data first
                   localStorage.clear();
-                  sessionStorage.clear();
+                  console.log('✅ localStorage cleared');
 
-                  // Clear IndexedDB
+                  // Clear all sessionStorage data
+                  sessionStorage.clear();
+                  console.log('✅ sessionStorage cleared');
+
+                  // Clear IndexedDB Firebase databases
                   if ('indexedDB' in window) {
-                    try {
-                      indexedDB.deleteDatabase('firebase-auth-database');
-                      indexedDB.deleteDatabase('firebase-app-config');
-                      indexedDB.deleteDatabase('firebase:authUser:AIzaSyDtZJA6SxMsWcDOJDHQrKGOmVLkMaInLaI:[DEFAULT]');
-                    } catch (e) {
-                      console.warn('IndexedDB clear failed:', e);
+                    const dbsToDelete = [
+                      'firebase-auth-database',
+                      'firebase-app-config',
+                      'firebaseLocalStorageDb'
+                    ];
+
+                    for (const dbName of dbsToDelete) {
+                      try {
+                        indexedDB.deleteDatabase(dbName);
+                        console.log('🗑️ Deleting IndexedDB:', dbName);
+                      } catch (e) {
+                        console.warn('⚠️ Failed to delete', dbName, e);
+                      }
                     }
                   }
 
-                  // Clear cookies
-                  document.cookie.split(";").forEach(function(cookie) {
+                  // Clear all cookies
+                  const cookies = document.cookie.split(";");
+                  cookies.forEach(function(cookie) {
                     const eqPos = cookie.indexOf("=");
                     const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
                     if (name) {
-                      document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
-                      document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=" + window.location.hostname;
-                      document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=." + window.location.hostname;
+                      const expireDate = 'expires=Thu, 01 Jan 1970 00:00:00 GMT';
+                      document.cookie = name + "=;" + expireDate + ";path=/";
+                      document.cookie = name + "=;" + expireDate + ";path=/;domain=" + window.location.hostname;
+                      document.cookie = name + "=;" + expireDate + ";path=/;domain=." + window.location.hostname;
                     }
                   });
+                  console.log('✅ All cookies cleared');
 
-                  // Clear specific app data
-                  localStorage.removeItem('user');
-                  localStorage.removeItem('lastDashboard');
-                  localStorage.removeItem('language');
-                  localStorage.removeItem('lang');
+                  // Clear specific Firebase persistence keys
+                  const firebaseKeys = [
+                    'firebase:host:all-in-one-eed0a-default-rtdb.firebaseio.com',
+                    'firebase:authUser:AIzaSyDtZJA6SxMsWcDOJDHQrKGOmVLkMaInLaI:[DEFAULT]',
+                    'firebase:config'
+                  ];
 
-                  console.log('✅ Console logout successful! Redirecting to homepage...');
-                  window.location.href = '/';
+                  firebaseKeys.forEach(key => {
+                    localStorage.removeItem(key);
+                    sessionStorage.removeItem(key);
+                  });
+
+                  console.log('🎯 Specific Firebase keys cleared');
+                  console.log('✅ CONSOLE LOGOUT COMPLETE! Redirecting to clean homepage...');
+
+                  // Force complete page reload with cache bust
+                  window.location.replace('/?t=' + Date.now());
 
                 } catch (error) {
                   console.error('❌ Console logout failed:', error);
-                  console.log('🔄 Forcing redirect to homepage...');
-                  localStorage.clear();
-                  sessionStorage.clear();
-                  window.location.href = '/';
+                  console.log('🚨 EMERGENCY: Force clearing all data and redirecting...');
+
+                  // Emergency cleanup
+                  try {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    window.location.replace('/?emergency=true&t=' + Date.now());
+                  } catch (e) {
+                    console.error('💥 Emergency cleanup failed:', e);
+                    alert('Manual refresh required - press F5 or Ctrl+R');
+                  }
                 }
               };
 
-              console.log('💡 Debug helper available: logoutUser() - Use this to force logout from console');
+              // Additional helper for quick auth check
+              window.checkAuthState = function() {
+                console.log('🔍 Current Auth State Check:');
+                console.log('- localStorage keys:', Object.keys(localStorage).filter(k => k.includes('firebase') || k.includes('user')));
+                console.log('- sessionStorage keys:', Object.keys(sessionStorage).filter(k => k.includes('firebase') || k.includes('user')));
+                console.log('- cookies:', document.cookie);
+                return {
+                  localStorage: Object.keys(localStorage),
+                  sessionStorage: Object.keys(sessionStorage),
+                  cookies: document.cookie
+                };
+              };
+
+              console.log('💡 Debug helpers available:');
+              console.log('  - logoutUser() - Complete logout with session clearing');
+              console.log('  - checkAuthState() - Check current authentication state');
             `,
           }}
         />

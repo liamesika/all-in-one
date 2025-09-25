@@ -39,52 +39,89 @@ export const signOut = () => {
 // Comprehensive logout function that clears all session data
 export const logout = async () => {
   try {
-    // Sign out from Firebase Auth
+    console.log('🔄 Starting comprehensive logout...');
+
+    // First, sign out from Firebase Auth
     await firebaseSignOut(auth);
+    console.log('✅ Firebase Auth signed out');
+
+    // Wait a moment for Firebase to process the sign out
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     // Clear all localStorage data
     localStorage.clear();
+    console.log('✅ localStorage cleared');
 
     // Clear all sessionStorage data
     sessionStorage.clear();
+    console.log('✅ sessionStorage cleared');
 
     // Clear Firebase-specific IndexedDB data
     if ('indexedDB' in window) {
       try {
-        // Clear Firebase Auth IndexedDB
-        const authDB = indexedDB.deleteDatabase('firebase-auth-database');
-        const configDB = indexedDB.deleteDatabase('firebase-app-config');
-        await Promise.allSettled([authDB, configDB]);
+        // Clear Firebase Auth IndexedDB databases
+        const dbPromises = [
+          'firebase-auth-database',
+          'firebase-app-config',
+          'firebaseLocalStorageDb'
+        ].map(dbName => {
+          return new Promise((resolve) => {
+            const deleteReq = indexedDB.deleteDatabase(dbName);
+            deleteReq.onsuccess = () => resolve(`${dbName} deleted`);
+            deleteReq.onerror = () => resolve(`${dbName} delete failed`);
+            deleteReq.onblocked = () => resolve(`${dbName} delete blocked`);
+          });
+        });
+
+        const results = await Promise.allSettled(dbPromises);
+        console.log('✅ IndexedDB cleanup results:', results);
       } catch (error) {
-        console.warn('Failed to clear IndexedDB:', error);
+        console.warn('⚠️ IndexedDB cleanup failed:', error);
       }
     }
 
     // Clear all cookies related to Firebase and the app
-    document.cookie.split(";").forEach((cookie) => {
+    const cookiesToClear = document.cookie.split(";");
+    cookiesToClear.forEach((cookie) => {
       const eqPos = cookie.indexOf("=");
       const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
-      // Clear cookie for current domain and all parent domains
-      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname}`;
-      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=.${window.location.hostname}`;
+      if (name) {
+        // Clear cookie for current domain and all parent domains
+        const expireDate = 'expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        document.cookie = `${name}=;${expireDate};path=/`;
+        document.cookie = `${name}=;${expireDate};path=/;domain=${window.location.hostname}`;
+        document.cookie = `${name}=;${expireDate};path=/;domain=.${window.location.hostname}`;
+      }
     });
+    console.log('✅ Cookies cleared');
 
-    // Clear any cached user preferences
-    localStorage.removeItem('user');
-    localStorage.removeItem('lastDashboard');
-    localStorage.removeItem('language');
-    localStorage.removeItem('lang');
+    // Clear specific Firebase persistence keys that might remain
+    const firebaseKeys = [
+      'firebase:host:all-in-one-eed0a-default-rtdb.firebaseio.com',
+      'firebase:authUser:AIzaSyDtZJA6SxMsWcDOJDHQrKGOmVLkMaInLaI:[DEFAULT]',
+      'firebase:config',
+      'user',
+      'lastDashboard',
+      'language',
+      'lang'
+    ];
+
+    firebaseKeys.forEach(key => {
+      localStorage.removeItem(key);
+      sessionStorage.removeItem(key);
+    });
 
     console.log('✅ Complete logout successful - all session data cleared');
 
-    // Redirect to homepage
-    window.location.href = '/';
+    // Force a complete page reload to ensure clean state
+    window.location.replace('/');
 
   } catch (error) {
     console.error('❌ Logout error:', error);
-    // Even if there's an error, redirect to homepage
-    window.location.href = '/';
+    // Even if there's an error, force clear and redirect
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.replace('/');
   }
 };
 
