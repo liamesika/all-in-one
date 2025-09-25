@@ -50,18 +50,18 @@ export async function POST(request: NextRequest) {
     });
 
     // Determine redirect path based on vertical
-    let redirectPath = '/e-commerce/dashboard'; // default
+    let redirectPath = '/dashboard/e-commerce/dashboard'; // default
 
     switch (vertical) {
       case 'REAL_ESTATE':
-        redirectPath = '/real-estate/dashboard';
+        redirectPath = '/dashboard/real-estate/dashboard';
         break;
       case 'LAW':
-        redirectPath = '/law/dashboard';
+        redirectPath = '/dashboard/law/dashboard';
         break;
       case 'E_COMMERCE':
       default:
-        redirectPath = '/e-commerce/dashboard';
+        redirectPath = '/dashboard/e-commerce/dashboard';
         break;
     }
 

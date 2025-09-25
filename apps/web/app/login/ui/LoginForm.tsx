@@ -7,7 +7,7 @@ import { getFirebaseAuth } from '../../../lib/firebaseClient';
 export default function LoginForm() {
   const qp = useSearchParams();
   const router = useRouter();
-  const next = qp.get('next') || '/dashboard';
+  const next = qp.get('next') || '/dashboard/e-commerce/dashboard';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [err, setErr] = useState<string | null>(null);

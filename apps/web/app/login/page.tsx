@@ -72,28 +72,28 @@ function LoginForm() {
 
             // Redirect based on user's chosen business vertical
             if (vertical === 'REAL_ESTATE') {
-              console.log('🔍 Redirecting to: /real-estate/dashboard');
-              router.push('/real-estate/dashboard');
+              console.log('🔍 Redirecting to: /dashboard/real-estate/dashboard');
+              router.push('/dashboard/real-estate/dashboard');
             } else if (vertical === 'E_COMMERCE') {
-              console.log('🔍 Redirecting to: /e-commerce/dashboard');
-              router.push('/e-commerce/dashboard');
+              console.log('🔍 Redirecting to: /dashboard/e-commerce/dashboard');
+              router.push('/dashboard/e-commerce/dashboard');
             } else if (vertical === 'LAW') {
-              console.log('🔍 Redirecting to: /law/dashboard');
-              router.push('/law/dashboard');
+              console.log('🔍 Redirecting to: /dashboard/law/dashboard');
+              router.push('/dashboard/law/dashboard');
             } else {
-              // Fallback to e-commerce if vertical is unknown
-              console.warn('🔍 Unknown vertical, defaulting to e-commerce');
-              router.push('/e-commerce/dashboard');
+              // Fallback to homepage if vertical is unknown
+              console.warn('🔍 Unknown vertical, redirecting to homepage for selection');
+              router.push('/');
             }
           } else {
-            // Fallback to e-commerce if profile fetch fails
-            console.warn('🔍 Failed to fetch user profile, defaulting to e-commerce');
-            router.push('/e-commerce/dashboard');
+            // Fallback to homepage if profile fetch fails
+            console.warn('🔍 Failed to fetch user profile, redirecting to homepage');
+            router.push('/');
           }
         } catch (error) {
-          // Fallback to e-commerce if any error occurs
+          // Fallback to homepage if any error occurs
           console.error('🔍 Error fetching user profile:', error);
-          router.push('/e-commerce/dashboard');
+          router.push('/');
         }
       }
     } catch (error: any) {
