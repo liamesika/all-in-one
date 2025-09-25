@@ -83,7 +83,7 @@ export default function LandingPage() {
       return lastDashboard;
     }
 
-    // Final fallback to e-commerce
+    // Final fallback to e-commerce dashboard (force deploy cache bust)
     console.log('🏠 Using default dashboard: e-commerce');
     return '/dashboard/e-commerce/dashboard';
   };
