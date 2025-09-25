@@ -44,7 +44,7 @@ export default function LoginForm() {
       });
       if (!r.ok) throw new Error('session');
 
-      // Fetch user data to get default vertical and log to browser console
+      // Fetch user data to get default vertical and redirect accordingly
       try {
         const userResponse = await fetch('/api/auth/me', {
           headers: { 'Authorization': `Bearer ${idToken}` }
@@ -53,12 +53,24 @@ export default function LoginForm() {
           const userData = await userResponse.json();
           if (userData.defaultVertical) {
             console.log(`User logged in with default vertical: ${userData.defaultVertical.toLowerCase().replace('_', '-')}`);
+
+            // Redirect based on user's defaultVertical
+            const verticalMap: Record<string, string> = {
+              'REAL_ESTATE': '/dashboard/real-estate/dashboard',
+              'E_COMMERCE': '/dashboard/e-commerce/dashboard',
+              'LAW': '/dashboard/law/dashboard'
+            };
+
+            const redirectPath = verticalMap[userData.defaultVertical] || '/dashboard/e-commerce/dashboard';
+            router.push(redirectPath);
+            return;
           }
         }
       } catch (userError) {
         console.error('Error fetching user data:', userError);
       }
 
+      // Fallback to next parameter if user data fetch fails
       router.push(next);
     } catch (error: any) {
       console.error('Login error:', error);

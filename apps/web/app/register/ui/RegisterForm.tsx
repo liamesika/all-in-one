@@ -7,7 +7,7 @@ import { getFirebaseAuth } from '../../../lib/firebaseClient';
 export default function RegisterForm() {
   const router = useRouter();
   const qp = useSearchParams();
-  const next = qp.get('next') || '/e-commerce/dashboard';
+  const next = qp.get('next') || '/dashboard/e-commerce/dashboard';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [err, setErr] = useState<string|null>(null);
