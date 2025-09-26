@@ -13,6 +13,12 @@ enum Vertical {
   REAL_ESTATE = 'REAL_ESTATE',
   LAW = 'LAW',
   E_COMMERCE = 'E_COMMERCE',
+  PRODUCTION = 'PRODUCTION',
+}
+
+enum AccountType {
+  FREELANCER = 'FREELANCER',
+  COMPANY = 'COMPANY',
 }
 
 type FormData = {
@@ -20,6 +26,7 @@ type FormData = {
   email: string;
   password: string;
   vertical: Vertical;
+  accountType?: AccountType;
   termsConsent: boolean;
   lang: string;
 };
@@ -35,6 +42,7 @@ function RegisterForm() {
     email: '',
     password: '',
     vertical: Vertical.E_COMMERCE,
+    accountType: undefined,
     termsConsent: false,
     lang: language,
   });
@@ -58,10 +66,28 @@ function RegisterForm() {
       label: language === 'he' ? 'נדל״ן' : 'Real Estate',
       description: language === 'he' ? 'ניהול נכסים ולידים' : 'Property & lead management'
     },
-    { 
-      value: Vertical.LAW, 
+    {
+      value: Vertical.LAW,
       label: language === 'he' ? 'משפטים' : 'Law',
       description: language === 'he' ? 'ניהול משרד עורכי דין' : 'Law firm management'
+    },
+    {
+      value: Vertical.PRODUCTION,
+      label: language === 'he' ? 'הפקה' : 'Production',
+      description: language === 'he' ? 'ניהול אירועים והפקות לעסקים ועצמאיים' : 'Event & production management for businesses and freelancers'
+    },
+  ];
+
+  const accountTypeOptions = [
+    {
+      value: AccountType.FREELANCER,
+      label: language === 'he' ? 'עצמאי (פרטי)' : 'Freelancer (Private)',
+      description: language === 'he' ? 'משתמש יחיד - ניהול פרוייקטים אישיים' : 'Single user - personal project management'
+    },
+    {
+      value: AccountType.COMPANY,
+      label: language === 'he' ? 'חברה (צוות)' : 'Company (Team)',
+      description: language === 'he' ? 'מנהל-בעלים עם חברי צוות' : 'Admin-owner with team members'
     },
   ];
 
@@ -94,6 +120,10 @@ function RegisterForm() {
       newErrors.password = language === 'he' 
         ? 'סיסמה חייבת להכיל לפחות 8 תווים, אות גדולה, אות קטנה ומספר'
         : 'Password must contain at least 8 characters, uppercase, lowercase and number';
+    }
+
+    if (formData.vertical === Vertical.PRODUCTION && !formData.accountType) {
+      newErrors.accountType = language === 'he' ? 'חובה לבחור סוג חשבון' : 'Account type is required';
     }
 
     if (!formData.termsConsent) {
@@ -301,7 +331,14 @@ function RegisterForm() {
                         name="vertical"
                         value={option.value}
                         checked={formData.vertical === option.value}
-                        onChange={e => updateField('vertical', e.target.value as Vertical)}
+                        onChange={e => {
+                          const newVertical = e.target.value as Vertical;
+                          updateField('vertical', newVertical);
+                          // Reset account type when changing vertical
+                          if (newVertical !== Vertical.PRODUCTION) {
+                            updateField('accountType', undefined);
+                          }
+                        }}
                         className="text-blue-600 focus:ring-blue-500"
                       />
                       <div>
@@ -314,6 +351,42 @@ function RegisterForm() {
               ))}
             </div>
           </div>
+
+          {/* Account Type Selection - Only for Production */}
+          {formData.vertical === Vertical.PRODUCTION && (
+            <div className="space-y-3">
+              <span className="block text-sm font-semibold text-gray-700 mb-3">
+                {language === 'he' ? 'בחר סוג חשבון' : 'Choose account type'} <span className="text-red-500">*</span>
+              </span>
+              <div className="space-y-2">
+                {accountTypeOptions.map((option) => (
+                  <label key={option.value} className="block">
+                    <div className={`rounded-xl border transition-all duration-300 cursor-pointer p-5 transform hover:-translate-y-1 ${
+                      formData.accountType === option.value
+                        ? 'border-green-400 bg-gradient-to-br from-green-50 to-green-100 shadow-lg'
+                        : 'border-gray-200 hover:border-green-300 hover:bg-green-50/50 shadow-sm hover:shadow-md'
+                    }`}>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="radio"
+                          name="accountType"
+                          value={option.value}
+                          checked={formData.accountType === option.value}
+                          onChange={e => updateField('accountType', e.target.value as AccountType)}
+                          className="text-green-600 focus:ring-green-500"
+                        />
+                        <div>
+                          <div className="text-base font-semibold text-gray-900 mb-1">{option.label}</div>
+                          <div className="text-sm font-normal text-gray-600">{option.description}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+              {errors.accountType && <div className="text-xs font-normal text-red-600 mt-1">{errors.accountType}</div>}
+            </div>
+          )}
 
           {/* Terms & Conditions */}
           <label className="flex items-start gap-3">

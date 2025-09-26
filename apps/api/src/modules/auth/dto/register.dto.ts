@@ -1,9 +1,15 @@
-import { IsEmail, IsString, IsEnum, IsBoolean, MinLength, MaxLength, Matches } from 'class-validator';
+import { IsEmail, IsString, IsEnum, IsBoolean, IsOptional, MinLength, MaxLength, Matches } from 'class-validator';
 
 export enum Vertical {
   REAL_ESTATE = 'REAL_ESTATE',
   LAW = 'LAW',
   E_COMMERCE = 'E_COMMERCE',
+  PRODUCTION = 'PRODUCTION',
+}
+
+export enum AccountType {
+  FREELANCER = 'FREELANCER',
+  COMPANY = 'COMPANY',
 }
 
 export class RegisterDto {
@@ -22,8 +28,12 @@ export class RegisterDto {
   })
   password: string;
 
-  @IsEnum(Vertical, { message: 'Invalid vertical. Must be one of: REAL_ESTATE, LAW, E_COMMERCE' })
+  @IsEnum(Vertical, { message: 'Invalid vertical. Must be one of: REAL_ESTATE, LAW, E_COMMERCE, PRODUCTION' })
   vertical: Vertical;
+
+  @IsOptional()
+  @IsEnum(AccountType, { message: 'Invalid account type. Must be either FREELANCER or COMPANY' })
+  accountType?: AccountType;
 
   @IsBoolean({ message: 'Terms consent is required' })
   termsConsent: boolean;

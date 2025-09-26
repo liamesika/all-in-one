@@ -20,10 +20,11 @@ import { ConnectionsModule } from './modules/connections/connections.module';
 import { InsightsModule } from './modules/insights/insights.module';
 import { PlatformJobsModule } from './modules/platform-jobs/platform-jobs.module';
 import { AuditModule } from './modules/audit/audit.module';
-import { 
-  CompressionMiddleware, 
-  CacheHeadersMiddleware, 
-  PerformanceMonitoringMiddleware 
+import { ProductionModule } from './modules/production/production.module';
+import {
+  CompressionMiddleware,
+  CacheHeadersMiddleware,
+  PerformanceMonitoringMiddleware
 } from './common/middleware/performance.middleware';
 
 @Module({
@@ -52,6 +53,7 @@ import {
     InsightsModule,
     PlatformJobsModule,
     AuditModule,
+    ProductionModule,
   ],
   controllers: [ChatController, PingController],
   

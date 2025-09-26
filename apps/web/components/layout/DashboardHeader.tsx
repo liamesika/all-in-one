@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth-context';
 import { useLanguage } from '@/lib/language-context';
 import LanguageToggle from './LanguageToggle';
 import UserMenu from './UserMenu';
+import { OrganizationSwitcher } from './OrganizationSwitcher';
 
 const DashboardHeader: React.FC = () => {
   const pathname = usePathname();
@@ -47,6 +48,7 @@ const DashboardHeader: React.FC = () => {
     { href: '/dashboard/e-commerce/dashboard', label: 'E-commerce', vertical: 'e-commerce' },
     { href: '/dashboard/real-estate/dashboard', label: 'Real Estate', vertical: 'real-estate' },
     { href: '/dashboard/law/dashboard', label: 'Law', vertical: 'law' },
+    { href: '/dashboard/production/dashboard', label: 'Production', vertical: 'production' },
   ];
 
   // Sub-navigation for current vertical
@@ -70,6 +72,14 @@ const DashboardHeader: React.FC = () => {
     if (pathname.startsWith('/dashboard/law/')) {
       return [
         { href: '/dashboard/law/dashboard', label: 'Dashboard' },
+      ];
+    }
+    if (pathname.startsWith('/dashboard/production/')) {
+      return [
+        { href: '/dashboard/production/dashboard', label: 'Dashboard' },
+        { href: '/dashboard/production/projects', label: 'Projects' },
+        { href: '/dashboard/production/suppliers', label: 'Suppliers' },
+        { href: '/dashboard/production/team', label: 'Team' },
       ];
     }
     return [];
@@ -111,6 +121,9 @@ const DashboardHeader: React.FC = () => {
 
           {/* Right Side Controls */}
           <div className={`flex items-center space-x-4 ${isRTL ? 'order-2 space-x-reverse' : 'order-3'}`}>
+            {/* Organization Switcher */}
+            <OrganizationSwitcher />
+
             {/* Language Toggle */}
             <LanguageToggle />
 

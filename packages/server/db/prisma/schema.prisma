@@ -4,6 +4,9 @@ generator client {
   provider = "prisma-client-js"
   output   = "../../../../node_modules/.prisma/client"
 }
+// Monorepo configuration:
+// In root package.json, add postinstall script:
+// "postinstall": "pnpm -C packages/server prisma generate --schema db/prisma/schema.prisma"
 
 datasource db {
   provider          = "postgresql"
@@ -17,12 +20,35 @@ enum Vertical {
   REAL_ESTATE
   LAW
   E_COMMERCE
+  PRODUCTION
 }
 
 enum MembershipRole {
   OWNER
   ADMIN
+  MANAGER
   MEMBER
+  VIEWER
+}
+
+enum MembershipStatus {
+  INVITED
+  ACTIVE
+  SUSPENDED
+}
+
+enum InviteStatus {
+  SENT
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+enum OrganizationTier {
+  PERSONAL
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
 }
 
 enum PropertyStatus {
@@ -242,16 +268,76 @@ enum MessageChannel {
   WHATSAPP
 }
 
+// Production vertical enums
+enum AccountType {
+  FREELANCER
+  COMPANY
+}
+
+enum ProjectType {
+  CONFERENCE
+  SHOW
+  FILMING
+  OTHER
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  DONE
+  ON_HOLD
+}
+
+enum TaskDomain {
+  LOGISTICS
+  CONTENT
+  MARKETING
+  SUPPLIERS
+}
+
+enum ProductionTaskStatus {
+  OPEN
+  IN_PROGRESS
+  DONE
+  BLOCKED
+}
+
+enum BudgetCategory {
+  STAGE
+  LIGHTING
+  CATERING
+  MARKETING
+  OTHER
+}
+
+enum SupplierCategory {
+  STAGE
+  LIGHTING
+  AUDIO
+  CATERING
+  VENUE
+  OTHER
+}
+
+enum FileFolder {
+  PERMITS
+  SAFETY
+  DESIGNS
+  CONTRACTS
+  OTHER
+}
+
 //// ========= Models ========= ////
 
 model User {
-  id           String   @id @default(cuid())
-  fullName     String
-  email        String   @unique
-  passwordHash String
-  lang         String   @default("en")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                String   @id @default(cuid())
+  fullName          String
+  email             String   @unique
+  passwordHash      String
+  lang              String   @default("en")
+  mustChangePassword Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   // Relations
   memberships        Membership[]
@@ -261,47 +347,79 @@ model User {
   tasks              Task[]
   messages           Message[]
 
+  // Production vertical relations
+  productionTasks     ProductionTask[]
+  productionFiles     ProductionFileAsset[]
+
   @@index([email])
 }
 
 model Organization {
-  id        String   @id @default(cuid())
-  ownerUid  String   @unique
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String            @id @default(cuid())
+  ownerUid          String            @unique // Backward compatibility
+  name              String
+  slug              String            @unique
+  seatLimit         Int               @default(5)
+  usedSeats         Int               @default(1)
+  planTier          OrganizationTier  @default(STARTER)
+  ownerUserId       String
+  domainAllowlist   String[]          @default([])
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
   // Relations
-  owner       User         @relation(fields: [ownerUid], references: [id], onDelete: Cascade)
-  memberships Membership[]
+  owner           User           @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  memberships     Membership[]
+  invites         Invite[]
+  domainClaims    DomainClaim[]
+
+  // Business data relations (org-scoped)
+  properties         Property[]
+  realEstateLeads    RealEstateLead[]
+  ecommerceLeads     EcommerceLead[]
+  campaigns          Campaign[]
+  followupTemplates  AutoFollowupTemplate[]
+
+  // Production vertical relations
+  productionProjects  ProductionProject[]
+  productionSuppliers ProductionSupplier[]
 
   @@index([ownerUid])
+  @@index([ownerUserId])
+  @@index([slug])
 }
 
 model Membership {
-  id        String         @id @default(cuid())
-  userId    String
-  ownerUid  String
-  role      MembershipRole @default(MEMBER)
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  id           String           @id @default(cuid())
+  userId       String
+  orgId        String           // New organization reference
+  ownerUid     String           // Backward compatibility
+  role         MembershipRole   @default(MEMBER)
+  status       MembershipStatus @default(ACTIVE)
+  invitedAt    DateTime?
+  acceptedAt   DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
 
   // Relations
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  organization Organization @relation(fields: [ownerUid], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, ownerUid])
+  @@unique([userId, orgId])
+  @@unique([userId, ownerUid]) // Backward compatibility
   @@index([userId])
+  @@index([orgId])
   @@index([ownerUid])
 }
 
 model UserProfile {
-  userId          String   @id
+  userId          String       @id
   defaultVertical Vertical
+  accountType     AccountType?
   termsConsentAt  DateTime
   termsVersion    String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -323,6 +441,45 @@ model EmailVerification {
   @@index([expiresAt])
 }
 
+model Invite {
+  id        String      @id @default(cuid())
+  orgId     String
+  email     String
+  role      MembershipRole @default(MEMBER)
+  token     String      @unique
+  status    InviteStatus   @default(SENT)
+  expiresAt DateTime
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, email])
+  @@index([orgId])
+  @@index([email])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+model DomainClaim {
+  id                String   @id @default(cuid())
+  orgId             String
+  domain            String
+  verificationToken String   @unique
+  verified          Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, domain])
+  @@index([orgId])
+  @@index([domain])
+  @@index([verified])
+}
+
 model RealEstateLeadEvent {
   id        String         @id @default(cuid())
   leadId    String
@@ -336,7 +493,8 @@ model RealEstateLeadEvent {
 
 model Property {
   id           String  @id @default(cuid())
-  ownerUid     String
+  ownerUid     String  // Backward compatibility
+  orgId        String? // Organization scope (nullable during migration)
   name         String
   address      String?
   city         String?
@@ -347,9 +505,10 @@ model Property {
   status PropertyStatus @default(DRAFT)
 
   type       PropertyType? // אם יש לך כבר Enum כזה – השאירי; אם אין, זה יכול להיות גם String? לשלב ה-MVP
-  photos     PropertyPhoto[]  @relation("PropertyToPhotos")
-  leads      RealEstateLead[] @relation("PropertyToLeads")
-  rooms      Int?
+  photos       PropertyPhoto[]  @relation("PropertyToPhotos")
+  leads        RealEstateLead[] @relation("PropertyToLeads")
+  organization Organization?    @relation(fields: [orgId], references: [id])
+  rooms        Int?
   size       Int?
   price      Int?
   currency   String?          @default("ILS")
@@ -368,6 +527,12 @@ model Property {
   syncData      Json? // Store original scraped data
   needsReview   Boolean          @default(false)
 
+  // AI scoring fields
+  aiScore       Float?   // 0-100 AI-generated property score
+  aiCategory    String?  // 'excellent', 'good', 'fair', 'poor'
+  aiInsights    Json?    // JSON with reasons, marketInsights, recommendations
+  aiScoredAt    DateTime? // When AI scoring was performed
+
   // SEO fields
   seoTitle       String?
   seoDescription String?
@@ -382,6 +547,11 @@ model Property {
   @@index([ownerUid, provider])
   @@index([ownerUid, createdAt])
   @@index([ownerUid, updatedAt])
+  // Organization-scoped indexes
+  @@index([orgId, status])
+  @@index([orgId, provider])
+  @@index([orgId, createdAt])
+  @@index([orgId])
   @@index([provider, externalId])
   @@index([city, status])
   @@index([price, status])
@@ -407,7 +577,8 @@ model PropertyPhoto {
 
 model RealEstateLead {
   id        String   @id @default(cuid())
-  ownerUid  String
+  ownerUid  String   // Backward compatibility
+  orgId     String?  // Organization scope (nullable during migration)
   fullName  String?
   phone     String?
   email     String?
@@ -419,12 +590,17 @@ model RealEstateLead {
   propertyId          String? // יכול להיות אופציונלי אם יש לידים כלליים
   // 🔽 ודא שם-יחס עקבי + opposite relation קיים ב-Property
   property            Property?             @relation(name: "PropertyToLeads", fields: [propertyId], references: [id])
+  organization        Organization?         @relation(fields: [orgId], references: [id])
   RealEstateLeadEvent RealEstateLeadEvent[]
 
   // Performance-critical indexes
   @@index([ownerUid])
   @@index([ownerUid, createdAt])
   @@index([ownerUid, updatedAt])
+  // Organization-scoped indexes
+  @@index([orgId])
+  @@index([orgId, createdAt])
+  @@index([orgId, updatedAt])
   @@index([propertyId])
   @@index([phone])
   @@index([email])
@@ -489,7 +665,8 @@ model Client {
 // E-commerce Lead Management System
 model EcommerceLead {
   id         String  @id @default(cuid())
-  ownerUid   String
+  ownerUid   String  // Backward compatibility
+  orgId      String? // Organization scope (nullable during migration)
   externalId String? // For deduplication across sources
 
   // Contact Information
@@ -542,12 +719,18 @@ model EcommerceLead {
   campaignId      String?
   platformAdSetId String? // Platform-specific adset ID
 
+  // Order/Conversion Tracking
+  orderValue      Decimal? @db.Decimal(12, 2) // Revenue from conversion
+  conversionDate  DateTime? // When lead converted to customer
+  orderNumber     String? // Shopify order number or ID
+
   // Relations
-  events     LeadEvent[]
-  activities LeadActivity[]
-  campaign   Campaign?               @relation("CampaignLeads", fields: [campaignId], references: [id])
-  followups  AutoFollowupExecution[]
-  sales      Sale[]
+  events       LeadEvent[]
+  activities   LeadActivity[]
+  campaign     Campaign?               @relation("CampaignLeads", fields: [campaignId], references: [id])
+  organization Organization?           @relation(fields: [orgId], references: [id])
+  followups    AutoFollowupExecution[]
+  sales        Sale[]
 
   @@unique([ownerUid, externalId, source]) // Prevent exact duplicates
   // Performance-critical indexes for dashboard queries
@@ -558,6 +741,14 @@ model EcommerceLead {
   @@index([ownerUid, updatedAt])
   @@index([ownerUid, status, createdAt])
   @@index([ownerUid, score, createdAt])
+  // Organization-scoped indexes
+  @@index([orgId, status])
+  @@index([orgId, score])
+  @@index([orgId, source])
+  @@index([orgId, createdAt])
+  @@index([orgId, updatedAt])
+  @@index([orgId, status, createdAt])
+  @@index([orgId])
   @@index([phone])
   @@index([email])
   @@index([externalId])
@@ -714,7 +905,8 @@ model OAuthConnection {
 // Campaign management
 model Campaign {
   id       String @id @default(cuid())
-  ownerUid String
+  ownerUid String  // Backward compatibility
+  orgId    String? // Organization scope (nullable during migration)
 
   name     String
   platform CampaignPlatform
@@ -751,10 +943,15 @@ model Campaign {
   // Relations
   connection   OAuthConnection @relation(fields: [connectionId], references: [id])
   connectionId String
+  organization Organization?    @relation(fields: [orgId], references: [id])
   leads        EcommerceLead[] @relation("CampaignLeads")
   sales        Sale[]
 
   @@index([ownerUid])
+  // Organization-scoped indexes
+  @@index([orgId])
+  @@index([orgId, status])
+  @@index([orgId, platform])
   @@index([status])
   @@index([platform])
 }
@@ -762,7 +959,8 @@ model Campaign {
 // Auto-followup templates
 model AutoFollowupTemplate {
   id       String @id @default(cuid())
-  ownerUid String
+  ownerUid String  // Backward compatibility
+  orgId    String? // Organization scope (nullable during migration)
 
   name    String
   trigger AutoFollowupTrigger
@@ -786,9 +984,13 @@ model AutoFollowupTemplate {
   updatedAt DateTime @updatedAt
 
   // Relations
-  followups AutoFollowupExecution[]
+  organization Organization?         @relation(fields: [orgId], references: [id])
+  followups    AutoFollowupExecution[]
 
   @@index([ownerUid, trigger])
+  // Organization-scoped indexes
+  @@index([orgId])
+  @@index([orgId, trigger])
   @@index([isActive])
 }
 
@@ -1387,4 +1589,179 @@ model Message {
   @@index([status])
   @@index([recipientType, recipientId])
   @@index([createdAt])
+}
+
+// Production Vertical Models
+
+model ProductionProject {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  type        ProjectType   @default(OTHER)
+  status      ProjectStatus @default(PLANNING)
+  startDate   DateTime?
+  endDate     DateTime?
+
+  // Multi-tenant fields
+  ownerUid       String
+  organizationId String
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  tasks        ProductionTask[]
+  budgetItems  ProductionBudgetItem[]
+  files        ProductionFileAsset[]
+  suppliers    ProductionProjectSupplier[]
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerUid])
+  @@index([organizationId])
+  @@index([status])
+}
+
+model ProductionTask {
+  id            String                 @id @default(cuid())
+  title         String
+  description   String?
+  domain        TaskDomain             @default(LOGISTICS)
+  status        ProductionTaskStatus   @default(OPEN)
+  dueDate       DateTime?
+  predecessorId String?                // Simple one-to-one dependency
+
+  // Assignment
+  assigneeId String?
+  assignee   User?   @relation(fields: [assigneeId], references: [id])
+
+  // Project relation
+  projectId String
+  project   ProductionProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Multi-tenant fields
+  ownerUid       String
+  organizationId String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerUid])
+  @@index([organizationId])
+  @@index([projectId])
+  @@index([status])
+  @@index([assigneeId])
+}
+
+model ProductionBudgetItem {
+  id         String         @id @default(cuid())
+  category   BudgetCategory @default(OTHER)
+  planned    Decimal        @default(0) @db.Decimal(12, 2)
+  actual     Decimal        @default(0) @db.Decimal(12, 2)
+  invoiceUrl String?
+  quoteUrl   String?
+  notes      String?
+
+  // Relations
+  projectId  String
+  project    ProductionProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  supplierId String?
+  supplier   ProductionSupplier? @relation(fields: [supplierId], references: [id])
+
+  // Multi-tenant fields
+  ownerUid       String
+  organizationId String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerUid])
+  @@index([organizationId])
+  @@index([projectId])
+  @@index([category])
+}
+
+model ProductionSupplier {
+  id         String           @id @default(cuid())
+  name       String
+  category   SupplierCategory @default(OTHER)
+  rating     Int?             // 1-5 scale
+  notes      String?
+  priceNotes String?
+  contactInfo Json?           // { email, phone, address, etc. }
+
+  // Multi-tenant fields
+  ownerUid       String
+  organizationId String
+
+  // Relations
+  organization    Organization                  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projects        ProductionProjectSupplier[]
+  budgetItems     ProductionBudgetItem[]
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerUid])
+  @@index([organizationId])
+  @@index([category])
+  @@index([name])
+}
+
+model ProductionProjectSupplier {
+  id         String @id @default(cuid())
+  role       String? // e.g. "Stage provider", "Catering lead"
+
+  // Relations
+  projectId  String
+  project    ProductionProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  supplierId String
+  supplier   ProductionSupplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  // Multi-tenant fields
+  ownerUid       String
+  organizationId String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([projectId, supplierId])
+  @@index([ownerUid])
+  @@index([organizationId])
+}
+
+model ProductionFileAsset {
+  id      String     @id @default(cuid())
+  name    String
+  folder  FileFolder @default(OTHER)
+  url     String
+  version Int        @default(1)
+  notes   String?
+  mimeType String?
+  size     Int?      // File size in bytes
+
+  // Relations
+  projectId String
+  project   ProductionProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Multi-tenant fields
+  ownerUid       String
+  organizationId String
+  createdBy      String
+
+  // Relations
+  creator User @relation(fields: [createdBy], references: [id])
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerUid])
+  @@index([organizationId])
+  @@index([projectId])
+  @@index([folder])
 }

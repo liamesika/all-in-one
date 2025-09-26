@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { PropertyScrapingService, ScrapedProperty } from './property-scraping.service';
+import { AiService, PropertyScoreResult } from '../ai/ai.service';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { PrismaClient } = require('@prisma/client');
 
@@ -33,7 +34,10 @@ export class PropertyImportService {
   private readonly logger = new Logger(PropertyImportService.name);
   private prisma = new PrismaClient();
 
-  constructor(private readonly scrapingService: PropertyScrapingService) {}
+  constructor(
+    private readonly scrapingService: PropertyScrapingService,
+    private readonly aiService: AiService
+  ) {}
 
   async importSingleProperty(ownerUid: string, url: string): Promise<ImportResult> {
     this.logger.log(`Starting single property import for: ${url}`);
@@ -385,6 +389,30 @@ export class PropertyImportService {
     // Create photos if available
     if (scrapedProperty.photos && scrapedProperty.photos.length > 0) {
       await this.createPropertyPhotos(property.id, scrapedProperty.photos);
+    }
+
+    // Score the property with AI
+    try {
+      const scoring = await this.aiService.scoreProperty(property);
+
+      // Update property with AI scoring data
+      await this.prisma.property.update({
+        where: { id: property.id },
+        data: {
+          aiScore: scoring.score,
+          aiCategory: scoring.category,
+          aiInsights: JSON.stringify({
+            reasons: scoring.reasons,
+            marketInsights: scoring.marketInsights,
+            recommendations: scoring.recommendations
+          }),
+          aiScoredAt: new Date()
+        }
+      });
+
+      this.logger.log(`Property ${property.id} scored: ${scoring.score} (${scoring.category})`);
+    } catch (error) {
+      this.logger.warn(`Failed to score property ${property.id}:`, error.message);
     }
 
     return property;

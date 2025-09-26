@@ -34,6 +34,7 @@ import { AutoMarketingWidget } from './components/AutoMarketingWidget';
 import { NeighborhoodGuideWidget } from './components/NeighborhoodGuideWidget';
 import { RevenueWidget } from './components/RevenueWidget';
 import { OperationsWidget } from './components/OperationsWidget';
+import { ImportedPropertiesWidget } from './components/ImportedPropertiesWidget';
 import { Sidebar } from './components/Sidebar';
 
 // Types for Real Estate Automation Hub
@@ -253,18 +254,19 @@ function RealEstateDashboardContent({
               />
             </div>
 
-            {/* Third Row - Marketing & Guides */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <AutoMarketingWidget 
+            {/* Third Row - Marketing, Guides & Imported Properties */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <AutoMarketingWidget
                 data={dashboardData.widgets.autoMarketing}
                 onViewDetails={() => router.push('/real-estate/marketing')}
                 onCampaignClick={(campaignId) => router.push(`/real-estate/marketing/${campaignId}`)}
               />
-              <NeighborhoodGuideWidget 
+              <NeighborhoodGuideWidget
                 data={dashboardData.widgets.neighborhoodGuides}
                 onViewDetails={() => router.push('/real-estate/neighborhood-guides')}
                 onGuideClick={(guideId) => router.push(`/real-estate/neighborhood-guides/${guideId}`)}
               />
+              <ImportedPropertiesWidget />
             </div>
 
             {/* Bottom Row - Revenue & Operations */}

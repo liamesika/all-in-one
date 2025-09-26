@@ -203,16 +203,16 @@ export const apiClient = new OptimizedAPIClient();
 // Utility functions for common patterns
 export const ApiUtils = {
   // Get data with caching
-  getCached: (path: string, ttl?: number) => 
+  getCached: (path: string, ttl?: number) =>
     apiFetch(path, { method: 'GET' }, { ttl }),
-  
+
   // Post data without caching
-  post: (path: string, data: any) => 
+  post: (path: string, data: any) =>
     apiFetch(path, {
       method: 'POST',
       body: JSON.stringify(data),
     }, { skipCache: true }),
-  
+
   // Put data and invalidate cache
   put: (path: string, data: any) => {
     apiCache.clear(); // Simple cache invalidation
@@ -221,19 +221,119 @@ export const ApiUtils = {
       body: JSON.stringify(data),
     }, { skipCache: true });
   },
-  
+
+  // Patch data and invalidate cache
+  patch: (path: string, data: any) => {
+    apiCache.clear(); // Simple cache invalidation
+    return apiFetch(path, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }, { skipCache: true });
+  },
+
   // Delete data and invalidate cache
   delete: (path: string) => {
     apiCache.clear(); // Simple cache invalidation
     return apiFetch(path, { method: 'DELETE' }, { skipCache: true });
   },
-  
+
   // Upload files
   upload: (path: string, files: FormData) =>
     apiFetch(path, {
       method: 'POST',
       body: files,
     }, { skipCache: true }),
+};
+
+// Organization-specific API methods
+export const orgApi = {
+  // Organization summary
+  getSummary: (orgId: string) =>
+    ApiUtils.getCached(`/organizations/${orgId}/summary`, 60000), // 1 minute cache
+
+  // Members
+  getMembers: (orgId: string) =>
+    ApiUtils.getCached(`/organizations/${orgId}/users`, 30000), // 30 seconds cache
+
+  updateMemberRole: (orgId: string, userId: string, role: string) =>
+    ApiUtils.patch(`/organizations/${orgId}/users/${userId}`, { role }),
+
+  removeMember: (orgId: string, userId: string) =>
+    ApiUtils.delete(`/organizations/${orgId}/users/${userId}`),
+
+  // Invites
+  getInvites: (orgId: string) =>
+    ApiUtils.getCached(`/organizations/${orgId}/invites`, 30000),
+
+  sendInvite: (orgId: string, email: string, role: string) =>
+    ApiUtils.post(`/organizations/${orgId}/invite`, { emails: [email], role }),
+
+  resendInvite: (orgId: string, inviteId: string) =>
+    ApiUtils.post(`/organizations/${orgId}/invites/${inviteId}/resend`, {}),
+
+  revokeInvite: (orgId: string, inviteId: string) =>
+    ApiUtils.delete(`/organizations/${orgId}/invites/${inviteId}`),
+
+  // Domains
+  getDomains: (orgId: string) =>
+    ApiUtils.getCached(`/organizations/${orgId}/domains`, 60000),
+
+  addDomain: (orgId: string, domain: string) =>
+    ApiUtils.post(`/organizations/${orgId}/domains`, { domain }),
+
+  verifyDomain: (orgId: string, domainId: string) =>
+    ApiUtils.post(`/organizations/${orgId}/domains/${domainId}/verify`, {}),
+
+  removeDomain: (orgId: string, domainId: string) =>
+    ApiUtils.delete(`/organizations/${orgId}/domains/${domainId}`),
+
+  // Billing
+  getBillingSummary: (orgId: string) =>
+    ApiUtils.getCached(`/organizations/${orgId}/billing/summary`, 300000), // 5 minutes cache
+
+  // Audit logs
+  getAuditLogs: (orgId: string, filters?: {
+    type?: string;
+    userId?: string;
+    from?: string;
+    to?: string;
+    page?: number;
+  }) => {
+    const params = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined) params.set(key, String(value));
+      });
+    }
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return ApiUtils.getCached(`/organizations/${orgId}/audit${query}`, 60000);
+  },
+
+  exportAuditLogs: (orgId: string, filters?: any) => {
+    const params = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined) params.set(key, String(value));
+      });
+    }
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return apiFetch(`/organizations/${orgId}/audit/export${query}`, {}, { skipCache: true });
+  },
+};
+
+// User/auth API
+export const userApi = {
+  getMe: () =>
+    ApiUtils.getCached('/auth/me', 60000),
+
+  getMemberships: () =>
+    ApiUtils.getCached('/organizations/me/memberships', 60000),
+
+  setActiveOrg: (orgId: string) =>
+    ApiUtils.post('/organizations/me/active-org', { orgId }),
+
+  changePassword: (currentPassword: string, newPassword: string) =>
+    ApiUtils.post('/auth/change-password', { currentPassword, newPassword }),
 };
 
 // Hook for React components to use optimized API

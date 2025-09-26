@@ -24,6 +24,14 @@ function guessColorFromName(filename: string): Color {
   return 'silver';
 }
 
+export interface PropertyScoreResult {
+  score: number; // 0-100
+  category: 'excellent' | 'good' | 'fair' | 'poor';
+  reasons: string[];
+  marketInsights: string[];
+  recommendations: string[];
+}
+
 @Injectable()
 export class AiService {
   async parseDefaults(text: string) {
@@ -204,5 +212,112 @@ const itemSchema = {
     throw err;
   }
 }
+
+  async scoreProperty(property: any): Promise<PropertyScoreResult> {
+    if (!process.env.OPENAI_API_KEY) {
+      console.error('[AI] ENV MISSING: OPENAI_API_KEY for property scoring');
+      throw new Error('OPENAI_API_KEY is missing');
+    }
+
+    const propertyData = {
+      address: property.address,
+      city: property.city,
+      neighborhood: property.neighborhood,
+      price: property.price,
+      currency: property.currency || 'ILS',
+      rooms: property.rooms,
+      size: property.size,
+      floor: property.floor,
+      type: property.type,
+      description: property.description,
+      amenities: property.amenities,
+      yearBuilt: property.yearBuilt,
+      agentName: property.agentName,
+      provider: property.provider
+    };
+
+    const jsonSchema = {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        score: { type: 'number', minimum: 0, maximum: 100 },
+        category: { type: 'string', enum: ['excellent', 'good', 'fair', 'poor'] },
+        reasons: { type: 'array', items: { type: 'string' } },
+        marketInsights: { type: 'array', items: { type: 'string' } },
+        recommendations: { type: 'array', items: { type: 'string' } }
+      },
+      required: ['score', 'category', 'reasons', 'marketInsights', 'recommendations']
+    };
+
+    const instructions = `
+Analyze this Israeli real estate property and provide a comprehensive scoring and insights:
+
+1. Score the property from 0-100 based on:
+   - Location desirability (neighborhood, city, proximity to amenities)
+   - Price competitiveness for the Israeli market
+   - Property specifications (size, rooms, floor, condition)
+   - Investment potential and rental yield prospects
+
+2. Categorize as: excellent (85-100), good (70-84), fair (50-69), poor (0-49)
+
+3. Provide specific reasons for the score in Hebrew
+4. Give market insights relevant to Israeli real estate
+5. Offer actionable recommendations for buyers/investors
+
+Consider Israeli market specifics: city popularity, neighborhood trends, price per square meter norms, and rental market conditions.
+`;
+
+    try {
+      const res = await (client as any).responses.create({
+        model: 'gpt-4o-mini',
+        input: JSON.stringify(propertyData),
+        instructions,
+        text: {
+          format: {
+            type: 'json_schema',
+            name: 'property_score',
+            schema: jsonSchema,
+            strict: true
+          }
+        },
+        temperature: 0.3
+      });
+
+      const outText = (res as any).output_text ??
+                      (res as any)?.output?.[0]?.content?.[0]?.text?.value ?? '';
+
+      console.log('[AI] Property scoring output length:', outText?.length ?? 0);
+
+      try {
+        const result = JSON.parse(outText) as PropertyScoreResult;
+        console.log('[AI] Property scored:', result.score, result.category);
+        return result;
+      } catch (parseErr) {
+        console.error('[AI] JSON parse failed for property scoring:', parseErr);
+        console.log('[AI] Raw output:', outText);
+
+        // Fallback scoring
+        return {
+          score: 50,
+          category: 'fair',
+          reasons: ['לא ניתן לנתח את הנכס באופן מלא'],
+          marketInsights: ['נדרש ניתוח נוסף של השוק המקומי'],
+          recommendations: ['מומלץ לבדוק נכסים דומים באזור']
+        };
+      }
+    } catch (err: any) {
+      console.error('[AI] Property scoring failed:', err?.status || '', err?.message || '');
+      if (err?.response?.data) console.error('[AI] response.data:', err.response.data);
+
+      // Fallback scoring
+      return {
+        score: 50,
+        category: 'fair',
+        reasons: ['שגיאה בניתוח הנכס'],
+        marketInsights: ['לא ניתן לקבל תובנות שוק כעת'],
+        recommendations: ['נסה שוב מאוחר יותר']
+      };
+    }
+  }
 
 }

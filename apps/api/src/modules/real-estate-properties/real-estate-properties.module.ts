@@ -4,14 +4,16 @@ import { RealEstatePropertiesService } from './real-estate-properties.service';
 import { StorageService } from './storage.service';
 import { PropertyScrapingService } from './property-scraping.service';
 import { PropertyImportService } from './property-import.service';
+import { AiService } from '../ai/ai.service';
 
 @Module({
   controllers: [RealEstatePropertiesController],
   providers: [
-    RealEstatePropertiesService, 
+    RealEstatePropertiesService,
     StorageService,
     PropertyScrapingService,
-    PropertyImportService
+    PropertyImportService,
+    AiService
   ],
   exports: [RealEstatePropertiesService],
 })

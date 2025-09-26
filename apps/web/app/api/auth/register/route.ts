@@ -4,12 +4,20 @@ import { prisma } from '@/lib/db';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { fullName, email, vertical, firebaseUid, lang } = body;
+    const { fullName, email, vertical, accountType, firebaseUid, lang } = body;
 
     // Validate required fields
     if (!fullName || !email || !vertical || !firebaseUid) {
       return NextResponse.json(
         { message: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    // Validate Production-specific requirements
+    if (vertical === 'PRODUCTION' && !accountType) {
+      return NextResponse.json(
+        { message: 'Account type is required for Production vertical' },
         { status: 400 }
       );
     }
@@ -39,11 +47,12 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Create user profile with vertical preference
+    // Create user profile with vertical preference and account type
     await prisma.userProfile.create({
       data: {
         userId: user.id,
         defaultVertical: vertical as any, // Convert string to Vertical enum
+        accountType: accountType ? accountType as any : null, // Convert string to AccountType enum
         termsConsentAt: new Date(),
         termsVersion: '1.0'
       }
@@ -58,6 +67,12 @@ export async function POST(request: NextRequest) {
         break;
       case 'LAW':
         redirectPath = '/dashboard/law/dashboard';
+        break;
+      case 'PRODUCTION':
+        // Route based on account type for Production
+        redirectPath = accountType === 'COMPANY'
+          ? '/dashboard/production/company'
+          : '/dashboard/production/private';
         break;
       case 'E_COMMERCE':
       default:

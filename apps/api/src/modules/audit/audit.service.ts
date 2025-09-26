@@ -2,6 +2,48 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../lib/prisma.service';
 import { ConnectionProvider } from '@prisma/client';
 
+export enum AuditAction {
+  // Organization actions
+  ORG_CREATE = 'org.create',
+  ORG_UPDATE = 'org.update',
+  ORG_DELETE = 'org.delete',
+
+  // Member management
+  MEMBER_INVITE = 'member.invite',
+  MEMBER_JOIN = 'member.join',
+  MEMBER_ROLE_CHANGE = 'member.role_change',
+  MEMBER_REMOVE = 'member.remove',
+  MEMBER_LEAVE = 'member.leave',
+
+  // Invitations
+  INVITE_SEND = 'invite.send',
+  INVITE_RESEND = 'invite.resend',
+  INVITE_CANCEL = 'invite.cancel',
+  INVITE_ACCEPT = 'invite.accept',
+
+  // Data access
+  DATA_EXPORT = 'data.export',
+  DATA_IMPORT = 'data.import',
+  DATA_BULK_DELETE = 'data.bulk_delete',
+
+  // Security
+  LOGIN_SUCCESS = 'auth.login_success',
+  LOGIN_FAILED = 'auth.login_failed',
+  ACCESS_DENIED = 'auth.access_denied'
+}
+
+export interface OrganizationAuditEntry {
+  action: AuditAction;
+  actorUserId: string;
+  orgId?: string;
+  targetUserId?: string;
+  targetResourceId?: string;
+  targetResourceType?: string;
+  metadata?: Record<string, any>;
+  ipAddress?: string;
+  userAgent?: string;
+}
+
 export interface ApiCallLog {
   connectionId?: string;
   ownerUid?: string;
@@ -228,6 +270,125 @@ export class AuditService {
     } catch (error) {
       this.logger.error('Failed to cleanup old audit logs', error);
     }
+  }
+
+  // Organization Audit Methods
+
+  /**
+   * Log organization-related audit events
+   */
+  async logOrganizationAudit(entry: OrganizationAuditEntry): Promise<void> {
+    try {
+      // For now, log to console and logger since we don't have a dedicated org audit table yet
+      // TODO: Add OrganizationAuditLog model to Prisma schema
+      this.logger.log('[ORG_AUDIT]', {
+        timestamp: new Date().toISOString(),
+        action: entry.action,
+        actorUserId: entry.actorUserId,
+        orgId: entry.orgId,
+        targetUserId: entry.targetUserId,
+        targetResourceId: entry.targetResourceId,
+        targetResourceType: entry.targetResourceType,
+        metadata: entry.metadata,
+        ipAddress: entry.ipAddress,
+        userAgent: entry.userAgent
+      });
+    } catch (error) {
+      this.logger.error('Failed to log organization audit event', error);
+    }
+  }
+
+  /**
+   * Log security events
+   */
+  async logSecurityEvent(
+    action: AuditAction,
+    userId: string,
+    orgId: string | null,
+    metadata: Record<string, any>,
+    ipAddress?: string,
+    userAgent?: string
+  ): Promise<void> {
+    await this.logOrganizationAudit({
+      action,
+      actorUserId: userId,
+      orgId,
+      metadata: {
+        ...metadata,
+        severity: 'high',
+        category: 'security'
+      },
+      ipAddress,
+      userAgent
+    });
+  }
+
+  /**
+   * Log membership changes
+   */
+  async logMembershipChange(
+    action: AuditAction,
+    actorUserId: string,
+    targetUserId: string,
+    orgId: string,
+    metadata?: Record<string, any>
+  ): Promise<void> {
+    await this.logOrganizationAudit({
+      action,
+      actorUserId,
+      targetUserId,
+      orgId,
+      metadata: {
+        ...metadata,
+        category: 'membership'
+      }
+    });
+  }
+
+  /**
+   * Log organization changes
+   */
+  async logOrganizationChange(
+    action: AuditAction,
+    actorUserId: string,
+    orgId: string,
+    metadata?: Record<string, any>
+  ): Promise<void> {
+    await this.logOrganizationAudit({
+      action,
+      actorUserId,
+      orgId,
+      targetResourceType: 'organization',
+      targetResourceId: orgId,
+      metadata: {
+        ...metadata,
+        category: 'organization'
+      }
+    });
+  }
+
+  /**
+   * Log data access events
+   */
+  async logDataAccess(
+    action: AuditAction,
+    userId: string,
+    orgId: string,
+    resourceType: string,
+    resourceId: string,
+    metadata?: Record<string, any>
+  ): Promise<void> {
+    await this.logOrganizationAudit({
+      action,
+      actorUserId: userId,
+      orgId,
+      targetResourceId: resourceId,
+      targetResourceType: resourceType,
+      metadata: {
+        ...metadata,
+        category: 'data_access'
+      }
+    });
   }
 }
 

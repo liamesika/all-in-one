@@ -4,21 +4,43 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User } from 'firebase/auth';
 import { onAuthChange, getIdToken, logout } from './firebase';
+import { userApi } from './api';
+import useSWR from 'swr';
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  avatarUrl?: string;
+  mustChangePassword?: boolean;
+  emailVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 interface AuthContextType {
   user: User | null;
+  userProfile: UserProfile | null;
   loading: boolean;
+  profileLoading: boolean;
   getToken: () => Promise<string | null>;
   ownerUid: string | null;
+  mustChangePassword: boolean;
   logout: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  userProfile: null,
   loading: true,
+  profileLoading: false,
   getToken: async () => null,
   ownerUid: null,
+  mustChangePassword: false,
   logout: async () => {},
+  refreshProfile: async () => {},
 });
 
 export const useAuth = () => {
@@ -36,6 +58,22 @@ interface AuthProviderProps {
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Fetch user profile using SWR when user is authenticated
+  const {
+    data: userProfile,
+    error: profileError,
+    isLoading: profileLoading,
+    mutate: refreshProfile
+  } = useSWR<UserProfile>(
+    user ? '/auth/me' : null,
+    () => user ? userApi.getMe() : null,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: true,
+      dedupingInterval: 60000, // Cache for 1 minute
+    }
+  );
 
   useEffect(() => {
     // Migrate from localStorage to Firebase auth
@@ -74,10 +112,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const value = {
     user,
+    userProfile: userProfile || null,
     loading,
+    profileLoading,
     getToken,
     ownerUid: user?.uid || null,
+    mustChangePassword: userProfile?.mustChangePassword || false,
     logout,
+    refreshProfile,
   };
 
   return (
