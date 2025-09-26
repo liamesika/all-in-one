@@ -5,7 +5,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User } from 'firebase/auth';
 import { onAuthChange, getIdToken, logout } from './firebase';
 import { userApi } from './api';
-import useSWR from 'swr';
+import useSWR, { KeyedMutator } from 'swr';
 
 export interface UserProfile {
   id: string;
@@ -28,7 +28,7 @@ interface AuthContextType {
   ownerUid: string | null;
   mustChangePassword: boolean;
   logout: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
+  refreshProfile: KeyedMutator<UserProfile>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -40,7 +40,7 @@ const AuthContext = createContext<AuthContextType>({
   ownerUid: null,
   mustChangePassword: false,
   logout: async () => {},
-  refreshProfile: async () => {},
+  refreshProfile: async () => undefined,
 });
 
 export const useAuth = () => {
@@ -67,7 +67,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     mutate: refreshProfile
   } = useSWR<UserProfile>(
     user ? '/auth/me' : null,
-    () => user ? userApi.getMe() : null,
+    user ? () => userApi.getMe() : null,
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: true,

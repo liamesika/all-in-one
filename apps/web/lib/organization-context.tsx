@@ -189,7 +189,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       return false;
     }
 
-    return allowedRoles.includes(membership.role);
+    return allowedRoles.includes(membership.role as any);
   }, [membership]);
 
   const loading = authLoading || membershipsLoading;
