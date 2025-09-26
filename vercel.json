@@ -1,9 +1,8 @@
 {
-  "buildCommand": "yarn prisma:generate && SKIP_ENV_VALIDATION=true yarn workspace web build",
+  "buildCommand": "yarn run prisma:generate && cd apps/web && SKIP_ENV_VALIDATION=true yarn build",
   "outputDirectory": "apps/web/.next",
   "installCommand": "yarn install --frozen-lockfile",
   "framework": "nextjs",
-  "rootDirectory": "apps/web",
   "env": {
     "NEXT_DISABLE_SWC_TOOLS_PATCHING": "1",
     "HUSKY": "0",
