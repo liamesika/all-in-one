@@ -10,5 +10,5 @@
   "framework": "nextjs",
   "outputDirectory": "apps/web/.next",
   "installCommand": "yarn install --frozen-lockfile",
-  "buildCommand": "yarn run prisma:generate && SKIP_ENV_VALIDATION=true yarn workspace web build"
+  "buildCommand": "npx prisma generate --schema packages/server/db/prisma/schema.prisma && SKIP_ENV_VALIDATION=true yarn workspace web build"
 }
