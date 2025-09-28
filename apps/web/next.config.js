@@ -18,13 +18,6 @@ const nextConfig = {
   //   'recharts'
   // ],
 
-  // Experimental features for performance
-  experimental: {
-    optimizeCss: true,
-    optimizePackageImports: [
-      'lucide-react'
-    ],
-  },
 
   turbopack: {
     rules: {
@@ -33,6 +26,14 @@ const nextConfig = {
         as: '*.js',
       },
     },
+  },
+
+  // Disable experimental features causing route conflicts
+  experimental: {
+    optimizeCss: false,
+    // optimizePackageImports: [
+    //   'lucide-react'
+    // ],
   },
 
   // Webpack optimization
@@ -149,6 +150,7 @@ const nextConfig = {
   // Output configuration - temporarily disabled static export for debugging
   // output: 'export',
   trailingSlash: false,
+  skipTrailingSlashRedirect: true,
   images: {
     unoptimized: false, // Re-enabled for SSR build
     formats: ['image/webp', 'image/avif'],
