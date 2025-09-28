@@ -1,7 +1,7 @@
 {
   "name": "mvp-base",
   "private": true,
-  "packageManager": "yarn@1.22.22",
+  "packageManager": "pnpm@8.15.7",
   "engines": {
     "node": ">=20.0.0 <23.0.0"
   },
@@ -16,7 +16,7 @@
     "lint": "turbo run lint",
     "format": "prettier -w .",
     "prisma:generate": "prisma generate --schema packages/server/db/prisma/schema.prisma",
-    "postinstall": "prisma generate --schema packages/server/db/prisma/schema.prisma",
+    "postinstall": "pnpm -C packages/server prisma generate --schema db/prisma/schema.prisma",
     "vercel-install": "npm install --force --no-optional"
   },
   "devDependencies": {
