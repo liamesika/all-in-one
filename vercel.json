@@ -1,14 +1,3 @@
 {
-  "build": {
-    "env": {
-      "NEXT_DISABLE_SWC_TOOLS_PATCHING": "1",
-      "HUSKY": "0",
-      "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "1",
-      "SKIP_ENV_VALIDATION": "true"
-    }
-  },
-  "framework": "nextjs",
-  "outputDirectory": "apps/web/.next",
-  "installCommand": "yarn install --frozen-lockfile",
-  "buildCommand": "SKIP_ENV_VALIDATION=true yarn workspace web build"
+  "version": 2
 }
