@@ -1,6 +1,5 @@
 // apps/api/src/lib/firebaseAdmin.ts
 import * as admin from 'firebase-admin';
-import * as fs from 'fs';
 import type { Request } from 'express';
 
 let app: admin.app.App | null = null;
@@ -8,32 +7,28 @@ let app: admin.app.App | null = null;
 export function getFirebaseAdmin() {
   if (app) return app;
 
-  const saPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-  const inline = process.env.FIREBASE_SERVICE_ACCOUNT_JSON; // אופציה לבייס64 במקום קובץ
-  const databaseURL = process.env.FIREBASE_DB_URL;
-  const storageBucket = process.env.FIREBASE_STORAGE_BUCKET;
+  // ENV-based configuration (no JSON files)
+  const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
+  const rawKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY || '';
+  const databaseURL = process.env.NEXT_PUBLIC_FIREBASE_DB_URL;
+  const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
+
+  if (!projectId || !clientEmail || !rawKey) {
+    throw new Error('Missing Firebase Admin ENV: FIREBASE_ADMIN_PROJECT_ID, FIREBASE_ADMIN_CLIENT_EMAIL, or FIREBASE_ADMIN_PRIVATE_KEY');
+  }
 
   if (!databaseURL) {
-    throw new Error('Missing FIREBASE_DB_URL env (copy it from Firebase Console RTDB settings).');
+    throw new Error('Missing NEXT_PUBLIC_FIREBASE_DB_URL env (copy it from Firebase Console RTDB settings).');
   }
 
-  let credential: admin.credential.Credential | undefined;
-
-  if (saPath) {
-    if (!fs.existsSync(saPath)) {
-      throw new Error(`Service account file not found at ${saPath}`);
-    }
-    const json = JSON.parse(fs.readFileSync(saPath, 'utf8'));
-    credential = admin.credential.cert(json);
-  } else if (inline) {
-    const text = inline.trim().startsWith('{')
-      ? inline
-      : Buffer.from(inline, 'base64').toString('utf8');
-    const json = JSON.parse(text);
-    credential = admin.credential.cert(json);
-  } else {
-    throw new Error('Set GOOGLE_APPLICATION_CREDENTIALS (file path) OR FIREBASE_SERVICE_ACCOUNT_JSON (base64).');
-  }
+  // Initialize Firebase Admin with ENV credentials
+  const credential = admin.credential.cert({
+    projectId,
+    clientEmail,
+    // Convert \n escapes back to actual newlines if present
+    privateKey: rawKey.replace(/\\n/g, '\n'),
+  });
 
   app = admin.initializeApp({
     credential,
@@ -62,3 +57,8 @@ export async function getUidFromRequest(req: Request): Promise<string> {
   const decoded = await adminApp.auth().verifySessionCookie(cookie, true);
   return decoded.uid;
 }
+
+// Convenience exports for Firebase Admin services
+export const firebaseAuth = () => getFirebaseAdmin().auth();
+export const firestore = () => getFirebaseAdmin().firestore();
+export const storage = () => getFirebaseAdmin().storage();

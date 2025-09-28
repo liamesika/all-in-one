@@ -8,3 +8,8 @@ coverage
 terraform/.terraform
 terraform/terraform.tfstate*
 .vercel
+
+# Firebase service account files
+serviceAccount*.json
+service-account*.json
+firebase-admin*.json
