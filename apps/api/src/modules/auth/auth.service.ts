@@ -39,12 +39,13 @@ export class AuthService {
 
   resolveDashboardPath(vertical: Vertical): string {
     const verticalRoutes = {
-      [Vertical.REAL_ESTATE]: '/real-estate/dashboard',
-      [Vertical.LAW]: '/law/dashboard',
-      [Vertical.E_COMMERCE]: '/e-commerce/dashboard',
+      [Vertical.REAL_ESTATE]: '/dashboard/real-estate/dashboard',
+      [Vertical.LAW]: '/dashboard/law/dashboard',
+      [Vertical.E_COMMERCE]: '/dashboard/e-commerce/dashboard',
+      [Vertical.PRODUCTION]: '/dashboard/production/dashboard',
     };
 
-    return verticalRoutes[vertical] || '/e-commerce/dashboard';
+    return verticalRoutes[vertical] || '/dashboard/e-commerce/dashboard';
   }
 
   async register(registerDto: RegisterDto): Promise<RegisterResponseDto> {

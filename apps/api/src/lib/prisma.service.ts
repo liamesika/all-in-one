@@ -156,6 +156,45 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     return this.client.message;
   }
 
+  // Missing getters for models referenced in the codebase
+  get invite() {
+    return this.client.invite;
+  }
+
+  get domainClaim() {
+    return this.client.domainClaim;
+  }
+
+  get oAuthConnection() {
+    return this.client.oAuthConnection;
+  }
+
+
+  // Production models
+  get productionProject() {
+    return this.client.productionProject;
+  }
+
+  get productionTask() {
+    return this.client.productionTask;
+  }
+
+  get productionBudgetItem() {
+    return this.client.productionBudgetItem;
+  }
+
+  get productionSupplier() {
+    return this.client.productionSupplier;
+  }
+
+  get productionProjectSupplier() {
+    return this.client.productionProjectSupplier;
+  }
+
+  get productionFileAsset() {
+    return this.client.productionFileAsset;
+  }
+
   $transaction<T>(fn: (prisma: any) => Promise<T>): Promise<T> {
     return this.client.$transaction(fn);
   }

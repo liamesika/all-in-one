@@ -5,11 +5,11 @@
   "type": "commonjs",
   "scripts": {
     "start": "node dist/apps/api/src/main",
-    "start:dev": "yarn build && node dist/apps/api/src/main",
+    "start:dev": "pnpm build && node dist/apps/api/src/main",
     "start:prod": "node dist/apps/api/src/main",
     "start:minimal": "node dist/apps/api/src/minimal-main",
     "build": "nest build",
-    "dev": "yarn build && node dist/apps/api/src/main",
+    "dev": "pnpm build && node dist/apps/api/src/main",
     "lint": "echo 'lint api'",
     "test": "jest",
     "test:watch": "jest --watch"
