@@ -58,7 +58,8 @@ export default function LoginForm() {
             const verticalMap: Record<string, string> = {
               'REAL_ESTATE': '/dashboard/real-estate/dashboard',
               'E_COMMERCE': '/dashboard/e-commerce/dashboard',
-              'LAW': '/dashboard/law/dashboard'
+              'LAW': '/dashboard/law/dashboard',
+              'PRODUCTION': '/dashboard/production/dashboard'
             };
 
             const redirectPath = verticalMap[userData.defaultVertical] || '/dashboard/e-commerce/dashboard';

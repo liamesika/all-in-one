@@ -5,6 +5,13 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { LanguageProvider, useLanguage } from '@/lib/language-context';
 import { LanguageToggle } from '@/components/language-toggle';
 import NewLeadModal from '@/components/modals/NewLeadModal';
+import {
+  TableSkeleton,
+  ButtonLoading,
+  DotsLoading,
+  LoadingCard,
+  Spinner
+} from '@/components/ui/loading';
 
 // Lead types based on our new schema
 type LeadScore = 'HOT' | 'WARM' | 'COLD';
@@ -115,6 +122,11 @@ function LeadsClient({ ownerUid, isAuthLoading = false, user }: LeadsClientProps
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [showNewLeadModal, setShowNewLeadModal] = useState(false);
+  // Enhanced loading states for different operations
+  const [updatingLeadId, setUpdatingLeadId] = useState<string | null>(null);
+  const [recordingContactId, setRecordingContactId] = useState<string | null>(null);
+  const [exportingData, setExportingData] = useState(false);
+  const [bulkOperationLoading, setBulkOperationLoading] = useState(false);
 
   // Check for new=1 parameter after mounting
   useEffect(() => {
@@ -180,6 +192,7 @@ function LeadsClient({ ownerUid, isAuthLoading = false, user }: LeadsClientProps
       return;
     }
 
+    setUpdatingLeadId(leadId);
     try {
       const response = await fetch(`/api/leads/${leadId}/status`, {
         method: 'PUT',
@@ -192,9 +205,12 @@ function LeadsClient({ ownerUid, isAuthLoading = false, user }: LeadsClientProps
       }
 
       // Refresh leads after update
-      fetchLeads(currentPage);
+      await fetchLeads(currentPage);
     } catch (err) {
       console.error('Error updating lead status:', err);
+      setError('Failed to update lead status');
+    } finally {
+      setUpdatingLeadId(null);
     }
   };
 
@@ -204,6 +220,7 @@ function LeadsClient({ ownerUid, isAuthLoading = false, user }: LeadsClientProps
       return;
     }
 
+    setRecordingContactId(leadId);
     try {
       const response = await fetch(`/api/leads/${leadId}/first-contact`, {
         method: 'POST',
@@ -216,9 +233,46 @@ function LeadsClient({ ownerUid, isAuthLoading = false, user }: LeadsClientProps
       }
 
       // Refresh leads after update
-      fetchLeads(currentPage);
+      await fetchLeads(currentPage);
     } catch (err) {
       console.error('Error recording first contact:', err);
+      setError('Failed to record first contact');
+    } finally {
+      setRecordingContactId(null);
+    }
+  };
+
+  // Bulk operations
+  const handleBulkDelete = async () => {
+    if (selectedLeads.size === 0) return;
+
+    setBulkOperationLoading(true);
+    try {
+      // Implement bulk delete API call
+      console.log('Bulk deleting leads:', Array.from(selectedLeads));
+      // await bulkDeleteLeads(Array.from(selectedLeads));
+      setSelectedLeads(new Set());
+      await fetchLeads(currentPage);
+    } catch (err) {
+      console.error('Error bulk deleting leads:', err);
+      setError('Failed to delete selected leads');
+    } finally {
+      setBulkOperationLoading(false);
+    }
+  };
+
+  const handleExport = async () => {
+    setExportingData(true);
+    try {
+      // Implement export functionality
+      console.log('Exporting leads data...');
+      // const exportData = await exportLeads(filters);
+      // downloadFile(exportData, 'leads.csv');
+    } catch (err) {
+      console.error('Error exporting leads:', err);
+      setError('Failed to export leads');
+    } finally {
+      setExportingData(false);
     }
   };
 
@@ -381,20 +435,41 @@ function LeadsClient({ ownerUid, isAuthLoading = false, user }: LeadsClientProps
                 </button>
               </div>
 
-              {/* Filter Toggle */}
+              {/* Filter Toggle with indicator */}
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 text-sm"
+                className="btn-secondary flex items-center relative"
               >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z" />
+                </svg>
                 {language === 'he' ? 'סינון' : 'Filters'}
+                {Object.keys(filters).some(key => filters[key as keyof LeadFilters] !== undefined && filters[key as keyof LeadFilters] !== '') && (
+                  <span className="absolute -top-1 -right-1 h-3 w-3 bg-blue-600 rounded-full animate-pulse" />
+                )}
               </button>
               
+              {/* Export Button */}
+              <ButtonLoading
+                onClick={handleExport}
+                loading={exportingData}
+                className="btn-secondary"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                </svg>
+                {language === 'he' ? 'ייצא' : 'Export'}
+              </ButtonLoading>
+
               {/* Add Lead Button */}
               <button
                 onClick={handleOpenNewLeadModal}
                 disabled={isPageDisabled}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm transition-opacity"
+                className="btn-primary hover-lift disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
               >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
                 {language === 'he' ? 'הוסף ליד' : 'Add Lead'}
               </button>
             </div>
@@ -402,10 +477,24 @@ function LeadsClient({ ownerUid, isAuthLoading = false, user }: LeadsClientProps
         </div>
       </div>
 
-      {/* Filters Panel */}
+      {/* Enhanced Filters Panel */}
       {showFilters && (
-        <div className="bg-white border-b">
+        <div className="bg-white border-b shadow-sm animate-slide-up">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium text-gray-900">
+                {language === 'he' ? 'סינון לידים' : 'Filter Leads'}
+              </h3>
+              <button
+                onClick={() => setFilters({})}
+                className="text-sm text-gray-500 hover:text-gray-700 flex items-center"
+              >
+                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {language === 'he' ? 'איפוס' : 'Reset'}
+              </button>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
               {/* Source Filter */}
               <div>
@@ -520,35 +609,108 @@ function LeadsClient({ ownerUid, isAuthLoading = false, user }: LeadsClientProps
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {loading ? (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="mt-2 text-gray-600">{language === 'he' ? 'טוען...' : 'Loading...'}</p>
+          <div className="animate-fade-in">
+            <TableSkeleton rows={8} cols={7} animate={true} />
           </div>
         ) : error ? (
-          <div className="text-center py-12">
-            <p className="text-red-600">{error}</p>
-            <button
-              onClick={() => fetchLeads(currentPage)}
-              className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            >
-              {language === 'he' ? 'נסה שוב' : 'Try Again'}
-            </button>
+          <div className="text-center py-12 animate-fade-in">
+            <div className="p-6 bg-red-50 rounded-lg inline-block">
+              <div className="text-red-500 mb-2">
+                <svg className="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <p className="text-red-600 font-medium mb-4">{error}</p>
+              <ButtonLoading
+                onClick={() => fetchLeads(currentPage)}
+                loading={loading}
+                className="btn-primary"
+              >
+                {language === 'he' ? 'נסה שוב' : 'Try Again'}
+              </ButtonLoading>
+            </div>
           </div>
         ) : leads.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-600">{language === 'he' ? 'לא נמצאו לידים' : 'No leads found'}</p>
-            <button
-              onClick={() => router.push('/e-commerce/leads/intake')}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            >
-              {language === 'he' ? 'יבא לידים' : 'Import Leads'}
-            </button>
+          <div className="text-center py-12 animate-fade-in">
+            <div className="p-8">
+              <div className="text-gray-400 mb-4">
+                <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                {language === 'he' ? 'אין לידים עדיין' : 'No leads yet'}
+              </h3>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                {language === 'he'
+                  ? 'התחל לאסוף לידים על ידי ייבוא מקבצי CSV או חיבור עם הפלטפורמות שלך'
+                  : 'Start collecting leads by importing from CSV files or connecting your platforms'
+                }
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                  onClick={() => router.push('/dashboard/e-commerce/leads/intake')}
+                  className="btn-primary hover-lift"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  {language === 'he' ? 'ייבא לידים' : 'Import Leads'}
+                </button>
+                <button
+                  onClick={handleOpenNewLeadModal}
+                  className="btn-secondary hover-lift"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  {language === 'he' ? 'הוסף ליד ידנית' : 'Add Lead Manually'}
+                </button>
+              </div>
+            </div>
           </div>
         ) : (
           <>
+            {/* Bulk Actions Bar */}
+            {selectedLeads.size > 0 && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 animate-slide-up">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <span className="text-sm font-medium text-blue-900">
+                      {language === 'he' ? `${selectedLeads.size} נבחרו` : `${selectedLeads.size} selected`}
+                    </span>
+                    <div className="flex space-x-2">
+                      <ButtonLoading
+                        onClick={handleBulkDelete}
+                        loading={bulkOperationLoading}
+                        className="btn-secondary text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        {language === 'he' ? 'מחק' : 'Delete'}
+                      </ButtonLoading>
+                      <ButtonLoading
+                        onClick={handleExport}
+                        loading={exportingData}
+                        className="btn-secondary"
+                      >
+                        {language === 'he' ? 'יצא' : 'Export'}
+                      </ButtonLoading>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setSelectedLeads(new Set())}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Table View */}
             {viewMode === 'table' && (
-              <div className="bg-white shadow rounded-lg overflow-hidden">
+              <div className="bg-white shadow rounded-lg overflow-hidden animate-fade-in card-hover">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -576,8 +738,12 @@ function LeadsClient({ ownerUid, isAuthLoading = false, user }: LeadsClientProps
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredAndSortedLeads.map((lead) => (
-                      <tr key={lead.id} className="hover:bg-gray-50">
+                    {filteredAndSortedLeads.map((lead, index) => (
+                      <tr
+                        key={lead.id}
+                        className="hover:bg-gray-50 transition-colors duration-200 animate-fade-in"
+                        style={{ animationDelay: `${index * 0.05}s` }}
+                      >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div>
@@ -633,10 +799,12 @@ function LeadsClient({ ownerUid, isAuthLoading = false, user }: LeadsClientProps
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <select
-                            value={lead.status}
-                            onChange={(e) => updateLeadStatus(lead.id, e.target.value as LeadStage)}
-                            className={`text-xs rounded px-2 py-1 border-0 font-medium ${STATUS_COLORS[lead.status]}`}
+                          <div className="relative">
+                            <select
+                              value={lead.status}
+                              onChange={(e) => updateLeadStatus(lead.id, e.target.value as LeadStage)}
+                              disabled={updatingLeadId === lead.id}
+                              className={`text-xs rounded px-2 py-1 border-0 font-medium transition-all duration-200 ${STATUS_COLORS[lead.status]} ${updatingLeadId === lead.id ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-sm cursor-pointer'}`}
                           >
                             <option value="NEW">{language === 'he' ? 'חדש' : 'New'}</option>
                             <option value="CONTACTED">{language === 'he' ? 'צור קשר' : 'Contacted'}</option>
@@ -646,6 +814,12 @@ function LeadsClient({ ownerUid, isAuthLoading = false, user }: LeadsClientProps
                             <option value="WON">{language === 'he' ? 'נמכר' : 'Won'}</option>
                             <option value="LOST">{language === 'he' ? 'אבד' : 'Lost'}</option>
                           </select>
+                            {updatingLeadId === lead.id && (
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <Spinner size="sm" color="blue" />
+                              </div>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           <div>
@@ -694,21 +868,50 @@ function LeadsClient({ ownerUid, isAuthLoading = false, user }: LeadsClientProps
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                          <button
-                            onClick={() => router.push(`/e-commerce/leads/${lead.id}`)}
-                            className="text-blue-600 hover:text-blue-900"
-                          >
-                            {language === 'he' ? 'צפה' : 'View'}
-                          </button>
-                          {lead.status === 'NEW' && !lead.firstContactAt && (
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex items-center space-x-2">
+                            {/* Checkbox for bulk selection */}
+                            <input
+                              type="checkbox"
+                              checked={selectedLeads.has(lead.id)}
+                              onChange={(e) => {
+                                const newSelected = new Set(selectedLeads);
+                                if (e.target.checked) {
+                                  newSelected.add(lead.id);
+                                } else {
+                                  newSelected.delete(lead.id);
+                                }
+                                setSelectedLeads(newSelected);
+                              }}
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded transition-colors"
+                            />
+
+                            {/* View Button */}
                             <button
-                              onClick={() => recordFirstContact(lead.id)}
-                              className="text-green-600 hover:text-green-900"
+                              onClick={() => router.push(`/dashboard/e-commerce/leads/${lead.id}`)}
+                              className="text-blue-600 hover:text-blue-900 hover:bg-blue-50 px-2 py-1 rounded transition-all duration-200"
                             >
-                              {language === 'he' ? 'קשר ראשון' : 'First Contact'}
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                              <span className="sr-only">{language === 'he' ? 'צפה' : 'View'}</span>
                             </button>
-                          )}
+
+                            {/* First Contact Button */}
+                            {lead.status === 'NEW' && !lead.firstContactAt && (
+                              <ButtonLoading
+                                onClick={() => recordFirstContact(lead.id)}
+                                loading={recordingContactId === lead.id}
+                                className="text-green-600 hover:text-green-900 hover:bg-green-50 px-2 py-1 rounded text-xs"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                </svg>
+                                <span className="sr-only">{language === 'he' ? 'קשר ראשון' : 'First Contact'}</span>
+                              </ButtonLoading>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -717,26 +920,74 @@ function LeadsClient({ ownerUid, isAuthLoading = false, user }: LeadsClientProps
               </div>
             )}
 
-            {/* Pagination */}
+            {/* Enhanced Pagination */}
             {totalPages > 1 && (
-              <div className="mt-6 flex items-center justify-between">
+              <div className="mt-6 flex items-center justify-between animate-fade-in">
                 <div className="text-sm text-gray-700">
-                  {language === 'he' ? 'עמוד' : 'Page'} {currentPage} {language === 'he' ? 'מתוך' : 'of'} {totalPages}
+                  <span className="flex items-center space-x-2">
+                    <span>{language === 'he' ? 'עמוד' : 'Page'} {currentPage} {language === 'he' ? 'מתוך' : 'of'} {totalPages}</span>
+                    {loading && <DotsLoading className="ml-2" />}
+                  </span>
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex items-center space-x-2">
+                  {/* First page */}
                   <button
-                    disabled={currentPage === 1}
+                    disabled={currentPage === 1 || loading}
+                    onClick={() => fetchLeads(1)}
+                    className="px-2 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-all duration-200"
+                  >
+                    «
+                  </button>
+
+                  {/* Previous page */}
+                  <ButtonLoading
                     onClick={() => fetchLeads(currentPage - 1)}
-                    className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                    loading={loading}
+                    disabled={currentPage === 1}
+                    className="btn-secondary"
                   >
                     {language === 'he' ? 'קודם' : 'Previous'}
-                  </button>
-                  <button
-                    disabled={currentPage === totalPages}
+                  </ButtonLoading>
+
+                  {/* Page numbers */}
+                  <div className="flex space-x-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                      if (pageNum > totalPages) return null;
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => fetchLeads(pageNum)}
+                          disabled={loading}
+                          className={`px-3 py-1 text-sm rounded transition-all duration-200 ${
+                            pageNum === currentPage
+                              ? 'bg-blue-600 text-white'
+                              : 'border border-gray-300 hover:bg-gray-50 disabled:opacity-50'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Next page */}
+                  <ButtonLoading
                     onClick={() => fetchLeads(currentPage + 1)}
-                    className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                    loading={loading}
+                    disabled={currentPage === totalPages}
+                    className="btn-secondary"
                   >
                     {language === 'he' ? 'הבא' : 'Next'}
+                  </ButtonLoading>
+
+                  {/* Last page */}
+                  <button
+                    disabled={currentPage === totalPages || loading}
+                    onClick={() => fetchLeads(totalPages)}
+                    className="px-2 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-all duration-200"
+                  >
+                    »
                   </button>
                 </div>
               </div>
@@ -745,16 +996,18 @@ function LeadsClient({ ownerUid, isAuthLoading = false, user }: LeadsClientProps
         )}
       </div>
 
-      {/* New Lead Form - Inline with opacity background */}
+      {/* Enhanced New Lead Modal */}
       {showNewLeadModal && (
-        <div className="fixed inset-0 z-40 bg-black bg-opacity-40">
-          <div className="min-h-screen p-4 overflow-y-auto">
-            <NewLeadModal
-              isOpen={showNewLeadModal}
-              onClose={handleCloseNewLeadModal}
-              onSuccess={handleNewLeadSuccess}
-              ownerUid={ownerUid || 'test-owner'}
-            />
+        <div className="fixed inset-0 z-40 bg-black bg-opacity-40 animate-fade-in">
+          <div className="min-h-screen p-4 overflow-y-auto flex items-center justify-center">
+            <div className="animate-scale-in">
+              <NewLeadModal
+                isOpen={showNewLeadModal}
+                onClose={handleCloseNewLeadModal}
+                onSuccess={handleNewLeadSuccess}
+                ownerUid={ownerUid || 'test-owner'}
+              />
+            </div>
           </div>
         </div>
       )}

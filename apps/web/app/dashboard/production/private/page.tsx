@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { LanguageProvider, useLanguage } from '@/lib/language-context';
-import { EffinityHeader } from '@/components/effinity-header';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui';
 import { useAuth } from '@/lib/auth-context';
 
@@ -33,10 +32,6 @@ function ProductionPrivateDashboardContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-indigo-50/30 to-gray-50">
       {/* Header */}
-      <EffinityHeader
-        variant="dashboard"
-        className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 shadow-xl border-0"
-      />
 
       {/* Freelancer Overview Hero */}
       <section className="relative px-6 py-16 bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 text-white overflow-hidden">

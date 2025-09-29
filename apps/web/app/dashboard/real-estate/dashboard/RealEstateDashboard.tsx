@@ -22,7 +22,6 @@ function KPIIcon({ type, className }: { type: string; className?: string }) {
   );
 }
 import { useRouter, useSearchParams } from 'next/navigation';
-import { EffinityHeader } from '@/components/effinity-header';
 import { LanguageProvider, useLanguage } from '@/lib/language-context';
 import { useLang } from '@/components/i18n/LangProvider';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui';
@@ -161,11 +160,6 @@ function RealEstateDashboardContent({
 
   return (
     <div className={`min-h-screen bg-gradient-to-br from-white via-blue-50/30 to-gray-50 animate-fade-in ${language === 'he' ? 'rtl' : 'ltr'}`}>
-      {/* Professional Header with Real Estate Branding */}
-      <EffinityHeader 
-        variant="dashboard"
-        className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 shadow-xl border-0"
-      />
       
       {/* Professional Hero Section */}
       <section className="relative px-6 py-16 bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 text-white overflow-hidden">

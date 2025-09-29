@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { LanguageProvider, useLanguage } from '@/lib/language-context';
-import { EffinityHeader } from '@/components/effinity-header';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui';
 import { useAuth } from '@/lib/auth-context';
 
@@ -73,10 +72,6 @@ function ProductionDashboardContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-purple-50/30 to-gray-50 animate-fade-in">
       {/* EFFINITY Header with Production Gradient */}
-      <EffinityHeader
-        variant="dashboard"
-        className="bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 shadow-xl border-0"
-      />
 
       {/* Professional Hero Section */}
       <section className="relative px-6 py-16 bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 text-white overflow-hidden">

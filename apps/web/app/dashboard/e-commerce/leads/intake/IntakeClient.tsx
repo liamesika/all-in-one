@@ -225,7 +225,7 @@ function IntakeClient({ ownerUid }: { ownerUid: string }) {
             setTimeout(() => {
               resetCsvImport();
               fetchImportHistory();
-              router.push('/e-commerce/leads');
+              router.push('/dashboard/e-commerce/leads');
             }, 1000);
             return 100;
           }
@@ -285,7 +285,7 @@ function IntakeClient({ ownerUid }: { ownerUid: string }) {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => router.push('/e-commerce/leads')}
+                onClick={() => router.push('/dashboard/e-commerce/leads')}
                 className="text-gray-600 hover:text-gray-900"
               >
                 ← {language === 'he' ? 'חזרה ללידים' : 'Back to Leads'}

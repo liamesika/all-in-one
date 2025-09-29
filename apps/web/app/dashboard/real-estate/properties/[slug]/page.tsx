@@ -5,7 +5,6 @@ import { useParams } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { LanguageProvider, useLanguage } from '@/lib/language-context';
 import { LanguageToggle } from '@/components/language-toggle';
-import { EffinityHeader } from '@/components/effinity-header';
 // Simple QR placeholder to avoid build issues
 const QRCodeSVG = ({ value, size, bgColor, fgColor, level }: any) => (
   <div
@@ -163,67 +162,6 @@ function PropertyPageContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <EffinityHeader variant="dashboard" />
-
-      {/* Property Header */}
-      <div className="bg-gradient-to-br from-blue-600 to-purple-700 px-6 py-8">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl font-bold text-white mb-2">{property.name}</h1>
-          <p className="text-blue-100 mb-6">
-            {property.address && property.city
-              ? `${property.address}, ${property.city}`
-              : property.city || property.address || (language === 'he' ? 'מיקום לא זמין' : 'Location not available')
-            }
-          </p>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setShowQR(!showQR)}
-              className="bg-white/20 backdrop-blur-sm border border-white/30 px-4 py-2 rounded-xl text-white font-medium hover:bg-white/30 transition-colors"
-            >
-              {showQR ? '✕' : '📱'} {language === 'he' ? 'QR קוד' : 'QR Code'}
-            </button>
-            <a
-              href="/real-estate/properties"
-              className="bg-white/20 backdrop-blur-sm border border-white/30 px-4 py-2 rounded-xl text-white font-medium hover:bg-white/30 transition-colors"
-            >
-              ← {language === 'he' ? 'חזרה לנכסים' : 'Back to Properties'}
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        
-        {/* Property Card - Landing Page Style */}
-        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
-          
-          {/* Property Title and Price */}
-          <div className="text-center py-10 px-8 bg-gradient-to-br from-blue-50 to-white">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">{property.name}</h1>
-            <div className="text-lg text-gray-600 mb-4">
-              {property.address && property.city 
-                ? `${property.address}, ${property.city}`
-                : property.city || property.address || (language === 'he' ? 'מיקום לא זמין' : 'Location not available')
-              }
-            </div>
-            {property.price && (
-              <div className="text-4xl md:text-5xl font-bold" style={{ color: brand.primary }}>
-                ₪{property.price.toLocaleString()}
-              </div>
-            )}
-          </div>
-
-          {/* Images Grid */}
-          {photos.length > 0 && (
-            <div className="p-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                {photos.slice(0, 4).map((photo, idx) => (
-                  <img
-                    key={photo.id}
-                    src={photo.url}
-                    alt={`${property.name} - Image ${idx + 1}`}
-                    className="w-full h-48 md:h-64 object-cover rounded-2xl shadow-lg hover:shadow-xl transition-shadow"
-                  />
                 ))}
                 {/* Fill remaining slots with placeholders if less than 4 images */}
                 {Array.from({ length: Math.max(0, 4 - photos.length) }).map((_, idx) => (

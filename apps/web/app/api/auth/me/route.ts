@@ -8,6 +8,7 @@ export async function GET() {
     lastName: 'User',
     emailVerified: true,
     mustChangePassword: false,
+    defaultVertical: 'E_COMMERCE', // Set default vertical for demo
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   });

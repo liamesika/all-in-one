@@ -30,6 +30,9 @@ export default function DashboardRedirect() {
             case 'LAW':
               router.replace('/dashboard/law/dashboard');
               break;
+            case 'PRODUCTION':
+              router.replace('/dashboard/production/dashboard');
+              break;
             case 'E_COMMERCE':
             default:
               router.replace('/dashboard/e-commerce/dashboard');

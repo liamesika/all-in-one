@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { LanguageProvider, useLanguage } from '@/lib/language-context';
-import { EffinityHeader } from '@/components/effinity-header';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui';
 import { useAuth } from '@/lib/auth-context';
 
@@ -143,10 +142,6 @@ function ProductionTeamContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-blue-50/30 to-gray-50">
       {/* Header */}
-      <EffinityHeader
-        variant="dashboard"
-        className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 shadow-xl border-0"
-      />
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Page Header */}

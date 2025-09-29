@@ -1,6 +1,5 @@
 'use client';
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { EffinityHeader } from '@/components/effinity-header';
 import { LanguageProvider, useLanguage } from '@/lib/language-context';
 
 type FlowStep = 'upload' | 'wizard' | 'preview' | 'job' | 'complete';
@@ -991,41 +990,5 @@ function ShopifyCsvFlowContent() {
         </div>
       </div>
     </div>
-  );
-
-  return (
-    <div className="min-h-screen bg-white">
-      <EffinityHeader variant="dashboard" />
-
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 text-white py-16">
-        <div className="max-w-7xl mx-auto px-6 text-center">
-          <h1 className="text-3xl font-semibold mb-4">
-            {language === 'he' ? 'יוצר CSV לשופיפיי' : 'Shopify CSV Generator'}
-          </h1>
-          <p className="text-xl opacity-90">
-            {language === 'he' ? 'העלה תמונות → AI אשף → תצוגה מקדימה → CSV מוכן' : 'Upload Images → AI Wizard → Preview → Ready CSV'}
-          </p>
-        </div>
-      </section>
-
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {renderStepIndicator()}
-        
-        {currentStep === 'upload' && renderUploadStep()}
-        {currentStep === 'wizard' && renderWizardStep()}
-        {currentStep === 'preview' && renderPreviewStep()}
-        {currentStep === 'job' && renderJobStep()}
-        {currentStep === 'complete' && renderCompleteStep()}
-      </div>
-    </div>
-  );
-}
-
-export default function ShopifyCsvFlow() {
-  return (
-    <LanguageProvider>
-      <ShopifyCsvFlowContent />
-    </LanguageProvider>
   );
 }

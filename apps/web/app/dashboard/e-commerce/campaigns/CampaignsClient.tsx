@@ -324,7 +324,7 @@ function CampaignsClient({ ownerUid }: { ownerUid: string }) {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => router.push('/e-commerce/dashboard')}
+                onClick={() => router.push('/dashboard/e-commerce/dashboard')}
                 className="text-gray-600 hover:text-gray-900"
               >
                 ← {language === 'he' ? 'חזרה לדשבורד' : 'Back to Dashboard'}
@@ -341,7 +341,7 @@ function CampaignsClient({ ownerUid }: { ownerUid: string }) {
               <LanguageToggle />
               
               <button
-                onClick={() => router.push('/e-commerce/connections')}
+                onClick={() => router.push('/dashboard/e-commerce/connections')}
                 className="px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm"
               >
                 {language === 'he' ? 'חיבורים' : 'Connections'}
@@ -588,7 +588,7 @@ function CampaignsClient({ ownerUid }: { ownerUid: string }) {
                         </button>
                         
                         <button
-                          onClick={() => router.push(`/e-commerce/campaigns/${campaign.id}`)}
+                          onClick={() => router.push(`/dashboard/e-commerce/campaigns/${campaign.id}`)}
                           className="text-blue-600 hover:text-blue-900"
                         >
                           {language === 'he' ? 'ערוך' : 'Edit'}

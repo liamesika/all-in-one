@@ -4,7 +4,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { LanguageToggle } from '@/components/language-toggle';
-import { EffinityHeader } from '@/components/effinity-header';
 import { LanguageProvider, useLanguage } from '@/lib/language-context';
 
 // ===== טיפוס ליד נדל״ן =====
@@ -688,59 +687,6 @@ function LeadsClientContent({ items }: { items: Lead[] }) {
   // ===== רנדר =====
   return (
     <div className="min-h-screen bg-gray-50">
-      <EffinityHeader variant="dashboard" />
-
-      {/* Page Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-semibold">{language === 'he' ? 'לידים נדל״ן' : 'Real Estate Leads'}</h1>
-              <p className="opacity-90 mt-1">{language === 'he' ? 'ניהול והמרת לקוחות פוטנציאליים בנדל״ן' : 'Real estate lead management and conversion'}</p>
-            </div>
-            <div className="flex gap-3 items-center">
-              <button
-                onClick={() => setShowCreate(true)}
-                className="bg-white/20 backdrop-blur-sm border border-white/30 px-6 py-2 rounded-xl text-white font-semibold hover:bg-white/30 transition-all transform hover:scale-105"
-              >
-                + {language === 'he' ? 'ליד חדש' : 'New Lead'}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-12 gap-6">
-          {/* Sidebar */}
-          <aside className="hidden md:block col-span-2">
-            <div className="sticky top-6 rounded-2xl bg-white shadow-xl border p-4">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="h-9 w-9 rounded-xl bg-blue-600 text-white grid place-items-center font-bold">E</div>
-                <div className="font-semibold">EFFINITY</div>
-              </div>
-              <nav className="space-y-1 text-sm">
-                <a className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-50" href="/real-estate/properties">
-                  {language === 'he' ? 'נכסים' : 'Properties'}
-                </a>
-                <a className="flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-50 text-blue-700 font-medium" href="/real-estate/leads">
-                  {language === 'he' ? 'לידים' : 'Leads'}
-                </a>
-              </nav>
-            </div>
-          </aside>
-
-          {/* Main Content */}
-          <main className="col-span-12 md:col-span-10">
-            <div className="mb-4 flex flex-wrap items-center gap-3">
-              <div className="flex-1">
-                <input
-                  placeholder={language === 'he' ? 'חיפוש...' : 'Search...'}
-                  className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 outline-none focus:border-blue-300"
-                  dir={language === 'he' ? 'rtl' : 'ltr'}
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                />
               </div>
 
               <button

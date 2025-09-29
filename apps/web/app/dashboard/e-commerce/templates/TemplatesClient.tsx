@@ -288,7 +288,7 @@ function TemplatesClient({ ownerUid }: { ownerUid: string }) {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => router.push('/e-commerce/dashboard')}
+                onClick={() => router.push('/dashboard/e-commerce/dashboard')}
                 className="text-gray-600 hover:text-gray-900"
               >
                 ← {language === 'he' ? 'חזרה לדשבורד' : 'Back to Dashboard'}
