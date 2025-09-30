@@ -121,6 +121,21 @@ function LawDashboardContent({
   return (
     <div className={`min-h-screen bg-white ${language === 'he' ? 'rtl' : 'ltr'}`}>
       {/* Header */}
+      <section className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white py-12 lg:py-16">
+        <div className="max-w-8xl mx-auto px-6">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+            <div className="text-center lg:text-left">
+              <h1 className="text-4xl lg:text-6xl font-bold mb-4 leading-tight">
+                {lang === 'he' ? 'דשבורד משפטי' : 'Legal Dashboard'}
+              </h1>
+              <p className="text-xl lg:text-2xl text-blue-100 mb-6">
+                {lang === 'he' ? 'ניהול מקרים ופעילות משפטית' : 'Manage cases and legal activities'}
+              </p>
+            </div>
+            <div className="flex gap-4">
+              <button className="bg-white/20 backdrop-blur-sm border border-white/30 px-4 py-2 rounded-xl text-white font-semibold hover:bg-white/30 transition-all duration-300 flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
                 {lang === 'he' ? 'דוח ביצועים' : 'Performance Report'}
               </button>

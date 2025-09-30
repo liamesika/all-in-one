@@ -117,9 +117,19 @@ function NewPropertyPageContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-            <p className="text-xs text-gray-500 mt-1">{t('newProperty.propertyNameRequired')}</p>
-          </div>
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-6xl mx-auto px-4 py-6">
+          <h1 className="text-2xl font-bold text-gray-900">
+            {t('newProperty.title')}
+          </h1>
+          <p className="text-xs text-gray-500 mt-1">{t('newProperty.propertyNameRequired')}</p>
+        </div>
+      </div>
 
+      {/* Form */}
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-lg shadow p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold mb-2 text-gray-700">{t('newProperty.address')}</label>

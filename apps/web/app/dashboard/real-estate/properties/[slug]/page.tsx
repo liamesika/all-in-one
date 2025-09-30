@@ -162,8 +162,36 @@ function PropertyPageContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-                ))}
-                {/* Fill remaining slots with placeholders if less than 4 images */}
+      {/* Property Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-6xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-gray-900">
+              {property.title}
+            </h1>
+            <a
+              href="/real-estate/properties"
+              className="text-blue-600 hover:text-blue-800"
+            >
+              {language === 'he' ? 'חזרה לרשימת הנכסים' : 'Back to Properties'}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* Property Photos Grid */}
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {photos.slice(0, 4).map((photo, idx) => (
+            <div key={idx} className="w-full h-48 md:h-64 bg-gray-200 rounded-2xl shadow-lg overflow-hidden">
+              <img
+                src={photo}
+                alt={`Property photo ${idx + 1}`}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ))}
+          {/* Fill remaining slots with placeholders if less than 4 images */}
                 {Array.from({ length: Math.max(0, 4 - photos.length) }).map((_, idx) => (
                   <div key={`placeholder-${idx}`} className="w-full h-48 md:h-64 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl shadow-lg flex items-center justify-center">
                     <div className="text-blue-400 text-4xl">🏠</div>

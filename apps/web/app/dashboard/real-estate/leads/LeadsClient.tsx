@@ -687,16 +687,28 @@ function LeadsClientContent({ items }: { items: Lead[] }) {
   // ===== רנדר =====
   return (
     <div className="min-h-screen bg-gray-50">
-              </div>
-
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-6xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-gray-900">
+              {language === 'he' ? 'לידים' : 'Leads'}
+            </h1>
+            <div className="flex items-center gap-4">
               <button
                 onClick={() => setShowCreate(true)}
                 className="rounded-xl bg-blue-600 text-white px-3 py-2 text-sm hover:bg-blue-700"
               >
                 {language === 'he' ? '+ ליד חדש' : '+ New lead'}
               </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
-              <select
+      {/* Main Content */}
+      <main className="max-w-6xl mx-auto px-4 py-8">
+        <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as any)}
                 className="rounded-xl border px-3 py-2 text-sm"
