@@ -8,14 +8,13 @@
     ],
     "rewrites": [
       {
+        "source": "/api/**",
+        "destination": "https://effinity-platform-6ztb3oomk-all-inones-projects.vercel.app/api/**"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
     ]
-  },
-  "functions": {
-    "source": "functions",
-    "runtime": "nodejs20",
-    "region": "europe-west1"
   }
 }

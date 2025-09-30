@@ -147,8 +147,8 @@ const nextConfig = {
 
   // PWA support would require next-pwa package - removed for Next.js 15 compatibility
 
-  // Output configuration - temporarily disabled static export for debugging
-  // output: 'export',
+  // Output configuration - static export for Firebase hosting
+  output: 'export',
   trailingSlash: false,
   skipTrailingSlashRedirect: true,
   images: {
