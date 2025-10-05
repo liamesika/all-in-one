@@ -199,7 +199,6 @@ function PropertyPageContent() {
                 ))}
               </div>
             </div>
-          )}
 
           {/* Two Column Info */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">

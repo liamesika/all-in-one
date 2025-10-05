@@ -593,6 +593,10 @@ function PropertiesPageContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-800 shadow-lg">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex items-center gap-4">
             <select
               className="border border-white/20 bg-white/10 backdrop-blur-sm rounded-xl px-3 py-2 text-white focus:outline-none"
               value={status}

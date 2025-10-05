@@ -708,6 +708,7 @@ function LeadsClientContent({ items }: { items: Lead[] }) {
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 py-8">
+            <div className="flex items-center gap-4 mb-6">
         <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as any)}
