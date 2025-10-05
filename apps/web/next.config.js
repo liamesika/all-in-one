@@ -58,12 +58,8 @@ const nextConfig = {
       );
     }
 
-    // Additional webpack runtime safety - disable complex optimizations
-    if (!dev) {
-      config.optimization.runtimeChunk = false; // Disable runtime chunk splitting to avoid undefined issues
-      // Disable splitChunks to avoid webpack runtime dependency issues
-      config.optimization.splitChunks = false;
-    }
+    // REMOVED: Don't disable runtimeChunk or splitChunks - this breaks Next.js static file generation
+    // Next.js needs these optimizations to properly generate and serve static assets
 
     // Node.js polyfills for browser globals
     if (!isServer) {
@@ -75,17 +71,8 @@ const nextConfig = {
         crypto: false,
       };
 
-      // Externalize problematic packages to prevent bundling
-      config.externals = config.externals || [];
-      config.externals.push({
-        'framer-motion': 'framer-motion',
-        'react-window': 'react-window',
-        'react-window-infinite-loader': 'react-window-infinite-loader',
-        'chart.js': 'chart.js',
-        'react-chartjs-2': 'react-chartjs-2',
-        'recharts': 'recharts',
-        'qrcode.react': 'qrcode.react'
-      });
+      // REMOVED: Don't externalize client packages - this prevents proper bundling
+      // Let Next.js/webpack handle these packages normally
     }
     // Bundle analyzer (only in production build with ANALYZE=true)
     if (process.env.ANALYZE === 'true') {
