@@ -262,6 +262,18 @@ export class AuthService {
 
       this.logger.log(`Firebase user registered successfully: ${result.user.id}`);
 
+      // Set Firebase custom claims for vertical (for fast token-based routing)
+      try {
+        const admin = getFirebaseAdmin();
+        await admin.auth().setCustomUserClaims(registerDto.firebaseUid, {
+          vertical: registerDto.vertical,
+        });
+        this.logger.log(`✅ Firebase custom claims set for user ${result.user.id}: vertical=${registerDto.vertical}`);
+      } catch (claimsError) {
+        // Log error but don't fail registration - vertical is still in DB
+        this.logger.error(`⚠️ Failed to set Firebase custom claims for user ${result.user.id}:`, claimsError);
+      }
+
       // Emit telemetry event
       this.emitEvent('user_registered_firebase', {
         userId: result.user.id,
@@ -290,6 +302,20 @@ export class AuthService {
     try {
       const admin = getFirebaseAdmin();
       const decodedToken = await admin.auth().verifyIdToken(idToken);
+
+      // Validate custom claims if present
+      if (decodedToken.vertical) {
+        const validVerticals = ['REAL_ESTATE', 'E_COMMERCE', 'LAW', 'PRODUCTION'];
+        if (!validVerticals.includes(decodedToken.vertical as string)) {
+          this.logger.warn(`⚠️ Invalid vertical in token claims: ${decodedToken.vertical} for user ${decodedToken.uid}`);
+          // Don't throw error - token is still valid, just log the warning
+        } else {
+          this.logger.log(`✅ Token verified with valid vertical: ${decodedToken.vertical} for user ${decodedToken.uid}`);
+        }
+      } else {
+        this.logger.log(`ℹ️ Token verified without vertical claim for user ${decodedToken.uid} (may be legacy user)`);
+      }
+
       return decodedToken;
     } catch (error) {
       this.logger.error('Firebase token verification failed:', error);

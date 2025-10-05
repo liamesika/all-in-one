@@ -136,41 +136,62 @@ function RegisterForm() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setServerError(null);
     setLoading(true);
 
     try {
+      console.log('📝 [REGISTER] Starting registration...');
+      console.log('🎯 [REGISTER] Selected vertical:', formData.vertical);
+      console.log('📊 [REGISTER] Form data:', {
+        fullName: formData.fullName,
+        email: formData.email,
+        vertical: formData.vertical,
+        accountType: formData.accountType,
+        lang: language
+      });
+
       // Create Firebase user
       const userCredential = await signUp(formData.email.trim(), formData.password);
       const idToken = await userCredential.user.getIdToken();
-      
+      console.log('✅ [REGISTER] Firebase user created:', userCredential.user.uid);
+
       // Create session with backend and register user profile
+      console.log('📡 [REGISTER] Sending registration to backend...');
+      const registrationPayload = {
+        ...formData,
+        lang: language,
+        firebaseUid: userCredential.user.uid,
+        idToken,
+      };
+      console.log('📦 [REGISTER] Registration payload:', {
+        ...registrationPayload,
+        password: '[REDACTED]',
+        idToken: '[REDACTED]'
+      });
+
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({
-          ...formData,
-          lang: language,
-          firebaseUid: userCredential.user.uid,
-          idToken,
-        }),
+        body: JSON.stringify(registrationPayload),
       });
 
       const data = await response.json();
+      console.log('📬 [REGISTER] Backend response:', data);
 
       if (!response.ok) {
+        console.error('❌ [REGISTER] Backend registration failed:', data);
         // If backend registration fails, clean up Firebase user
         await userCredential.user.delete();
-        
+
         if (response.status === 409 && data.action === 'login_or_reset') {
           setServerError(
-            language === 'he' 
+            language === 'he'
               ? 'חשבון עם כתובת אימייל זו כבר קיים. נסה להתחבר או לאפס סיסמה.'
               : 'An account with this email already exists. Try logging in or resetting your password.'
           );
@@ -178,8 +199,12 @@ function RegisterForm() {
         }
         throw new Error(data.message || 'Registration failed');
       }
-      
+
+      console.log('✅ [REGISTER] Backend registration successful');
+      console.log('🔀 [REGISTER] Redirect path from backend:', data.redirectPath);
+
       // Create backend session
+      console.log('🔑 [REGISTER] Creating backend session...');
       const sessionResponse = await fetch('/api/auth/firebase/session', {
         method: 'POST',
         headers: {
@@ -192,10 +217,23 @@ function RegisterForm() {
       });
 
       if (!sessionResponse.ok) {
+        console.error('❌ [REGISTER] Session creation failed');
         throw new Error('Failed to create session');
+      }
+      console.log('✅ [REGISTER] Session created');
+
+      // Force token refresh to get updated custom claims
+      console.log('🔄 [REGISTER] Forcing token refresh to get custom claims...');
+      try {
+        const currentUser = userCredential.user;
+        await currentUser.getIdToken(true); // Force refresh
+        console.log('✅ [REGISTER] Token refreshed with custom claims');
+      } catch (refreshError) {
+        console.warn('⚠️ [REGISTER] Token refresh failed (non-critical):', refreshError);
       }
 
       // Registration successful, redirect to dashboard
+      console.log(`🚀 [REGISTER] Redirecting to: ${data.redirectPath}`);
       router.push(data.redirectPath);
     } catch (error: any) {
       console.error('Registration error:', error);

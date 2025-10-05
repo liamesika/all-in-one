@@ -136,4 +136,11 @@ export const getIdToken = async () => {
   return await user.getIdToken();
 };
 
+// Helper to get ID token result with custom claims
+export const getIdTokenResult = async () => {
+  const user = auth.currentUser;
+  if (!user) return null;
+  return await user.getIdTokenResult();
+};
+
 export default app;

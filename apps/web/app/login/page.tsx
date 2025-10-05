@@ -4,7 +4,7 @@ import { Suspense, useState, useId } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { LanguageProvider, useLanguage } from '@/lib/language-context';
 import { LanguageToggle } from '@/components/language-toggle';
-import { signIn, getIdToken } from '@/lib/firebase';
+import { signIn, getIdToken, getIdTokenResult } from '@/lib/firebase';
 import { FirebaseError } from 'firebase/app';
 import { EffinityLogo } from '@/components/effinity-header';
 
@@ -39,65 +39,76 @@ function LoginForm() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
+
     setServerError(null);
     setLoading(true);
-    
+
     try {
+      console.log('🔐 [LOGIN] Starting Firebase sign-in...');
+
       // Sign in with Firebase - onAuthStateChanged will handle state updates
       await signIn(email.trim(), password.trim());
+      console.log('✅ [LOGIN] Firebase sign-in successful');
 
       // Get the next parameter to redirect to the intended page
       const nextUrl = qp.get('next');
       if (nextUrl) {
+        console.log(`🔀 [LOGIN] Redirecting to next URL: ${nextUrl}`);
         router.push(nextUrl);
-      } else {
-        // Get user's business vertical and redirect to correct dashboard
-        try {
-          const token = await getIdToken();
-          const response = await fetch('/api/user/profile', {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-
-          if (response.ok) {
-            const profile = await response.json();
-            const vertical = profile.defaultVertical;
-
-            console.log('🔍 User business vertical:', vertical);
-
-            // Redirect based on user's chosen business vertical
-            if (vertical === 'REAL_ESTATE') {
-              console.log('🔍 Redirecting to: /dashboard/real-estate/dashboard');
-              router.push('/dashboard/real-estate/dashboard');
-            } else if (vertical === 'E_COMMERCE') {
-              console.log('🔍 Redirecting to: /dashboard/e-commerce/dashboard');
-              router.push('/dashboard/e-commerce/dashboard');
-            } else if (vertical === 'LAW') {
-              console.log('🔍 Redirecting to: /dashboard/law/dashboard');
-              router.push('/dashboard/law/dashboard');
-            } else {
-              // Fallback to homepage if vertical is unknown
-              console.warn('🔍 Unknown vertical, redirecting to homepage for selection');
-              router.push('/');
-            }
-          } else {
-            // Fallback to homepage if profile fetch fails
-            console.warn('🔍 Failed to fetch user profile, redirecting to homepage');
-            router.push('/');
-          }
-        } catch (error) {
-          // Fallback to homepage if any error occurs
-          console.error('🔍 Error fetching user profile:', error);
-          router.push('/');
-        }
+        return;
       }
+
+      // Get Firebase ID token with custom claims
+      console.log('🔑 [LOGIN] Getting Firebase ID token with claims...');
+      const tokenResult = await getIdTokenResult();
+      const token = await getIdToken();
+
+      if (!tokenResult) {
+        throw new Error('Failed to get token result');
+      }
+
+      // Extract vertical from custom claims
+      const vertical = tokenResult.claims.vertical as string;
+      console.log('🎯 [LOGIN] Vertical from token claims:', vertical);
+      console.log('📊 [LOGIN] All custom claims:', tokenResult.claims);
+
+      // Create backend session
+      console.log('📡 [LOGIN] Creating backend session...');
+      const sessionResponse = await fetch('/api/auth/firebase/session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ idToken: token }),
+      });
+
+      if (!sessionResponse.ok) {
+        const errorData = await sessionResponse.json();
+        console.error('❌ [LOGIN] Session creation failed:', errorData);
+        throw new Error('Failed to create session');
+      }
+      console.log('✅ [LOGIN] Backend session created');
+
+      // Map vertical to dashboard path (matching backend logic)
+      const verticalPaths: Record<string, string> = {
+        'REAL_ESTATE': '/dashboard/real-estate/dashboard',
+        'E_COMMERCE': '/dashboard/e-commerce/dashboard',
+        'LAW': '/dashboard/law/dashboard',
+        'PRODUCTION': '/dashboard/production/dashboard',
+      };
+
+      // Use vertical from token claims, fallback to e-commerce if not set
+      const redirectPath = vertical
+        ? (verticalPaths[vertical] || '/dashboard/e-commerce/dashboard')
+        : '/dashboard/e-commerce/dashboard';
+
+      console.log(`✅ [LOGIN] Redirecting to: ${redirectPath}`);
+      router.push(redirectPath);
     } catch (error: any) {
-      console.error('Login error:', error);
+      console.error('❌ [LOGIN] Error:', error);
       
       let errorMessage = language === 'he'
         ? 'התחברות נכשלה. אנא נסה שוב.'
