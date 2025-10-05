@@ -1,13 +1,19 @@
 // apps/web/app/api/auth/firebase/session/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { getFirebaseAdmin } from '@/lib/firebaseAdmin.server';
 import { cookies } from 'next/headers';
+
+// Force dynamic route - prevent static optimization during build
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 const SESSION_COOKIE_NAME = 'session';
 const SESSION_TTL_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
 
 export async function POST(request: NextRequest) {
   try {
+    // Dynamic import to prevent build-time evaluation
+    const { getFirebaseAdmin } = await import('@/lib/firebaseAdmin.server');
+
     const body = await request.json();
     const idToken: string | undefined = body?.idToken;
 

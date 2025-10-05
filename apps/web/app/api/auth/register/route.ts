@@ -1,8 +1,10 @@
 // apps/web/app/api/auth/register/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { getFirebaseAdmin } from '@/lib/firebaseAdmin.server';
-import { prisma } from '@/lib/prisma.server';
 import * as bcrypt from 'bcryptjs';
+
+// Force dynamic route - prevent static optimization during build
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 const TERMS_VERSION = process.env.TERMS_VERSION || '1.0';
 const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS || '12', 10);
@@ -33,6 +35,10 @@ function resolveDashboardPath(vertical: Vertical): string {
 
 export async function POST(request: NextRequest) {
   try {
+    // Dynamic imports to prevent build-time evaluation
+    const { getFirebaseAdmin } = await import('@/lib/firebaseAdmin.server');
+    const { prisma } = await import('@/lib/prisma.server');
+
     const body: RegisterDto = await request.json();
 
     console.log(`📝 [REGISTER] Registration attempt for email: ${body.email.substring(0, 3)}***`);
