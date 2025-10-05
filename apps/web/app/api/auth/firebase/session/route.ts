@@ -72,7 +72,12 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (err: any) {
-    console.error('🔥 [SESSION] createSession failed', err);
+    console.error('🔥 [SESSION] createSession failed:', {
+      message: err.message,
+      stack: err.stack,
+      name: err.name,
+      code: err.code,
+    });
 
     if (err.code === 'auth/invalid-id-token') {
       return NextResponse.json(
@@ -87,7 +92,10 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { message: 'Failed to create session. Please try again.' },
+      {
+        message: 'Failed to create session. Please try again.',
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined,
+      },
       { status: 401 }
     );
   }

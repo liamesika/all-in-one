@@ -35,13 +35,17 @@ function resolveDashboardPath(vertical: Vertical): string {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('🚀 [REGISTER] Starting registration request');
+
     // Dynamic imports to prevent build-time evaluation
+    console.log('📦 [REGISTER] Loading Firebase Admin and Prisma...');
     const { getFirebaseAdmin } = await import('@/lib/firebaseAdmin.server');
     const { prisma } = await import('@/lib/prisma.server');
+    console.log('✅ [REGISTER] Dependencies loaded');
 
     const body: RegisterDto = await request.json();
 
-    console.log(`📝 [REGISTER] Registration attempt for email: ${body.email.substring(0, 3)}***`);
+    console.log(`📝 [REGISTER] Registration attempt for email: ${body.email.substring(0, 3)}***, vertical: ${body.vertical}`);
 
     // Validate terms consent
     if (!body.termsConsent) {
@@ -70,10 +74,14 @@ export async function POST(request: NextRequest) {
     // Firebase registration path
     if (body.firebaseUid && body.idToken) {
       try {
+        console.log('🔑 [REGISTER] Verifying Firebase token for user:', body.firebaseUid.substring(0, 8) + '...');
+
         // Verify Firebase token
         const admin = getFirebaseAdmin();
         await admin.auth().verifyIdToken(body.idToken);
+        console.log('✅ [REGISTER] Firebase token verified');
 
+        console.log('💾 [REGISTER] Creating user in database transaction...');
         // Create user in transaction (no password hash needed for Firebase users)
         const result = await prisma.$transaction(async (tx) => {
           // Create user with Firebase UID
@@ -144,8 +152,14 @@ export async function POST(request: NextRequest) {
           },
           { status: 201 }
         );
-      } catch (error) {
-        console.error('❌ [REGISTER] Firebase registration failed:', error);
+      } catch (error: any) {
+        console.error('🔥 [REGISTER] Firebase registration failed:', {
+          message: error.message,
+          stack: error.stack,
+          name: error.name,
+          code: error.code,
+          firebaseUid: body.firebaseUid,
+        });
         throw error;
       }
     }
@@ -206,10 +220,18 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error) {
-    console.error('❌ [REGISTER] Registration failed:', error);
+  } catch (error: any) {
+    console.error('🔥 [REGISTER] Registration failed with error:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      code: error.code,
+    });
     return NextResponse.json(
-      { message: 'Registration failed' },
+      {
+        message: 'Registration failed',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      },
       { status: 500 }
     );
   }
