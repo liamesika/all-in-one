@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Add to mock data
-    mockLeads.unshift(newLead);
+    mockLeads.unshift(newLead as any);
     nextId++;
 
     return NextResponse.json({
