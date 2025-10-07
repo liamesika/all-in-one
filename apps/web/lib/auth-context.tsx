@@ -70,8 +70,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     user ? () => userApi.getMe() : null,
     {
       revalidateOnFocus: false,
-      revalidateOnReconnect: true,
+      revalidateOnReconnect: false,
       dedupingInterval: 60000, // Cache for 1 minute
+      shouldRetryOnError: false, // Don't retry on 401/404
+      onError: (error) => {
+        // Silently handle 401 errors (not logged in)
+        if (error.message.includes('401') || error.message.includes('No session')) {
+          // This is expected when not logged in
+          return;
+        }
+        console.error('Profile fetch error:', error);
+      }
     }
   );
 
