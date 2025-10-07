@@ -93,14 +93,24 @@ export async function POST(request: NextRequest) {
     console.log('🔍 [REGISTER] Checking if user metadata exists...');
     const existingUser = await prisma.user.findUnique({
       where: { id: body.firebaseUid },
+      include: {
+        userProfile: true,
+      },
     });
 
     if (existingUser) {
       console.warn(`⚠️ [REGISTER] User metadata already exists for UID: ${body.firebaseUid}`);
+      const vertical = existingUser.userProfile?.defaultVertical || body.vertical;
       return NextResponse.json(
         {
           message: 'User profile already exists',
-          redirectPath: resolveDashboardPath(existingUser.userProfile?.defaultVertical || body.vertical),
+          redirectPath: resolveDashboardPath(vertical as Vertical),
+          user: {
+            id: existingUser.id,
+            fullName: existingUser.fullName,
+            email: existingUser.email,
+            defaultVertical: vertical,
+          },
         },
         { status: 200 } // 200 since user can proceed to dashboard
       );
