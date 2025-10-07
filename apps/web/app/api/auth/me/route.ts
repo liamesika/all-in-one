@@ -10,41 +10,35 @@ const SESSION_COOKIE_NAME = 'session';
 
 export async function GET(request: NextRequest) {
   try {
-    // Dynamic imports to prevent build-time evaluation
-    const { getFirebaseAdmin } = await import('@/lib/firebaseAdmin.server');
-    const { prisma } = await import('@/lib/prisma.server');
-
-    console.log('🔍 [ME] Getting current user profile');
-
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 
+    // Return 401 immediately if no session cookie (don't log as error)
     if (!sessionCookie) {
-      console.warn('⚠️ [ME] No session cookie found');
       return NextResponse.json(
         { message: 'No session found' },
         { status: 401 }
       );
     }
 
-    console.log('🔑 [ME] Session cookie found, verifying...');
+    // Only import expensive dependencies if we have a session
+    const { getFirebaseAdmin } = await import('@/lib/firebaseAdmin.server');
+    const { prisma } = await import('@/lib/prisma.server');
 
     // Verify the session cookie using Firebase Admin
     let decodedToken;
     try {
       const admin = getFirebaseAdmin();
       decodedToken = await admin.auth().verifySessionCookie(sessionCookie, true);
-      console.log('✅ [ME] Session verified for user:', decodedToken.uid);
     } catch (verifyError: any) {
-      console.error('❌ [ME] Session verification failed:', verifyError.message);
+      // Session invalid or expired - return 401, not 500
       return NextResponse.json(
-        { message: 'Invalid session' },
+        { message: 'Invalid or expired session' },
         { status: 401 }
       );
     }
 
     // Get user data from database
-    console.log('📊 [ME] Fetching user data from database...');
     const user = await prisma.user.findUnique({
       where: { id: decodedToken.uid },
       include: {
@@ -53,14 +47,11 @@ export async function GET(request: NextRequest) {
     });
 
     if (!user) {
-      console.error('❌ [ME] User not found in database:', decodedToken.uid);
       return NextResponse.json(
         { message: 'User not found' },
         { status: 404 }
       );
     }
-
-    console.log('✅ [ME] User found:', user.id);
 
     // Return user profile
     return NextResponse.json({
