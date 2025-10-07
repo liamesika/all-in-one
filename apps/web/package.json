@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate --schema ../../packages/server/db/prisma/schema.prisma && next build",
     "build:analyze": "ANALYZE=true next build",
     "analyze": "ANALYZE=true npm run build",
     "start": "next start",
+    "postinstall": "prisma generate --schema ../../packages/server/db/prisma/schema.prisma || true",
     "lint": "echo 'lint web'",
     "test": "jest",
     "test:watch": "jest --watch",
