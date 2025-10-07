@@ -37,191 +37,180 @@ export async function POST(request: NextRequest) {
   try {
     console.log('🚀 [REGISTER] Starting registration request');
 
-    // Dynamic imports to prevent build-time evaluation
-    console.log('📦 [REGISTER] Loading Firebase Admin and Prisma...');
-    const { getFirebaseAdmin } = await import('@/lib/firebaseAdmin.server');
-    const { prisma } = await import('@/lib/prisma.server');
-    console.log('✅ [REGISTER] Dependencies loaded');
-
     const body: RegisterDto = await request.json();
+    console.log(`📝 [REGISTER] Registration for: ${body.email.substring(0, 3)}***, vertical: ${body.vertical}`);
 
-    console.log(`📝 [REGISTER] Registration attempt for email: ${body.email.substring(0, 3)}***, vertical: ${body.vertical}`);
+    // Validate required fields
+    if (!body.email || !body.fullName || !body.vertical || !body.firebaseUid || !body.idToken) {
+      console.error('❌ [REGISTER] Missing required fields:', { email: !!body.email, fullName: !!body.fullName, vertical: !!body.vertical, firebaseUid: !!body.firebaseUid, idToken: !!body.idToken });
+      return NextResponse.json(
+        { message: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
 
     // Validate terms consent
     if (!body.termsConsent) {
       return NextResponse.json(
         { message: 'Terms consent is required' },
-        { status: 409 }
+        { status: 400 }
+      );
+    }
+
+    // Dynamic imports - load Firebase Admin
+    console.log('📦 [REGISTER] Loading Firebase Admin...');
+    let getFirebaseAdmin;
+    try {
+      const module = await import('@/lib/firebaseAdmin.server');
+      getFirebaseAdmin = module.getFirebaseAdmin;
+      console.log('✅ [REGISTER] Firebase Admin loaded');
+    } catch (error: any) {
+      console.error('🔥 [REGISTER] Failed to load Firebase Admin:', error.message);
+      return NextResponse.json(
+        { message: 'Firebase configuration error. Please contact support.', details: error.message },
+        { status: 500 }
+      );
+    }
+
+    // Dynamic imports - load Prisma
+    console.log('📦 [REGISTER] Loading Prisma...');
+    let prisma;
+    try {
+      const module = await import('@/lib/prisma.server');
+      prisma = module.prisma;
+      console.log('✅ [REGISTER] Prisma loaded');
+    } catch (error: any) {
+      console.error('🔥 [REGISTER] Failed to load Prisma:', error.message);
+      return NextResponse.json(
+        { message: 'Database configuration error. Please contact support.', details: error.message },
+        { status: 500 }
       );
     }
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email: body.email.toLowerCase() },
-    });
+    console.log('🔍 [REGISTER] Checking for existing user...');
+    try {
+      const existingUser = await prisma.user.findUnique({
+        where: { email: body.email.toLowerCase() },
+      });
 
-    if (existingUser) {
-      console.warn(`⚠️ [REGISTER] Registration failed: email already exists ${body.email.substring(0, 3)}***`);
+      if (existingUser) {
+        console.warn(`⚠️ [REGISTER] Email already exists: ${body.email.substring(0, 3)}***`);
+        return NextResponse.json(
+          {
+            message: 'Email already exists',
+            action: 'login_or_reset',
+          },
+          { status: 409 }
+        );
+      }
+    } catch (error: any) {
+      console.error('🔥 [REGISTER] Database query failed:', error.message);
       return NextResponse.json(
-        {
-          message: 'Email already exists',
-          action: 'login_or_reset',
-        },
-        { status: 409 }
+        { message: 'Database error while checking existing user', details: error.message },
+        { status: 500 }
       );
     }
 
-    // Firebase registration path
-    if (body.firebaseUid && body.idToken) {
-      try {
-        console.log('🔑 [REGISTER] Verifying Firebase token for user:', body.firebaseUid.substring(0, 8) + '...');
-
-        // Verify Firebase token
-        const admin = getFirebaseAdmin();
-        await admin.auth().verifyIdToken(body.idToken);
-        console.log('✅ [REGISTER] Firebase token verified');
-
-        console.log('💾 [REGISTER] Creating user in database transaction...');
-        // Create user in transaction (no password hash needed for Firebase users)
-        const result = await prisma.$transaction(async (tx) => {
-          // Create user with Firebase UID
-          const user = await tx.user.create({
-            data: {
-              id: body.firebaseUid!, // Use Firebase UID as primary key
-              fullName: body.fullName.trim(),
-              email: body.email.toLowerCase(),
-              passwordHash: '', // Empty for Firebase users
-              lang: body.lang || 'en',
-            },
-          });
-
-          // Create organization for the user
-          const organization = await tx.organization.create({
-            data: {
-              ownerUid: user.id,
-              name: `${body.fullName.trim()}'s Organization`,
-            },
-          });
-
-          // Create membership with OWNER role
-          await tx.membership.create({
-            data: {
-              userId: user.id,
-              ownerUid: organization.id,
-              role: 'OWNER',
-            },
-          });
-
-          // Create user profile
-          const userProfile = await tx.userProfile.create({
-            data: {
-              userId: user.id,
-              defaultVertical: body.vertical,
-              termsConsentAt: new Date(),
-              termsVersion: TERMS_VERSION,
-            },
-          });
-
-          return { user, userProfile };
-        });
-
-        console.log(`✅ [REGISTER] Firebase user registered successfully: ${result.user.id}`);
-
-        // Set Firebase custom claims for vertical (for fast token-based routing)
-        try {
-          await admin.auth().setCustomUserClaims(body.firebaseUid, {
-            vertical: body.vertical,
-          });
-          console.log(`✅ [REGISTER] Firebase custom claims set for user ${result.user.id}: vertical=${body.vertical}`);
-        } catch (claimsError) {
-          // Log error but don't fail registration - vertical is still in DB
-          console.error(`⚠️ [REGISTER] Failed to set Firebase custom claims for user ${result.user.id}:`, claimsError);
-        }
-
-        const redirectPath = resolveDashboardPath(body.vertical);
-
-        return NextResponse.json(
-          {
-            redirectPath,
-            user: {
-              id: result.user.id,
-              fullName: result.user.fullName,
-              email: result.user.email,
-              defaultVertical: body.vertical,
-            },
-          },
-          { status: 201 }
-        );
-      } catch (error: any) {
-        console.error('🔥 [REGISTER] Firebase registration failed:', {
-          message: error.message,
-          stack: error.stack,
-          name: error.name,
-          code: error.code,
-          firebaseUid: body.firebaseUid,
-        });
-        throw error;
-      }
+    // Verify Firebase token
+    console.log('🔑 [REGISTER] Verifying Firebase token...');
+    let admin;
+    try {
+      admin = getFirebaseAdmin();
+      await admin.auth().verifyIdToken(body.idToken);
+      console.log('✅ [REGISTER] Firebase token verified');
+    } catch (error: any) {
+      console.error('🔥 [REGISTER] Firebase token verification failed:', error.message);
+      return NextResponse.json(
+        { message: 'Invalid Firebase token', details: error.message },
+        { status: 401 }
+      );
     }
 
-    // Traditional registration path (not currently used but kept for compatibility)
-    const passwordHash = await bcrypt.hash(body.password, BCRYPT_ROUNDS);
+    // Create user in database
+    console.log('💾 [REGISTER] Creating user in database...');
+    try {
+      const result = await prisma.$transaction(async (tx) => {
+        // Create user with Firebase UID
+        const user = await tx.user.create({
+          data: {
+            id: body.firebaseUid!,
+            fullName: body.fullName.trim(),
+            email: body.email.toLowerCase(),
+            passwordHash: '', // Empty for Firebase users
+            lang: body.lang || 'en',
+          },
+        });
 
-    const result = await prisma.$transaction(async (tx) => {
-      const user = await tx.user.create({
-        data: {
-          fullName: body.fullName.trim(),
-          email: body.email.toLowerCase(),
-          passwordHash,
-          lang: body.lang || 'en',
-        },
+        // Create organization
+        const organization = await tx.organization.create({
+          data: {
+            ownerUid: user.id,
+            name: `${body.fullName.trim()}'s Organization`,
+          },
+        });
+
+        // Create membership
+        await tx.membership.create({
+          data: {
+            userId: user.id,
+            ownerUid: organization.id,
+            role: 'OWNER',
+          },
+        });
+
+        // Create user profile
+        const userProfile = await tx.userProfile.create({
+          data: {
+            userId: user.id,
+            defaultVertical: body.vertical,
+            termsConsentAt: new Date(),
+            termsVersion: TERMS_VERSION,
+          },
+        });
+
+        return { user, userProfile };
       });
 
-      const organization = await tx.organization.create({
-        data: {
-          ownerUid: user.id,
-          name: `${body.fullName.trim()}'s Organization`,
+      console.log(`✅ [REGISTER] User created successfully: ${result.user.id}`);
+
+      // Set Firebase custom claims
+      try {
+        await admin.auth().setCustomUserClaims(body.firebaseUid, {
+          vertical: body.vertical,
+        });
+        console.log(`✅ [REGISTER] Firebase custom claims set: vertical=${body.vertical}`);
+      } catch (claimsError: any) {
+        console.warn(`⚠️ [REGISTER] Failed to set Firebase claims (non-critical):`, claimsError.message);
+      }
+
+      const redirectPath = resolveDashboardPath(body.vertical);
+
+      return NextResponse.json(
+        {
+          redirectPath,
+          user: {
+            id: result.user.id,
+            fullName: result.user.fullName,
+            email: result.user.email,
+            defaultVertical: body.vertical,
+          },
         },
+        { status: 201 }
+      );
+    } catch (error: any) {
+      console.error('🔥 [REGISTER] Database transaction failed:', {
+        message: error.message,
+        code: error.code,
+        meta: error.meta,
       });
-
-      await tx.membership.create({
-        data: {
-          userId: user.id,
-          ownerUid: organization.id,
-          role: 'OWNER',
-        },
-      });
-
-      const userProfile = await tx.userProfile.create({
-        data: {
-          userId: user.id,
-          defaultVertical: body.vertical,
-          termsConsentAt: new Date(),
-          termsVersion: TERMS_VERSION,
-        },
-      });
-
-      return { user, userProfile };
-    });
-
-    console.log(`✅ [REGISTER] User registered successfully: ${result.user.id}`);
-
-    const redirectPath = resolveDashboardPath(body.vertical);
-
-    return NextResponse.json(
-      {
-        redirectPath,
-        user: {
-          id: result.user.id,
-          fullName: result.user.fullName,
-          email: result.user.email,
-          defaultVertical: body.vertical,
-        },
-      },
-      { status: 201 }
-    );
+      return NextResponse.json(
+        { message: 'Failed to create user in database', details: error.message },
+        { status: 500 }
+      );
+    }
   } catch (error: any) {
-    console.error('🔥 [REGISTER] Registration failed with error:', {
+    console.error('🔥 [REGISTER] Unexpected error:', {
       message: error.message,
       stack: error.stack,
       name: error.name,
