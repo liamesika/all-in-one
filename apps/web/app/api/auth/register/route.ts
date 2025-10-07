@@ -1,25 +1,22 @@
 // apps/web/app/api/auth/register/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import * as bcrypt from 'bcryptjs';
 
 // Force dynamic route - prevent static optimization during build
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 const TERMS_VERSION = process.env.TERMS_VERSION || '1.0';
-const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS || '12', 10);
 
 type Vertical = 'REAL_ESTATE' | 'E_COMMERCE' | 'LAW' | 'PRODUCTION';
 
 interface RegisterDto {
   email: string;
-  password: string;
   fullName: string;
   vertical: Vertical;
   lang?: string;
   termsConsent: boolean;
-  firebaseUid?: string;
-  idToken?: string;
+  firebaseUid: string; // Required - Firebase UID
+  idToken: string; // Required - Firebase ID token for verification
 }
 
 function resolveDashboardPath(vertical: Vertical): string {
@@ -35,14 +32,14 @@ function resolveDashboardPath(vertical: Vertical): string {
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🚀 [REGISTER] Starting registration request');
+    console.log('🚀 [REGISTER] Starting Firebase-based registration');
 
     const body: RegisterDto = await request.json();
     console.log(`📝 [REGISTER] Registration for: ${body.email.substring(0, 3)}***, vertical: ${body.vertical}`);
 
     // Validate required fields
     if (!body.email || !body.fullName || !body.vertical || !body.firebaseUid || !body.idToken) {
-      console.error('❌ [REGISTER] Missing required fields:', { email: !!body.email, fullName: !!body.fullName, vertical: !!body.vertical, firebaseUid: !!body.firebaseUid, idToken: !!body.idToken });
+      console.error('❌ [REGISTER] Missing required fields');
       return NextResponse.json(
         { message: 'Missing required fields' },
         { status: 400 }
@@ -57,68 +54,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Dynamic imports - load Firebase Admin
+    // Load Firebase Admin
     console.log('📦 [REGISTER] Loading Firebase Admin...');
-    let getFirebaseAdmin;
-    try {
-      const module = await import('@/lib/firebaseAdmin.server');
-      getFirebaseAdmin = module.getFirebaseAdmin;
-      console.log('✅ [REGISTER] Firebase Admin loaded');
-    } catch (error: any) {
-      console.error('🔥 [REGISTER] Failed to load Firebase Admin:', error.message);
-      return NextResponse.json(
-        { message: 'Firebase configuration error. Please contact support.', details: error.message },
-        { status: 500 }
-      );
-    }
+    const { getFirebaseAdmin } = await import('@/lib/firebaseAdmin.server');
+    const admin = getFirebaseAdmin();
+    console.log('✅ [REGISTER] Firebase Admin loaded');
 
-    // Dynamic imports - load Prisma
-    console.log('📦 [REGISTER] Loading Prisma...');
-    let prisma;
+    // Verify Firebase ID token (ensures the user was actually created in Firebase)
+    console.log('🔑 [REGISTER] Verifying Firebase token...');
+    let decodedToken;
     try {
-      const module = await import('@/lib/prisma.server');
-      prisma = module.prisma;
-      console.log('✅ [REGISTER] Prisma loaded');
-    } catch (error: any) {
-      console.error('🔥 [REGISTER] Failed to load Prisma:', error.message);
-      return NextResponse.json(
-        { message: 'Database configuration error. Please contact support.', details: error.message },
-        { status: 500 }
-      );
-    }
+      decodedToken = await admin.auth().verifyIdToken(body.idToken);
+      console.log('✅ [REGISTER] Firebase token verified for UID:', decodedToken.uid);
 
-    // Check if user already exists
-    console.log('🔍 [REGISTER] Checking for existing user...');
-    try {
-      const existingUser = await prisma.user.findUnique({
-        where: { email: body.email.toLowerCase() },
-      });
-
-      if (existingUser) {
-        console.warn(`⚠️ [REGISTER] Email already exists: ${body.email.substring(0, 3)}***`);
+      // Ensure the token UID matches the provided UID
+      if (decodedToken.uid !== body.firebaseUid) {
+        console.error('❌ [REGISTER] UID mismatch - token UID does not match provided UID');
         return NextResponse.json(
-          {
-            message: 'Email already exists',
-            action: 'login_or_reset',
-          },
-          { status: 409 }
+          { message: 'Invalid authentication token' },
+          { status: 401 }
         );
       }
-    } catch (error: any) {
-      console.error('🔥 [REGISTER] Database query failed:', error.message);
-      return NextResponse.json(
-        { message: 'Database error while checking existing user', details: error.message },
-        { status: 500 }
-      );
-    }
-
-    // Verify Firebase token
-    console.log('🔑 [REGISTER] Verifying Firebase token...');
-    let admin;
-    try {
-      admin = getFirebaseAdmin();
-      await admin.auth().verifyIdToken(body.idToken);
-      console.log('✅ [REGISTER] Firebase token verified');
     } catch (error: any) {
       console.error('🔥 [REGISTER] Firebase token verification failed:', error.message);
       return NextResponse.json(
@@ -127,17 +83,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create user in database
-    console.log('💾 [REGISTER] Creating user in database...');
+    // Load Prisma
+    console.log('📦 [REGISTER] Loading Prisma...');
+    const { prisma } = await import('@/lib/prisma.server');
+    console.log('✅ [REGISTER] Prisma loaded');
+
+    // Check if user metadata already exists in Prisma (by Firebase UID)
+    // Note: We check by UID, not email, since Firebase is the source of truth for auth
+    console.log('🔍 [REGISTER] Checking if user metadata exists...');
+    const existingUser = await prisma.user.findUnique({
+      where: { id: body.firebaseUid },
+    });
+
+    if (existingUser) {
+      console.warn(`⚠️ [REGISTER] User metadata already exists for UID: ${body.firebaseUid}`);
+      return NextResponse.json(
+        {
+          message: 'User profile already exists',
+          redirectPath: resolveDashboardPath(existingUser.userProfile?.defaultVertical || body.vertical),
+        },
+        { status: 200 } // 200 since user can proceed to dashboard
+      );
+    }
+
+    // Create user metadata in Prisma (Firebase UID as the primary key)
+    console.log('💾 [REGISTER] Creating user metadata in database...');
     try {
       const result = await prisma.$transaction(async (tx) => {
-        // Create user with Firebase UID
+        // Create user record with Firebase UID as ID
         const user = await tx.user.create({
           data: {
-            id: body.firebaseUid!,
+            id: body.firebaseUid, // Use Firebase UID as primary key
             fullName: body.fullName.trim(),
             email: body.email.toLowerCase(),
-            passwordHash: '', // Empty for Firebase users
+            passwordHash: '', // Empty - Firebase handles passwords
             lang: body.lang || 'en',
           },
         });
@@ -159,7 +138,7 @@ export async function POST(request: NextRequest) {
           },
         });
 
-        // Create user profile
+        // Create user profile with vertical
         const userProfile = await tx.userProfile.create({
           data: {
             userId: user.id,
@@ -172,9 +151,9 @@ export async function POST(request: NextRequest) {
         return { user, userProfile };
       });
 
-      console.log(`✅ [REGISTER] User created successfully: ${result.user.id}`);
+      console.log(`✅ [REGISTER] User metadata created successfully: ${result.user.id}`);
 
-      // Set Firebase custom claims
+      // Set Firebase custom claims for vertical (for fast token-based routing)
       try {
         await admin.auth().setCustomUserClaims(body.firebaseUid, {
           vertical: body.vertical,
@@ -205,7 +184,7 @@ export async function POST(request: NextRequest) {
         meta: error.meta,
       });
       return NextResponse.json(
-        { message: 'Failed to create user in database', details: error.message },
+        { message: 'Failed to create user metadata in database', details: error.message },
         { status: 500 }
       );
     }
