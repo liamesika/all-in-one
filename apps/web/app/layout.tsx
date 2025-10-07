@@ -60,20 +60,35 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         
-        {/* Service Worker registration */}
+        {/* Service Worker UNREGISTRATION - Critical fix for asset 404s */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
+              // CRITICAL: Unregister service worker that was caching stale assets
               if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js')
-                    .then(function(registration) {
-                      console.log('ServiceWorker registered: ', registration);
-                    })
-                    .catch(function(registrationError) {
-                      console.log('ServiceWorker registration failed: ', registrationError);
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                  for (let registration of registrations) {
+                    registration.unregister().then(function(success) {
+                      if (success) {
+                        console.log('✅ ServiceWorker unregistered successfully');
+                      }
                     });
+                  }
                 });
+
+                // Clear all caches
+                if ('caches' in window) {
+                  caches.keys().then(function(cacheNames) {
+                    return Promise.all(
+                      cacheNames.map(function(cacheName) {
+                        console.log('🗑️ Clearing cache:', cacheName);
+                        return caches.delete(cacheName);
+                      })
+                    );
+                  }).then(function() {
+                    console.log('✅ All caches cleared');
+                  });
+                }
               }
             `,
           }}

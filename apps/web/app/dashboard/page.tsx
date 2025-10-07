@@ -4,66 +4,89 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 
-export default function DashboardRedirect() {
+/**
+ * Dashboard Router Page
+ *
+ * This page handles routing authenticated users to their correct vertical dashboard
+ * based on their defaultVertical setting from the database.
+ *
+ * Flow:
+ * 1. Check auth state
+ * 2. Fetch user profile from /api/auth/me
+ * 3. Redirect to appropriate vertical dashboard
+ * 4. Fallback to e-commerce if vertical unknown
+ */
+export default function DashboardPage() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading, getToken } = useAuth();
 
   useEffect(() => {
-    if (loading || !user) return;
+    const redirectToUserDashboard = async () => {
+      if (loading) {
+        console.log('🔄 [DASHBOARD] Auth loading...');
+        return;
+      }
 
-    const fetchUserAndRedirect = async () => {
+      if (!user) {
+        console.log('❌ [DASHBOARD] No user, redirecting to login');
+        router.replace('/login?next=/dashboard');
+        return;
+      }
+
       try {
-        const token = await user.getIdToken();
+        console.log('🔐 [DASHBOARD] Fetching user vertical from API...');
+        const token = await getToken();
+
+        if (!token) {
+          console.error('❌ [DASHBOARD] No token available');
+          router.replace('/login?next=/dashboard');
+          return;
+        }
+
         const response = await fetch('/api/auth/me', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        if (response.ok) {
-          const userData = await response.json();
-          const vertical = userData.defaultVertical;
-
-          // Redirect based on user's default vertical
-          switch (vertical) {
-            case 'REAL_ESTATE':
-              router.replace('/dashboard/real-estate/dashboard');
-              break;
-            case 'LAW':
-              router.replace('/dashboard/law/dashboard');
-              break;
-            case 'PRODUCTION':
-              router.replace('/dashboard/production/dashboard');
-              break;
-            case 'E_COMMERCE':
-            default:
-              router.replace('/dashboard/e-commerce/dashboard');
-              break;
-          }
-        } else {
-          // Default fallback
+        if (!response.ok) {
+          console.error('❌ [DASHBOARD] Failed to fetch user data:', response.status);
+          // Fallback to e-commerce
           router.replace('/dashboard/e-commerce/dashboard');
+          return;
         }
+
+        const userData = await response.json();
+        const vertical = userData.defaultVertical;
+
+        console.log('👤 [DASHBOARD] User vertical:', vertical);
+
+        const verticalMap: Record<string, string> = {
+          'REAL_ESTATE': '/dashboard/real-estate/dashboard',
+          'E_COMMERCE': '/dashboard/e-commerce/dashboard',
+          'LAW': '/dashboard/law/dashboard',
+          'PRODUCTION': '/dashboard/production/dashboard',
+        };
+
+        const dashboardPath = verticalMap[vertical] || '/dashboard/e-commerce/dashboard';
+        console.log('➡️ [DASHBOARD] Redirecting to:', dashboardPath);
+
+        router.replace(dashboardPath);
       } catch (error) {
-        console.error('Error fetching user data for redirect:', error);
+        console.error('❌ [DASHBOARD] Error determining dashboard:', error);
+        // Fallback to e-commerce on any error
         router.replace('/dashboard/e-commerce/dashboard');
       }
     };
 
-    fetchUserAndRedirect();
-  }, [user, loading, router]);
+    redirectToUserDashboard();
+  }, [user, loading, router, getToken]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
+  // Loading spinner while determining dashboard
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">Redirecting to your dashboard...</p>
+    <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-gray-600 text-lg">Loading your dashboard...</p>
+        <p className="text-gray-400 text-sm">Determining your vertical...</p>
       </div>
     </div>
   );

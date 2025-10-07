@@ -1,16 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getVerticalFromPath, getVerticalDashboardPath } from '@/lib/vertical-mapping';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip middleware for non-dashboard routes
-  if (!pathname.startsWith('/dashboard')) {
+  // Skip middleware for API routes and static files
+  if (
+    pathname.startsWith('/api/') ||
+    pathname.startsWith('/_next/') ||
+    pathname.startsWith('/static/') ||
+    pathname.match(/\.(ico|png|jpg|jpeg|svg|css|js|woff|woff2|ttf|eot)$/)
+  ) {
     return NextResponse.next();
   }
 
-  // Skip middleware for API routes
-  if (pathname.startsWith('/api/')) {
+  // Only apply auth checks to dashboard routes
+  if (!pathname.startsWith('/dashboard')) {
     return NextResponse.next();
   }
 
@@ -25,26 +29,18 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(loginUrl, 302);
     }
 
-    // For Edge middleware, we'll do a simple session check
-    // The real authentication logic will be handled by API routes
-
-    // Allow access to base /dashboard route - redirect to default vertical (real-estate)
+    // For base /dashboard route, we need to determine which vertical dashboard to redirect to
+    // We'll let the client-side handle this redirect by fetching user data from /api/auth/me
     if (pathname === '/dashboard' || pathname === '/dashboard/') {
-      const dashboardUrl = new URL('/dashboard/real-estate/dashboard', request.url);
-      return NextResponse.redirect(dashboardUrl, 302);
+      // Redirect to a loading page that will fetch user data and redirect appropriately
+      // For now, redirect to e-commerce as default - the page.tsx will handle proper routing
+      const response = NextResponse.next();
+      response.headers.set('x-middleware-rewrite', '/dashboard/e-commerce/dashboard');
+      return response;
     }
 
-    // For now, allow access to all dashboard routes
-    // Real vertical enforcement will happen in the API routes
-    const requestedVertical = getVerticalFromPath(pathname);
-
-    // If accessing an unknown vertical, redirect to real-estate as default
-    if (pathname.startsWith('/dashboard/') && !requestedVertical) {
-      const defaultDashboardUrl = new URL('/dashboard/real-estate/dashboard', request.url);
-      return NextResponse.redirect(defaultDashboardUrl, 302);
-    }
-
-    // Allow access
+    // Allow access to all other dashboard routes
+    // The actual vertical enforcement happens at the page level via /api/auth/me
     return NextResponse.next();
 
   } catch (error) {
@@ -58,6 +54,13 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/dashboard/:path*',
+    /*
+     * Match all request paths except:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 };
