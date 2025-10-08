@@ -232,12 +232,15 @@ export async function POST(request: NextRequest) {
     } catch (queryError: any) {
       console.error('🔥 [REGISTER] Database query failed:', {
         message: queryError.message,
-        code: queryError.code,
+        code: queryError.code, // e.g., P2021 (table not found), P1001 (can't reach DB)
         meta: queryError.meta,
+        name: queryError.name,
+        clientVersion: queryError.clientVersion,
       });
       return NextResponse.json(
         {
           message: 'Database query error',
+          code: queryError.code,
           details: process.env.NODE_ENV === 'development' ? queryError.message : undefined
         },
         { status: 500 }
@@ -361,11 +364,18 @@ export async function POST(request: NextRequest) {
     } catch (error: any) {
       console.error('🔥 [REGISTER] Database transaction failed:', {
         message: error.message,
-        code: error.code,
+        code: error.code, // e.g., P2002 (unique constraint), P2003 (foreign key)
         meta: error.meta,
+        name: error.name,
+        clientVersion: error.clientVersion,
+        stack: error.stack,
       });
       return NextResponse.json(
-        { message: 'Failed to create user metadata in database', details: error.message },
+        {
+          message: 'Failed to create user metadata in database',
+          code: error.code,
+          details: error.message
+        },
         { status: 500 }
       );
     }
