@@ -85,9 +85,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   );
 
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     // Migrate from localStorage to Firebase auth
     const migrateLocalStorageUser = () => {
       try {
+        if (typeof localStorage === 'undefined') return;
         const localUser = localStorage.getItem('user');
         if (localUser) {
           console.log('Migrating user from localStorage to Firebase auth...');
@@ -104,8 +110,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       if (firebaseUser) {
         // Clear localStorage after successful Firebase auth
-        localStorage.removeItem('user');
-        console.log('Firebase auth established, localStorage cleaned');
+        try {
+          if (typeof localStorage !== 'undefined') {
+            localStorage.removeItem('user');
+          }
+          console.log('Firebase auth established, localStorage cleaned');
+        } catch (error) {
+          console.warn('Could not access localStorage:', error);
+        }
       } else {
         // Check for localStorage migration on no user
         migrateLocalStorageUser();

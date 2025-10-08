@@ -8,7 +8,14 @@ import {
   User,
   updateProfile,
 } from 'firebase/auth';
-import { firebaseAuth } from '@/lib/firebase';
+// Import the entire firebase module to ensure app initialization
+import { firebaseAuth, firebaseApp } from '@/lib/firebase';
+
+// Ensure Firebase app is initialized by accessing it
+if (!firebaseApp) {
+  throw new Error('[Auth Client] Firebase app not initialized');
+}
+console.log('[Auth Client] Firebase app confirmed:', firebaseApp.name);
 
 export type Vertical = 'REAL_ESTATE' | 'E_COMMERCE' | 'LAW' | 'PRODUCTION';
 
