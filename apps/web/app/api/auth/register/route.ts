@@ -10,13 +10,10 @@ const TERMS_VERSION = process.env.TERMS_VERSION || '1.0';
 type Vertical = 'REAL_ESTATE' | 'E_COMMERCE' | 'LAW' | 'PRODUCTION';
 
 interface RegisterDto {
-  idToken: string; // Firebase ID token
-  profile: {
-    fullName: string;
-    vertical: Vertical;
-    lang?: string;
-    termsConsent: boolean;
-  };
+  fullName: string;
+  vertical: Vertical;
+  lang?: string;
+  termsConsent: boolean;
 }
 
 function resolveDashboardPath(vertical: Vertical): string {
@@ -34,11 +31,24 @@ export async function POST(request: NextRequest) {
   try {
     console.log('🚀 [REGISTER] Starting Firebase-only registration');
 
+    // Get Authorization header
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.error('❌ [REGISTER] Missing or invalid Authorization header');
+      return NextResponse.json(
+        { message: 'Missing authentication token' },
+        { status: 401 }
+      );
+    }
+
+    const idToken = authHeader.substring(7); // Remove 'Bearer ' prefix
+    console.log('🔑 [REGISTER] ID token received, prefix:', idToken.substring(0, 15));
+
     // Parse request body
     let body: RegisterDto;
     try {
       body = await request.json();
-      console.log(`📝 [REGISTER] Registration for vertical: ${body.profile.vertical}`);
+      console.log(`📝 [REGISTER] Registration for vertical: ${body.vertical}`);
     } catch (parseError: any) {
       console.error('❌ [REGISTER] Failed to parse request body:', parseError.message);
       return NextResponse.json(
@@ -48,12 +58,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate required fields
-    if (!body.idToken || !body.profile?.fullName || !body.profile?.vertical || !body.profile?.termsConsent) {
+    if (!body.fullName || !body.vertical || !body.termsConsent) {
       console.error('❌ [REGISTER] Missing required fields:', {
-        hasIdToken: !!body.idToken,
-        hasFullName: !!body.profile?.fullName,
-        hasVertical: !!body.profile?.vertical,
-        hasTermsConsent: !!body.profile?.termsConsent,
+        hasFullName: !!body.fullName,
+        hasVertical: !!body.vertical,
+        hasTermsConsent: !!body.termsConsent,
       });
       return NextResponse.json(
         { message: 'Missing required fields' },
@@ -63,8 +72,8 @@ export async function POST(request: NextRequest) {
 
     // Validate vertical is a valid enum value
     const validVerticals = ['REAL_ESTATE', 'E_COMMERCE', 'LAW', 'PRODUCTION'];
-    if (!validVerticals.includes(body.profile.vertical)) {
-      console.error('❌ [REGISTER] Invalid vertical:', body.profile.vertical);
+    if (!validVerticals.includes(body.vertical)) {
+      console.error('❌ [REGISTER] Invalid vertical:', body.vertical);
       return NextResponse.json(
         { message: 'Invalid vertical selected' },
         { status: 400 }
@@ -82,12 +91,26 @@ export async function POST(request: NextRequest) {
 
       // Verify Firebase ID token
       console.log('🔑 [REGISTER] Verifying Firebase token...');
-      decodedToken = await auth.verifyIdToken(body.idToken, true); // checkRevoked = true
+      decodedToken = await auth.verifyIdToken(idToken, true); // checkRevoked = true
       console.log('✅ [REGISTER] Token verified:', {
         uid: decodedToken.uid,
         email: decodedToken.email,
-        projectId: decodedToken.aud,
+        aud: decodedToken.aud,
+        iss: decodedToken.iss,
       });
+
+      // Verify project ID matches expected project
+      const expectedProjectId = 'all-in-one-eed0a';
+      if (decodedToken.aud !== expectedProjectId) {
+        console.error('❌ [REGISTER] Project ID mismatch:', {
+          expected: expectedProjectId,
+          actual: decodedToken.aud,
+        });
+        return NextResponse.json(
+          { message: 'Token is from different Firebase project' },
+          { status: 401 }
+        );
+      }
     } catch (authError: any) {
       console.error('🔥 [REGISTER] Firebase Auth error:', {
         message: authError.message,
@@ -127,9 +150,9 @@ export async function POST(request: NextRequest) {
       // Create new profile
       const userDoc = await createUserProfile(decodedToken.uid, {
         email: decodedToken.email!,
-        fullName: body.profile.fullName.trim(),
-        vertical: body.profile.vertical,
-        lang: body.profile.lang || 'en',
+        fullName: body.fullName.trim(),
+        vertical: body.vertical,
+        lang: body.lang || 'en',
       });
 
       console.log('✅ [REGISTER] User profile created in Firestore');
@@ -137,14 +160,14 @@ export async function POST(request: NextRequest) {
       // Set Firebase custom claims for vertical (optional, for fast routing)
       try {
         await auth.setCustomUserClaims(decodedToken.uid, {
-          vertical: body.profile.vertical,
+          vertical: body.vertical,
         });
-        console.log(`✅ [REGISTER] Custom claims set: vertical=${body.profile.vertical}`);
+        console.log(`✅ [REGISTER] Custom claims set: vertical=${body.vertical}`);
       } catch (claimsError: any) {
         console.warn('⚠️ [REGISTER] Failed to set custom claims (non-critical):', claimsError.message);
       }
 
-      const redirectPath = resolveDashboardPath(body.profile.vertical);
+      const redirectPath = resolveDashboardPath(body.vertical);
 
       return NextResponse.json(
         {
@@ -164,6 +187,20 @@ export async function POST(request: NextRequest) {
         code: firestoreError.code,
         stack: firestoreError.stack,
       });
+
+      // Defensive cleanup: delete Firebase user if Firestore write failed
+      // Suppress 400 errors if user doesn't exist
+      try {
+        console.log('🧹 [REGISTER] Attempting cleanup: deleting Firebase user...');
+        await auth.deleteUser(decodedToken.uid);
+        console.log('✅ [REGISTER] Firebase user deleted during cleanup');
+      } catch (cleanupError: any) {
+        // Ignore "user not found" errors - this is expected if cleanup already happened
+        if (cleanupError.code !== 'auth/user-not-found') {
+          console.warn('⚠️ [REGISTER] Cleanup failed (non-critical):', cleanupError.message);
+        }
+      }
+
       return NextResponse.json(
         {
           message: 'Failed to create user profile',

@@ -100,7 +100,14 @@ export function getFirebaseAdmin() {
 
 // Convenience exports for Firebase Admin services
 export const adminAuth = () => getAuth(getFirebaseAdmin());
-export const adminFirestore = () => getFirestore(getFirebaseAdmin());
+export const adminFirestore = () => {
+  const firestore = getFirestore(getFirebaseAdmin());
+
+  // Log Firestore configuration for debugging
+  console.log('🔍 [Firestore] Getting Firestore instance for project:', process.env.FIREBASE_ADMIN_PROJECT_ID);
+
+  return firestore;
+};
 export const adminStorage = () => getStorage(getFirebaseAdmin());
 export const adminDatabase = () => getDatabase(getFirebaseAdmin());
 
@@ -114,23 +121,41 @@ export async function createUserProfile(uid: string, data: {
   vertical: string;
   lang?: string;
 }) {
-  const firestore = adminFirestore();
-  const userRef = firestore.collection('users').doc(uid);
+  try {
+    console.log('💾 [Firestore] createUserProfile - Starting for uid:', uid);
 
-  const userDoc = {
-    uid,
-    email: data.email,
-    fullName: data.fullName,
-    vertical: data.vertical,
-    lang: data.lang || 'en',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
+    const firestore = adminFirestore();
+    const userRef = firestore.collection('users').doc(uid);
 
-  await userRef.set(userDoc);
-  console.log('✅ [Firestore] User profile created:', uid);
+    const userDoc = {
+      uid,
+      email: data.email,
+      fullName: data.fullName,
+      vertical: data.vertical,
+      lang: data.lang || 'en',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
 
-  return userDoc;
+    console.log('💾 [Firestore] Writing to path: users/' + uid);
+    console.log('💾 [Firestore] Document data:', JSON.stringify(userDoc));
+
+    // Use merge: true to avoid overwriting existing data and prevent NOT_FOUND errors
+    await userRef.set(userDoc, { merge: true });
+
+    console.log('✅ [Firestore] User profile created successfully:', uid);
+
+    return userDoc;
+  } catch (error: any) {
+    console.error('🔥 [Firestore] createUserProfile FAILED:', {
+      uid,
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      stack: error.stack,
+    });
+    throw error;
+  }
 }
 
 export async function getUserProfile(uid: string) {

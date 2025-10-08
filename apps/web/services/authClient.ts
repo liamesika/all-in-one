@@ -52,9 +52,9 @@ export async function signUpWithEmail(data: SignUpData): Promise<{ uid: string; 
     });
     console.log('✅ [Auth Client] Display name updated');
 
-    // Step 3: Get fresh ID token
+    // Step 3: Get fresh ID token (force refresh)
     const idToken = await userCredential.user.getIdToken(true);
-    console.log('✅ [Auth Client] ID token obtained');
+    console.log('✅ [Auth Client] ID token obtained, prefix:', idToken.substring(0, 15));
 
     // Step 4: Register profile with backend (Firestore)
     const response = await fetch('/api/auth/register', {
@@ -64,13 +64,10 @@ export async function signUpWithEmail(data: SignUpData): Promise<{ uid: string; 
         'Authorization': `Bearer ${idToken}`,
       },
       body: JSON.stringify({
-        idToken,
-        profile: {
-          fullName: data.fullName,
-          vertical: data.vertical,
-          lang: data.lang || 'en',
-          termsConsent: data.termsConsent,
-        },
+        fullName: data.fullName,
+        vertical: data.vertical,
+        lang: data.lang || 'en',
+        termsConsent: data.termsConsent,
       }),
     });
 
