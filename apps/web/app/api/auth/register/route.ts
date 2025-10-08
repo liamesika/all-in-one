@@ -39,15 +39,51 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!body.email || !body.fullName || !body.vertical || !body.firebaseUid || !body.idToken) {
-      console.error('❌ [REGISTER] Missing required fields');
+      console.error('❌ [REGISTER] Missing required fields:', {
+        hasEmail: !!body.email,
+        hasFullName: !!body.fullName,
+        hasVertical: !!body.vertical,
+        hasFirebaseUid: !!body.firebaseUid,
+        hasIdToken: !!body.idToken
+      });
       return NextResponse.json(
         { message: 'Missing required fields' },
         { status: 400 }
       );
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(body.email)) {
+      console.error('❌ [REGISTER] Invalid email format:', body.email);
+      return NextResponse.json(
+        { message: 'Invalid email format' },
+        { status: 400 }
+      );
+    }
+
+    // Validate full name length
+    if (body.fullName.trim().length < 2 || body.fullName.trim().length > 80) {
+      console.error('❌ [REGISTER] Invalid full name length:', body.fullName.length);
+      return NextResponse.json(
+        { message: 'Full name must be between 2 and 80 characters' },
+        { status: 400 }
+      );
+    }
+
+    // Validate vertical is a valid enum value
+    const validVerticals = ['REAL_ESTATE', 'E_COMMERCE', 'LAW', 'PRODUCTION'];
+    if (!validVerticals.includes(body.vertical)) {
+      console.error('❌ [REGISTER] Invalid vertical:', body.vertical);
+      return NextResponse.json(
+        { message: 'Invalid vertical selected' },
+        { status: 400 }
+      );
+    }
+
     // Validate terms consent
     if (!body.termsConsent) {
+      console.error('❌ [REGISTER] Terms consent not provided');
       return NextResponse.json(
         { message: 'Terms consent is required' },
         { status: 400 }
@@ -64,7 +100,7 @@ export async function POST(request: NextRequest) {
     console.log('🔑 [REGISTER] Verifying Firebase token...');
     let decodedToken;
     try {
-      decodedToken = await admin.auth().verifyIdToken(body.idToken);
+      decodedToken = await admin.auth().verifyIdToken(body.idToken, true); // checkRevoked = true
       console.log('✅ [REGISTER] Firebase token verified for UID:', decodedToken.uid);
 
       // Ensure the token UID matches the provided UID
@@ -72,6 +108,15 @@ export async function POST(request: NextRequest) {
         console.error('❌ [REGISTER] UID mismatch - token UID does not match provided UID');
         return NextResponse.json(
           { message: 'Invalid authentication token' },
+          { status: 401 }
+        );
+      }
+
+      // Verify the email in the token matches the email in the request
+      if (decodedToken.email?.toLowerCase() !== body.email.toLowerCase()) {
+        console.error('❌ [REGISTER] Email mismatch - token email does not match provided email');
+        return NextResponse.json(
+          { message: 'Email mismatch in authentication token' },
           { status: 401 }
         );
       }
@@ -101,6 +146,20 @@ export async function POST(request: NextRequest) {
     if (existingUser) {
       console.warn(`⚠️ [REGISTER] User metadata already exists for UID: ${body.firebaseUid}`);
       const vertical = existingUser.userProfile?.defaultVertical || body.vertical;
+
+      // Set custom claims if not already set (for existing users missing claims)
+      try {
+        const currentClaims = (await admin.auth().getUser(body.firebaseUid)).customClaims;
+        if (!currentClaims?.vertical) {
+          await admin.auth().setCustomUserClaims(body.firebaseUid, {
+            vertical: vertical,
+          });
+          console.log(`✅ [REGISTER] Added missing custom claims for existing user: vertical=${vertical}`);
+        }
+      } catch (claimsError: any) {
+        console.warn(`⚠️ [REGISTER] Failed to set custom claims for existing user:`, claimsError.message);
+      }
+
       return NextResponse.json(
         {
           message: 'User profile already exists',
@@ -120,6 +179,7 @@ export async function POST(request: NextRequest) {
     console.log('💾 [REGISTER] Creating user metadata in database...');
     try {
       const result = await prisma.$transaction(async (tx) => {
+        console.log('📝 [REGISTER] Transaction: Creating user record...');
         // Create user record with Firebase UID as ID
         const user = await tx.user.create({
           data: {
@@ -130,7 +190,9 @@ export async function POST(request: NextRequest) {
             lang: body.lang || 'en',
           },
         });
+        console.log('✅ [REGISTER] Transaction: User record created');
 
+        console.log('📝 [REGISTER] Transaction: Creating organization...');
         // Create organization
         const organization = await tx.organization.create({
           data: {
@@ -138,7 +200,9 @@ export async function POST(request: NextRequest) {
             name: `${body.fullName.trim()}'s Organization`,
           },
         });
+        console.log('✅ [REGISTER] Transaction: Organization created');
 
+        console.log('📝 [REGISTER] Transaction: Creating membership...');
         // Create membership
         await tx.membership.create({
           data: {
@@ -147,7 +211,9 @@ export async function POST(request: NextRequest) {
             role: 'OWNER',
           },
         });
+        console.log('✅ [REGISTER] Transaction: Membership created');
 
+        console.log('📝 [REGISTER] Transaction: Creating user profile...');
         // Create user profile with vertical
         const userProfile = await tx.userProfile.create({
           data: {
@@ -157,8 +223,12 @@ export async function POST(request: NextRequest) {
             termsVersion: TERMS_VERSION,
           },
         });
+        console.log('✅ [REGISTER] Transaction: User profile created');
 
         return { user, userProfile };
+      }, {
+        maxWait: 5000, // Maximum time to wait for a transaction slot (5s)
+        timeout: 10000, // Maximum time for transaction to complete (10s)
       });
 
       console.log(`✅ [REGISTER] User metadata created successfully: ${result.user.id}`);

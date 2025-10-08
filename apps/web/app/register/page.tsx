@@ -153,12 +153,38 @@ function RegisterForm() {
         lang: language
       });
 
-      // Create Firebase user
-      const userCredential = await signUp(formData.email.trim(), formData.password);
-      const idToken = await userCredential.user.getIdToken();
-      console.log('✅ [REGISTER] Firebase user created:', userCredential.user.uid);
+      // Step 1: Create Firebase user
+      console.log('🔥 [REGISTER] Creating Firebase user...');
+      let userCredential;
+      try {
+        userCredential = await signUp(formData.email.trim(), formData.password);
+        console.log('✅ [REGISTER] Firebase user created:', userCredential.user.uid);
+      } catch (firebaseError: any) {
+        console.error('❌ [REGISTER] Firebase user creation failed:', firebaseError);
+        throw firebaseError; // Let the outer catch handle Firebase errors
+      }
 
-      // Create session with backend and register user profile
+      // Step 2: Wait for Firebase to fully persist and get a fresh ID token
+      console.log('⏳ [REGISTER] Waiting for Firebase to persist user...');
+      await new Promise(resolve => setTimeout(resolve, 500)); // Brief wait for Firebase persistence
+
+      let idToken;
+      try {
+        idToken = await userCredential.user.getIdToken(true); // Force refresh to ensure latest token
+        console.log('✅ [REGISTER] Fresh ID token obtained');
+      } catch (tokenError: any) {
+        console.error('❌ [REGISTER] Failed to get ID token:', tokenError);
+        // Try to clean up Firebase user
+        try {
+          await userCredential.user.delete();
+          console.log('✅ [REGISTER] Cleaned up Firebase user after token failure');
+        } catch (deleteError) {
+          console.warn('⚠️ [REGISTER] Failed to clean up Firebase user:', deleteError);
+        }
+        throw new Error('Failed to generate authentication token');
+      }
+
+      // Step 3: Register user metadata with backend
       console.log('📡 [REGISTER] Sending registration to backend...');
       const registrationPayload = {
         ...formData,
@@ -172,22 +198,42 @@ function RegisterForm() {
         idToken: '[REDACTED]'
       });
 
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(registrationPayload),
-      });
+      let response;
+      let data;
+      try {
+        response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify(registrationPayload),
+        });
 
-      const data = await response.json();
-      console.log('📬 [REGISTER] Backend response:', data);
+        data = await response.json();
+        console.log('📬 [REGISTER] Backend response:', data);
+      } catch (fetchError: any) {
+        console.error('❌ [REGISTER] Backend request failed:', fetchError);
+        // Clean up Firebase user
+        try {
+          await userCredential.user.delete();
+          console.log('✅ [REGISTER] Cleaned up Firebase user after backend request failure');
+        } catch (deleteError) {
+          console.warn('⚠️ [REGISTER] Failed to clean up Firebase user:', deleteError);
+        }
+        throw new Error('Failed to connect to registration service');
+      }
 
       if (!response.ok) {
         console.error('❌ [REGISTER] Backend registration failed:', data);
-        // If backend registration fails, clean up Firebase user
-        await userCredential.user.delete();
+
+        // Clean up Firebase user on backend failure
+        try {
+          await userCredential.user.delete();
+          console.log('✅ [REGISTER] Cleaned up Firebase user after backend failure');
+        } catch (deleteError) {
+          console.warn('⚠️ [REGISTER] Failed to clean up Firebase user:', deleteError);
+        }
 
         if (response.status === 409 && data.action === 'login_or_reset') {
           setServerError(
@@ -197,42 +243,49 @@ function RegisterForm() {
           );
           return;
         }
-        throw new Error(data.message || 'Registration failed');
+        throw new Error(data.message || 'Registration failed on backend');
       }
 
       console.log('✅ [REGISTER] Backend registration successful');
       console.log('🔀 [REGISTER] Redirect path from backend:', data.redirectPath);
 
-      // Create backend session
+      // Step 4: Create backend session
       console.log('🔑 [REGISTER] Creating backend session...');
-      const sessionResponse = await fetch('/api/auth/firebase/session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          idToken,
-        }),
-      });
+      try {
+        const sessionResponse = await fetch('/api/auth/firebase/session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            idToken,
+          }),
+        });
 
-      if (!sessionResponse.ok) {
-        console.error('❌ [REGISTER] Session creation failed');
-        throw new Error('Failed to create session');
+        if (!sessionResponse.ok) {
+          const sessionError = await sessionResponse.json();
+          console.error('❌ [REGISTER] Session creation failed:', sessionError);
+          throw new Error('Failed to create session');
+        }
+        console.log('✅ [REGISTER] Session created');
+      } catch (sessionError: any) {
+        console.error('❌ [REGISTER] Session creation error:', sessionError);
+        // Don't delete Firebase user here - user is created, just session failed
+        // User can try logging in again
+        throw new Error('Failed to create session. Please try logging in.');
       }
-      console.log('✅ [REGISTER] Session created');
 
-      // Force token refresh to get updated custom claims
+      // Step 5: Force token refresh to get updated custom claims
       console.log('🔄 [REGISTER] Forcing token refresh to get custom claims...');
       try {
-        const currentUser = userCredential.user;
-        await currentUser.getIdToken(true); // Force refresh
+        await userCredential.user.getIdToken(true); // Force refresh
         console.log('✅ [REGISTER] Token refreshed with custom claims');
       } catch (refreshError) {
         console.warn('⚠️ [REGISTER] Token refresh failed (non-critical):', refreshError);
       }
 
-      // Registration successful, redirect to dashboard
+      // Step 6: Registration successful, redirect to dashboard
       console.log(`🚀 [REGISTER] Redirecting to: ${data.redirectPath}`);
       router.push(data.redirectPath);
     } catch (error: any) {

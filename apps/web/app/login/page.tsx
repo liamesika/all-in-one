@@ -4,7 +4,7 @@ import { Suspense, useState, useId } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { LanguageProvider, useLanguage } from '@/lib/language-context';
 import { LanguageToggle } from '@/components/language-toggle';
-import { signIn, getIdToken, getIdTokenResult } from '@/lib/firebase';
+import { signIn, getIdToken } from '@/lib/firebase';
 import { FirebaseError } from 'firebase/app';
 import { EffinityLogo } from '@/components/effinity-header';
 
@@ -60,19 +60,13 @@ function LoginForm() {
         return;
       }
 
-      // Get Firebase ID token with custom claims
-      console.log('🔑 [LOGIN] Getting Firebase ID token with claims...');
-      const tokenResult = await getIdTokenResult();
+      // Get Firebase ID token
+      console.log('🔑 [LOGIN] Getting Firebase ID token...');
       const token = await getIdToken();
 
-      if (!tokenResult) {
-        throw new Error('Failed to get token result');
+      if (!token) {
+        throw new Error('Failed to get authentication token');
       }
-
-      // Extract vertical from custom claims
-      const vertical = tokenResult.claims.vertical as string;
-      console.log('🎯 [LOGIN] Vertical from token claims:', vertical);
-      console.log('📊 [LOGIN] All custom claims:', tokenResult.claims);
 
       // Create backend session
       console.log('📡 [LOGIN] Creating backend session...');
@@ -92,18 +86,35 @@ function LoginForm() {
       }
       console.log('✅ [LOGIN] Backend session created');
 
-      // Map vertical to dashboard path (matching backend logic)
-      const verticalPaths: Record<string, string> = {
-        'REAL_ESTATE': '/dashboard/real-estate/dashboard',
-        'E_COMMERCE': '/dashboard/e-commerce/dashboard',
-        'LAW': '/dashboard/law/dashboard',
-        'PRODUCTION': '/dashboard/production/dashboard',
-      };
+      // Fetch user profile from backend to get vertical
+      console.log('📡 [LOGIN] Fetching user profile from backend...');
+      const profileResponse = await fetch('/api/auth/me', {
+        credentials: 'include',
+      });
 
-      // Use vertical from token claims, fallback to e-commerce if not set
-      const redirectPath = vertical
-        ? (verticalPaths[vertical] || '/dashboard/e-commerce/dashboard')
-        : '/dashboard/e-commerce/dashboard';
+      let redirectPath = '/dashboard/e-commerce/dashboard'; // Default fallback
+
+      if (profileResponse.ok) {
+        const profile = await profileResponse.json();
+        console.log('📊 [LOGIN] User profile:', profile);
+
+        const vertical = profile.defaultVertical;
+        console.log('🎯 [LOGIN] Vertical from profile:', vertical);
+
+        // Map vertical to dashboard path
+        const verticalPaths: Record<string, string> = {
+          'REAL_ESTATE': '/dashboard/real-estate/dashboard',
+          'E_COMMERCE': '/dashboard/e-commerce/dashboard',
+          'LAW': '/dashboard/law/dashboard',
+          'PRODUCTION': '/dashboard/production/dashboard',
+        };
+
+        redirectPath = vertical
+          ? (verticalPaths[vertical] || '/dashboard/e-commerce/dashboard')
+          : '/dashboard/e-commerce/dashboard';
+      } else {
+        console.warn('⚠️ [LOGIN] Failed to fetch user profile, using default dashboard');
+      }
 
       console.log(`✅ [LOGIN] Redirecting to: ${redirectPath}`);
       router.push(redirectPath);
