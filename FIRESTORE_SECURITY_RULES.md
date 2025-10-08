@@ -60,11 +60,12 @@ Each document in the `users` collection should have:
   fullName: string;         // User's display name
   vertical: string;         // User's selected vertical (REAL_ESTATE, E_COMMERCE, LAW, PRODUCTION)
   lang: string;             // Preferred language (en, he)
-  planStatus: string;       // Subscription status (basic, premium)
   createdAt: string;        // ISO timestamp
   updatedAt: string;        // ISO timestamp
 }
 ```
+
+**Note:** Effinity does not use user plan types (basic/premium). All users have the same access level.
 
 ## Testing the Rules
 

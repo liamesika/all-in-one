@@ -113,7 +113,6 @@ export async function createUserProfile(uid: string, data: {
   fullName: string;
   vertical: string;
   lang?: string;
-  planStatus?: 'basic' | 'premium';
 }) {
   const firestore = adminFirestore();
   const userRef = firestore.collection('users').doc(uid);
@@ -124,7 +123,6 @@ export async function createUserProfile(uid: string, data: {
     fullName: data.fullName,
     vertical: data.vertical,
     lang: data.lang || 'en',
-    planStatus: data.planStatus || 'basic',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -150,7 +148,7 @@ export async function getUserProfile(uid: string) {
 export async function updateUserProfile(uid: string, data: Partial<{
   fullName: string;
   vertical: string;
-  planStatus: 'basic' | 'premium';
+  lang: string;
 }>) {
   const firestore = adminFirestore();
   const userRef = firestore.collection('users').doc(uid);

@@ -118,7 +118,6 @@ export async function POST(request: NextRequest) {
               email: decodedToken.email,
               fullName: existingProfile.fullName,
               vertical: existingProfile.vertical,
-              planStatus: existingProfile.planStatus,
             },
           },
           { status: 200 }
@@ -131,7 +130,6 @@ export async function POST(request: NextRequest) {
         fullName: body.profile.fullName.trim(),
         vertical: body.profile.vertical,
         lang: body.profile.lang || 'en',
-        planStatus: 'basic',
       });
 
       console.log('✅ [REGISTER] User profile created in Firestore');
@@ -140,7 +138,6 @@ export async function POST(request: NextRequest) {
       try {
         await auth.setCustomUserClaims(decodedToken.uid, {
           vertical: body.profile.vertical,
-          planStatus: 'basic',
         });
         console.log(`✅ [REGISTER] Custom claims set: vertical=${body.profile.vertical}`);
       } catch (claimsError: any) {
@@ -157,7 +154,6 @@ export async function POST(request: NextRequest) {
             email: userDoc.email,
             fullName: userDoc.fullName,
             vertical: userDoc.vertical,
-            planStatus: userDoc.planStatus,
           },
         },
         { status: 201 }

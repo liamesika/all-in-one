@@ -66,11 +66,9 @@ export async function GET(request: NextRequest) {
         email_verified: decodedToken.email_verified,
         fullName: profile.fullName,
         vertical: profile.vertical,
-        planStatus: profile.planStatus,
         lang: profile.lang,
         claims: {
           vertical: decodedToken.vertical,
-          planStatus: decodedToken.planStatus,
         },
       });
     } catch (firestoreError: any) {

@@ -26,7 +26,7 @@ export interface UserProfile {
   email: string;
   fullName?: string;
   vertical?: Vertical;
-  planStatus?: 'basic' | 'premium';
+  lang?: string;
 }
 
 /**
