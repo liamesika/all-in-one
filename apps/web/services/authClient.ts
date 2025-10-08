@@ -41,13 +41,18 @@ export interface UserProfile {
  * Creates Firebase user, updates profile, and registers with backend
  */
 export async function signUpWithEmail(data: SignUpData): Promise<{ uid: string; redirectPath: string }> {
-  console.log('🔐 [Auth Client] Starting sign up for:', data.email);
+  // Normalize email and password (trim whitespace)
+  const email = data.email.trim().toLowerCase();
+  const password = data.password.trim();
+
+  console.log('🔐 [Auth Client] Starting sign up for:', email);
+  console.log('🔍 [Auth Client] Firebase project:', firebaseAuth.app.options.projectId);
 
   // Step 1: Create Firebase user
   const userCredential = await createUserWithEmailAndPassword(
     firebaseAuth,
-    data.email,
-    data.password
+    email,
+    password
   );
 
   console.log('✅ [Auth Client] Firebase user created:', userCredential.user.uid);
@@ -119,11 +124,18 @@ export async function signUpWithEmail(data: SignUpData): Promise<{ uid: string; 
  * Sign in with email and password
  */
 export async function signInWithEmail(email: string, password: string): Promise<{ uid: string }> {
-  console.log('🔐 [Auth Client] Starting sign in for:', email);
+  // Normalize email and password (trim whitespace, lowercase email)
+  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedPassword = password.trim();
 
-  const userCredential = await signInWithEmailAndPassword(firebaseAuth, email, password);
+  console.log('🔐 [Auth Client] Starting sign in for:', normalizedEmail);
+  console.log('🔍 [Auth Client] Firebase project:', firebaseAuth.app.options.projectId);
+  console.log('🔍 [Auth Client] Email length:', normalizedEmail.length, 'Password length:', normalizedPassword.length);
+
+  const userCredential = await signInWithEmailAndPassword(firebaseAuth, normalizedEmail, normalizedPassword);
 
   console.log('✅ [Auth Client] Sign in successful:', userCredential.user.uid);
+  console.log('✅ [Auth Client] User email from Firebase:', userCredential.user.email);
 
   return {
     uid: userCredential.user.uid,

@@ -47,9 +47,11 @@ function LoginForm() {
 
     try {
       console.log('🔐 [LOGIN] Starting Firebase sign-in with authClient...');
+      console.log('🔍 [LOGIN] Email input:', email, 'Length:', email.length);
 
       // Sign in with Firebase using the auth service
-      await signInWithEmail(email.trim(), password.trim());
+      // Note: authClient handles trimming and normalization
+      await signInWithEmail(email, password);
       console.log('✅ [LOGIN] Firebase sign-in successful');
 
       // Get the next parameter to redirect to the intended page
