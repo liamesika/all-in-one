@@ -14,11 +14,12 @@ export function getFirebaseAdmin() {
   console.log('🔧 [Firebase Admin] Initializing new instance...');
 
   // ENV-based configuration (no JSON files)
-  const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
-  const rawKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY || '';
-  const databaseURL = process.env.NEXT_PUBLIC_FIREBASE_DB_URL;
-  const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
+  // Trim values to remove any accidental newlines or whitespace
+  const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID?.trim();
+  const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL?.trim();
+  const rawKey = (process.env.FIREBASE_ADMIN_PRIVATE_KEY || '').trim();
+  const databaseURL = process.env.NEXT_PUBLIC_FIREBASE_DB_URL?.trim();
+  const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET?.trim();
 
   console.log('🔍 [Firebase Admin] Environment check:', {
     hasProjectId: !!projectId,
