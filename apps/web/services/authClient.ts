@@ -123,7 +123,7 @@ export async function signUpWithEmail(data: SignUpData): Promise<{ uid: string; 
 /**
  * Sign in with email and password
  */
-export async function signInWithEmail(email: string, password: string): Promise<{ uid: string }> {
+export async function signInWithEmail(email: string, password: string): Promise<{ uid: string; user: User }> {
   // Normalize email and password (trim whitespace, lowercase email)
   const normalizedEmail = email.trim().toLowerCase();
   const normalizedPassword = password.trim();
@@ -139,6 +139,7 @@ export async function signInWithEmail(email: string, password: string): Promise<
 
   return {
     uid: userCredential.user.uid,
+    user: userCredential.user,
   };
 }
 
@@ -219,11 +220,28 @@ export async function getCurrentUserToken(): Promise<string | null> {
 /**
  * Get current user's profile from backend
  */
-export async function getUserProfile(): Promise<UserProfile | null> {
-  const token = await getCurrentUserToken();
-  if (!token) return null;
+export async function getUserProfile(user?: User): Promise<UserProfile | null> {
+  let token: string | null;
+
+  if (user) {
+    // Use the provided user object to get token
+    token = await user.getIdToken(true);
+    console.log('🔑 [Auth Client] Using provided user for token');
+  } else {
+    // Fallback to current user
+    token = await getCurrentUserToken();
+    console.log('🔑 [Auth Client] Using currentUser for token');
+  }
+
+  if (!token) {
+    console.error('❌ [Auth Client] No token available for getUserProfile');
+    return null;
+  }
 
   try {
+    console.log('📡 [Auth Client] Fetching user profile from /api/auth/me');
+    console.log('🔑 [Auth Client] Token prefix:', token.substring(0, 15));
+
     const response = await fetch('/api/auth/me', {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -231,11 +249,14 @@ export async function getUserProfile(): Promise<UserProfile | null> {
     });
 
     if (!response.ok) {
-      console.error('❌ [Auth Client] Failed to fetch user profile');
+      const errorText = await response.text();
+      console.error('❌ [Auth Client] Failed to fetch user profile:', response.status, errorText);
       return null;
     }
 
-    return await response.json();
+    const profile = await response.json();
+    console.log('✅ [Auth Client] User profile fetched:', profile);
+    return profile;
   } catch (error) {
     console.error('❌ [Auth Client] Error fetching user profile:', error);
     return null;

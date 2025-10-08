@@ -16,6 +16,17 @@ const ANALYTICS_ENDPOINT = '/webapi/performance/metrics';
 
 // Send metric to analytics
 function sendToAnalytics(metric: Metric, additionalData: Record<string, any> = {}) {
+  // TODO: Re-enable when performance metrics endpoint is implemented
+  // For now, just log to console in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[Performance]', metric.name, metric.value, metric.rating);
+  }
+
+  // Disabled to prevent 404 errors
+  // TODO: Implement /api/performance/metrics endpoint
+  return;
+
+  /*
   const body = JSON.stringify({
     name: metric.name,
     value: metric.value,
@@ -44,6 +55,7 @@ function sendToAnalytics(metric: Metric, additionalData: Record<string, any> = {
       keepalive: true,
     }).catch(console.error);
   }
+  */
 }
 
 // Performance rating based on thresholds

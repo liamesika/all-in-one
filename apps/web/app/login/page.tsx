@@ -51,8 +51,8 @@ function LoginForm() {
 
       // Sign in with Firebase using the auth service
       // Note: authClient handles trimming and normalization
-      await signInWithEmail(email, password);
-      console.log('✅ [LOGIN] Firebase sign-in successful');
+      const { user } = await signInWithEmail(email, password);
+      console.log('✅ [LOGIN] Firebase sign-in successful, UID:', user.uid);
 
       // Get the next parameter to redirect to the intended page
       const nextUrl = qp.get('next');
@@ -63,8 +63,9 @@ function LoginForm() {
       }
 
       // Fetch user profile from backend to get vertical
+      // Pass the user object to ensure we have a valid token
       console.log('📡 [LOGIN] Fetching user profile...');
-      const profile = await getUserProfile();
+      const profile = await getUserProfile(user);
 
       let redirectPath = '/dashboard/e-commerce/dashboard'; // Default fallback
 
