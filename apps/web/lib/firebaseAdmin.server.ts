@@ -1,14 +1,20 @@
 // apps/web/lib/firebaseAdmin.server.ts
 // Server-only Firebase Admin SDK - DO NOT IMPORT IN CLIENT COMPONENTS
 import 'server-only';
-import * as admin from 'firebase-admin';
+import { getApps, initializeApp, cert, type AppOptions } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
+import { getFirestore } from 'firebase-admin/firestore';
+import { getStorage } from 'firebase-admin/storage';
+import { getDatabase } from 'firebase-admin/database';
 
-let app: admin.app.App | null = null;
+// Singleton pattern - initialize only once
+let adminInitialized = false;
 
 export function getFirebaseAdmin() {
-  if (app) {
+  const existingApps = getApps();
+  if (existingApps.length > 0 && adminInitialized) {
     console.log('✅ [Firebase Admin] Returning existing instance');
-    return app;
+    return existingApps[0];
   }
 
   console.log('🔧 [Firebase Admin] Initializing new instance...');
@@ -17,28 +23,31 @@ export function getFirebaseAdmin() {
   // Trim values to remove any accidental newlines or whitespace
   const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID?.trim();
   const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL?.trim();
-  const rawKey = (process.env.FIREBASE_ADMIN_PRIVATE_KEY || '').trim();
+  const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY
+    ?.replace(/\\n/g, '\n') // Convert escaped newlines to actual newlines
+    ?.trim();
   const databaseURL = process.env.NEXT_PUBLIC_FIREBASE_DB_URL?.trim();
   const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET?.trim();
 
   console.log('🔍 [Firebase Admin] Environment check:', {
     hasProjectId: !!projectId,
-    projectId: projectId ? `${projectId.substring(0, 10)}...` : 'MISSING',
+    projectId: projectId ? `${projectId.substring(0, 15)}...` : 'MISSING',
     hasClientEmail: !!clientEmail,
-    clientEmail: clientEmail ? `${clientEmail.substring(0, 20)}...` : 'MISSING',
-    hasPrivateKey: !!rawKey,
-    privateKeyLength: rawKey.length,
+    clientEmail: clientEmail ? `${clientEmail.substring(0, 30)}...` : 'MISSING',
+    hasPrivateKey: !!privateKey,
+    privateKeyLength: privateKey?.length || 0,
+    privateKeyStart: privateKey ? privateKey.substring(0, 30) : 'MISSING',
     hasDatabaseURL: !!databaseURL,
     databaseURL: databaseURL || 'MISSING',
     hasStorageBucket: !!storageBucket,
     storageBucket: storageBucket || 'MISSING',
   });
 
-  if (!projectId || !clientEmail || !rawKey) {
+  if (!projectId || !clientEmail || !privateKey) {
     const missing = [];
     if (!projectId) missing.push('FIREBASE_ADMIN_PROJECT_ID');
     if (!clientEmail) missing.push('FIREBASE_ADMIN_CLIENT_EMAIL');
-    if (!rawKey) missing.push('FIREBASE_ADMIN_PRIVATE_KEY');
+    if (!privateKey) missing.push('FIREBASE_ADMIN_PRIVATE_KEY');
 
     console.error('❌ [Firebase Admin] Missing required environment variables:', missing);
     throw new Error(`Missing Firebase Admin ENV: ${missing.join(', ')}`);
@@ -51,30 +60,38 @@ export function getFirebaseAdmin() {
 
   // Initialize Firebase Admin with ENV credentials
   try {
-    const credential = admin.credential.cert({
-      projectId,
-      clientEmail,
-      // Convert \n escapes back to actual newlines if present
-      privateKey: rawKey.replace(/\\n/g, '\n'),
-    });
-
-    console.log('🔑 [Firebase Admin] Credential created successfully');
-
-    app = admin.initializeApp({
-      credential,
+    const options: AppOptions = {
+      credential: cert({
+        projectId,
+        clientEmail,
+        privateKey,
+      }),
       databaseURL,
       storageBucket,
+    };
+
+    console.log('🔑 [Firebase Admin] Creating credential with:', {
+      projectId,
+      clientEmail: clientEmail.substring(0, 30) + '...',
+      privateKeyLength: privateKey.length,
     });
+
+    const app = initializeApp(options);
+    adminInitialized = true;
 
     console.log('✅ [Firebase Admin] Initialized successfully');
     console.log('📊 [Firebase Admin] App name:', app.name);
-    console.log('📊 [Firebase Admin] Project ID:', projectId);
+    console.log('📊 [Firebase Admin] Project ID from ENV:', projectId);
+    console.log('📊 [Firebase Admin] Client Email:', clientEmail);
 
     return app;
   } catch (error: any) {
     console.error('🔥 [Firebase Admin] Initialization failed:', {
       message: error.message,
       code: error.code,
+      projectId,
+      clientEmail,
+      privateKeyLength: privateKey?.length,
       stack: error.stack,
     });
     throw new Error(`Firebase Admin initialization failed: ${error.message}`);
@@ -82,7 +99,10 @@ export function getFirebaseAdmin() {
 }
 
 // Convenience exports for Firebase Admin services
-export const firebaseAuth = () => getFirebaseAdmin().auth();
-export const firestore = () => getFirebaseAdmin().firestore();
-export const storage = () => getFirebaseAdmin().storage();
-export const rtdb = () => getFirebaseAdmin().database();
+export const adminAuth = () => getAuth(getFirebaseAdmin());
+export const adminFirestore = () => getFirestore(getFirebaseAdmin());
+export const adminStorage = () => getStorage(getFirebaseAdmin());
+export const adminDatabase = () => getDatabase(getFirebaseAdmin());
+
+// Export app getter for debug purposes
+export const getAdminApp = () => getFirebaseAdmin();

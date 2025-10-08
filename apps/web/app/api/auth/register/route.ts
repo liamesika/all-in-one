@@ -109,13 +109,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Load Firebase Admin
-    console.log('📦 [REGISTER] Loading Firebase Admin...');
-    let admin;
+    // Load Firebase Admin Auth
+    console.log('📦 [REGISTER] Loading Firebase Admin Auth...');
+    let auth;
     try {
-      const { getFirebaseAdmin } = await import('@/lib/firebaseAdmin.server');
-      admin = getFirebaseAdmin();
-      console.log('✅ [REGISTER] Firebase Admin loaded successfully');
+      const { adminAuth } = await import('@/lib/firebaseAdmin.server');
+      auth = adminAuth();
+      console.log('✅ [REGISTER] Firebase Admin Auth loaded successfully');
     } catch (adminError: any) {
       console.error('🔥 [REGISTER] Failed to load Firebase Admin:', {
         message: adminError.message,
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
     console.log('🔑 [REGISTER] Token preview:', body.idToken.substring(0, 50) + '...');
     let decodedToken;
     try {
-      decodedToken = await admin.auth().verifyIdToken(body.idToken, true); // checkRevoked = true
+      decodedToken = await auth.verifyIdToken(body.idToken, true); // checkRevoked = true
 
       // Log critical token details for debugging
       console.log('✅ [REGISTER] Firebase token verified successfully!');
@@ -250,9 +250,9 @@ export async function POST(request: NextRequest) {
 
       // Set custom claims if not already set (for existing users missing claims)
       try {
-        const currentClaims = (await admin.auth().getUser(body.firebaseUid)).customClaims;
+        const currentClaims = (await auth.getUser(body.firebaseUid)).customClaims;
         if (!currentClaims?.vertical) {
-          await admin.auth().setCustomUserClaims(body.firebaseUid, {
+          await auth.setCustomUserClaims(body.firebaseUid, {
             vertical: vertical,
           });
           console.log(`✅ [REGISTER] Added missing custom claims for existing user: vertical=${vertical}`);
@@ -336,7 +336,7 @@ export async function POST(request: NextRequest) {
 
       // Set Firebase custom claims for vertical (for fast token-based routing)
       try {
-        await admin.auth().setCustomUserClaims(body.firebaseUid, {
+        await auth.setCustomUserClaims(body.firebaseUid, {
           vertical: body.vertical,
         });
         console.log(`✅ [REGISTER] Firebase custom claims set: vertical=${body.vertical}`);
