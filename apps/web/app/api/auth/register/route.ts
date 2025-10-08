@@ -35,8 +35,11 @@ export async function POST(request: NextRequest) {
     console.log('🚀 [REGISTER] Starting Firebase-based registration');
     console.log('🌍 [REGISTER] Environment check:', {
       hasFirebaseProjectId: !!process.env.FIREBASE_ADMIN_PROJECT_ID,
+      firebaseProjectId: process.env.FIREBASE_ADMIN_PROJECT_ID, // Log full ID
       hasFirebaseClientEmail: !!process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
+      firebaseClientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
       hasFirebasePrivateKey: !!process.env.FIREBASE_ADMIN_PRIVATE_KEY,
+      privateKeyLength: process.env.FIREBASE_ADMIN_PRIVATE_KEY?.length || 0,
       hasDatabaseUrl: !!process.env.DATABASE_URL,
       nodeEnv: process.env.NODE_ENV,
     });
@@ -130,10 +133,38 @@ export async function POST(request: NextRequest) {
 
     // Verify Firebase ID token (ensures the user was actually created in Firebase)
     console.log('🔑 [REGISTER] Verifying Firebase token...');
+    console.log('🔑 [REGISTER] Token preview:', body.idToken.substring(0, 50) + '...');
     let decodedToken;
     try {
       decodedToken = await admin.auth().verifyIdToken(body.idToken, true); // checkRevoked = true
-      console.log('✅ [REGISTER] Firebase token verified for UID:', decodedToken.uid);
+
+      // Log critical token details for debugging
+      console.log('✅ [REGISTER] Firebase token verified successfully!');
+      console.log('📊 [REGISTER] Token details:', {
+        uid: decodedToken.uid,
+        email: decodedToken.email,
+        audience: decodedToken.aud, // Should match project ID
+        issuer: decodedToken.iss,   // Should contain project ID
+        authTime: new Date(decodedToken.auth_time * 1000).toISOString(),
+        projectId: decodedToken.aud, // This is the client project ID
+      });
+
+      // Verify project ID matches
+      const expectedProjectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
+      if (decodedToken.aud !== expectedProjectId) {
+        console.error('❌ [REGISTER] PROJECT MISMATCH!', {
+          tokenProjectId: decodedToken.aud,
+          serverProjectId: expectedProjectId,
+          message: 'Frontend Firebase config is using a different project than the Admin SDK!'
+        });
+        return NextResponse.json(
+          {
+            message: 'Project mismatch between frontend and backend Firebase configuration',
+            details: `Token from project ${decodedToken.aud} but server expects ${expectedProjectId}`
+          },
+          { status: 401 }
+        );
+      }
 
       // Ensure the token UID matches the provided UID
       if (decodedToken.uid !== body.firebaseUid) {
@@ -153,7 +184,11 @@ export async function POST(request: NextRequest) {
         );
       }
     } catch (error: any) {
-      console.error('🔥 [REGISTER] Firebase token verification failed:', error.message);
+      console.error('🔥 [REGISTER] Firebase token verification failed:', {
+        message: error.message,
+        code: error.code,
+        stack: error.stack,
+      });
       return NextResponse.json(
         { message: 'Invalid Firebase token', details: error.message },
         { status: 401 }

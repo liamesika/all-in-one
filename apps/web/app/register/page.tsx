@@ -144,6 +144,8 @@ function RegisterForm() {
 
     try {
       console.log('📝 [REGISTER] Starting registration...');
+      console.log('🔍 [REGISTER] Client Firebase Project ID:', process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
+      console.log('🔍 [REGISTER] Client Firebase API Key:', process.env.NEXT_PUBLIC_FIREBASE_API_KEY?.substring(0, 20) + '...');
       console.log('🎯 [REGISTER] Selected vertical:', formData.vertical);
       console.log('📊 [REGISTER] Form data:', {
         fullName: formData.fullName,
