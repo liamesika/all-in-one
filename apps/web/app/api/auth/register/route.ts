@@ -33,9 +33,25 @@ function resolveDashboardPath(vertical: Vertical): string {
 export async function POST(request: NextRequest) {
   try {
     console.log('🚀 [REGISTER] Starting Firebase-based registration');
+    console.log('🌍 [REGISTER] Environment check:', {
+      hasFirebaseProjectId: !!process.env.FIREBASE_ADMIN_PROJECT_ID,
+      hasFirebaseClientEmail: !!process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
+      hasFirebasePrivateKey: !!process.env.FIREBASE_ADMIN_PRIVATE_KEY,
+      hasDatabaseUrl: !!process.env.DATABASE_URL,
+      nodeEnv: process.env.NODE_ENV,
+    });
 
-    const body: RegisterDto = await request.json();
-    console.log(`📝 [REGISTER] Registration for: ${body.email.substring(0, 3)}***, vertical: ${body.vertical}`);
+    let body: RegisterDto;
+    try {
+      body = await request.json();
+      console.log(`📝 [REGISTER] Registration for: ${body.email.substring(0, 3)}***, vertical: ${body.vertical}`);
+    } catch (parseError: any) {
+      console.error('❌ [REGISTER] Failed to parse request body:', parseError.message);
+      return NextResponse.json(
+        { message: 'Invalid request body' },
+        { status: 400 }
+      );
+    }
 
     // Validate required fields
     if (!body.email || !body.fullName || !body.vertical || !body.firebaseUid || !body.idToken) {
@@ -92,9 +108,25 @@ export async function POST(request: NextRequest) {
 
     // Load Firebase Admin
     console.log('📦 [REGISTER] Loading Firebase Admin...');
-    const { getFirebaseAdmin } = await import('@/lib/firebaseAdmin.server');
-    const admin = getFirebaseAdmin();
-    console.log('✅ [REGISTER] Firebase Admin loaded');
+    let admin;
+    try {
+      const { getFirebaseAdmin } = await import('@/lib/firebaseAdmin.server');
+      admin = getFirebaseAdmin();
+      console.log('✅ [REGISTER] Firebase Admin loaded successfully');
+    } catch (adminError: any) {
+      console.error('🔥 [REGISTER] Failed to load Firebase Admin:', {
+        message: adminError.message,
+        stack: adminError.stack,
+        name: adminError.name,
+      });
+      return NextResponse.json(
+        {
+          message: 'Server configuration error - Firebase Admin not available',
+          details: process.env.NODE_ENV === 'development' ? adminError.message : undefined
+        },
+        { status: 500 }
+      );
+    }
 
     // Verify Firebase ID token (ensures the user was actually created in Firebase)
     console.log('🔑 [REGISTER] Verifying Firebase token...');
@@ -130,18 +162,52 @@ export async function POST(request: NextRequest) {
 
     // Load Prisma
     console.log('📦 [REGISTER] Loading Prisma...');
-    const { prisma } = await import('@/lib/prisma.server');
-    console.log('✅ [REGISTER] Prisma loaded');
+    let prisma;
+    try {
+      const prismaModule = await import('@/lib/prisma.server');
+      prisma = prismaModule.prisma;
+      console.log('✅ [REGISTER] Prisma loaded successfully');
+    } catch (prismaError: any) {
+      console.error('🔥 [REGISTER] Failed to load Prisma:', {
+        message: prismaError.message,
+        stack: prismaError.stack,
+        name: prismaError.name,
+      });
+      return NextResponse.json(
+        {
+          message: 'Server configuration error - Database not available',
+          details: process.env.NODE_ENV === 'development' ? prismaError.message : undefined
+        },
+        { status: 500 }
+      );
+    }
 
     // Check if user metadata already exists in Prisma (by Firebase UID)
     // Note: We check by UID, not email, since Firebase is the source of truth for auth
     console.log('🔍 [REGISTER] Checking if user metadata exists...');
-    const existingUser = await prisma.user.findUnique({
-      where: { id: body.firebaseUid },
-      include: {
-        userProfile: true,
-      },
-    });
+    let existingUser;
+    try {
+      existingUser = await prisma.user.findUnique({
+        where: { id: body.firebaseUid },
+        include: {
+          userProfile: true,
+        },
+      });
+      console.log('✅ [REGISTER] Existing user check completed:', existingUser ? 'Found' : 'Not found');
+    } catch (queryError: any) {
+      console.error('🔥 [REGISTER] Database query failed:', {
+        message: queryError.message,
+        code: queryError.code,
+        meta: queryError.meta,
+      });
+      return NextResponse.json(
+        {
+          message: 'Database query error',
+          details: process.env.NODE_ENV === 'development' ? queryError.message : undefined
+        },
+        { status: 500 }
+      );
+    }
 
     if (existingUser) {
       console.warn(`⚠️ [REGISTER] User metadata already exists for UID: ${body.firebaseUid}`);
