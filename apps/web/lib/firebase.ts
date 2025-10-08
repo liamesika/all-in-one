@@ -1,7 +1,7 @@
 // apps/web/lib/firebase.ts
 // Client-side Firebase initialization
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY?.trim(),
@@ -48,5 +48,29 @@ export const getIdTokenResult = async () => {
   if (!user) return null;
   return await user.getIdTokenResult();
 };
+
+// Backward-compatible exports for components still using old imports
+/**
+ * @deprecated Use onAuthStateChanged from @/services/authClient instead
+ */
+export function onAuthChange(callback: (user: User | null) => void) {
+  return onAuthStateChanged(firebaseAuth, callback);
+}
+
+/**
+ * @deprecated Use logoutUser from @/services/authClient instead
+ */
+export async function logout() {
+  const { logoutUser } = await import('@/services/authClient');
+  return logoutUser();
+}
+
+/**
+ * @deprecated Use logoutUser from @/services/authClient instead
+ */
+export async function signOut() {
+  const { logoutUser } = await import('@/services/authClient');
+  return logoutUser();
+}
 
 export default firebaseApp;
