@@ -10,13 +10,13 @@ const TERMS_VERSION = process.env.TERMS_VERSION || '1.0';
 type Vertical = 'REAL_ESTATE' | 'E_COMMERCE' | 'LAW' | 'PRODUCTION';
 
 interface RegisterDto {
-  email: string;
-  fullName: string;
-  vertical: Vertical;
-  lang?: string;
-  termsConsent: boolean;
-  firebaseUid: string; // Required - Firebase UID
-  idToken: string; // Required - Firebase ID token for verification
+  idToken: string; // Firebase ID token
+  profile: {
+    fullName: string;
+    vertical: Vertical;
+    lang?: string;
+    termsConsent: boolean;
+  };
 }
 
 function resolveDashboardPath(vertical: Vertical): string {
@@ -32,22 +32,13 @@ function resolveDashboardPath(vertical: Vertical): string {
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🚀 [REGISTER] Starting Firebase-based registration');
-    console.log('🌍 [REGISTER] Environment check:', {
-      hasFirebaseProjectId: !!process.env.FIREBASE_ADMIN_PROJECT_ID,
-      firebaseProjectId: process.env.FIREBASE_ADMIN_PROJECT_ID, // Log full ID
-      hasFirebaseClientEmail: !!process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-      firebaseClientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-      hasFirebasePrivateKey: !!process.env.FIREBASE_ADMIN_PRIVATE_KEY,
-      privateKeyLength: process.env.FIREBASE_ADMIN_PRIVATE_KEY?.length || 0,
-      hasDatabaseUrl: !!process.env.DATABASE_URL,
-      nodeEnv: process.env.NODE_ENV,
-    });
+    console.log('🚀 [REGISTER] Starting Firebase-only registration');
 
+    // Parse request body
     let body: RegisterDto;
     try {
       body = await request.json();
-      console.log(`📝 [REGISTER] Registration for: ${body.email.substring(0, 3)}***, vertical: ${body.vertical}`);
+      console.log(`📝 [REGISTER] Registration for vertical: ${body.profile.vertical}`);
     } catch (parseError: any) {
       console.error('❌ [REGISTER] Failed to parse request body:', parseError.message);
       return NextResponse.json(
@@ -57,13 +48,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate required fields
-    if (!body.email || !body.fullName || !body.vertical || !body.firebaseUid || !body.idToken) {
+    if (!body.idToken || !body.profile?.fullName || !body.profile?.vertical || !body.profile?.termsConsent) {
       console.error('❌ [REGISTER] Missing required fields:', {
-        hasEmail: !!body.email,
-        hasFullName: !!body.fullName,
-        hasVertical: !!body.vertical,
-        hasFirebaseUid: !!body.firebaseUid,
-        hasIdToken: !!body.idToken
+        hasIdToken: !!body.idToken,
+        hasFullName: !!body.profile?.fullName,
+        hasVertical: !!body.profile?.vertical,
+        hasTermsConsent: !!body.profile?.termsConsent,
       });
       return NextResponse.json(
         { message: 'Missing required fields' },
@@ -71,310 +61,117 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(body.email)) {
-      console.error('❌ [REGISTER] Invalid email format:', body.email);
-      return NextResponse.json(
-        { message: 'Invalid email format' },
-        { status: 400 }
-      );
-    }
-
-    // Validate full name length
-    if (body.fullName.trim().length < 2 || body.fullName.trim().length > 80) {
-      console.error('❌ [REGISTER] Invalid full name length:', body.fullName.length);
-      return NextResponse.json(
-        { message: 'Full name must be between 2 and 80 characters' },
-        { status: 400 }
-      );
-    }
-
     // Validate vertical is a valid enum value
     const validVerticals = ['REAL_ESTATE', 'E_COMMERCE', 'LAW', 'PRODUCTION'];
-    if (!validVerticals.includes(body.vertical)) {
-      console.error('❌ [REGISTER] Invalid vertical:', body.vertical);
+    if (!validVerticals.includes(body.profile.vertical)) {
+      console.error('❌ [REGISTER] Invalid vertical:', body.profile.vertical);
       return NextResponse.json(
         { message: 'Invalid vertical selected' },
         { status: 400 }
       );
     }
 
-    // Validate terms consent
-    if (!body.termsConsent) {
-      console.error('❌ [REGISTER] Terms consent not provided');
-      return NextResponse.json(
-        { message: 'Terms consent is required' },
-        { status: 400 }
-      );
-    }
-
     // Load Firebase Admin Auth
-    console.log('📦 [REGISTER] Loading Firebase Admin Auth...');
+    console.log('📦 [REGISTER] Loading Firebase Admin...');
     let auth;
+    let decodedToken;
     try {
       const { adminAuth } = await import('@/lib/firebaseAdmin.server');
       auth = adminAuth();
-      console.log('✅ [REGISTER] Firebase Admin Auth loaded successfully');
-    } catch (adminError: any) {
-      console.error('🔥 [REGISTER] Failed to load Firebase Admin:', {
-        message: adminError.message,
-        stack: adminError.stack,
-        name: adminError.name,
-      });
-      return NextResponse.json(
-        {
-          message: 'Server configuration error - Firebase Admin not available',
-          details: process.env.NODE_ENV === 'development' ? adminError.message : undefined
-        },
-        { status: 500 }
-      );
-    }
+      console.log('✅ [REGISTER] Firebase Admin loaded');
 
-    // Verify Firebase ID token (ensures the user was actually created in Firebase)
-    console.log('🔑 [REGISTER] Verifying Firebase token...');
-    console.log('🔑 [REGISTER] Token preview:', body.idToken.substring(0, 50) + '...');
-    let decodedToken;
-    try {
+      // Verify Firebase ID token
+      console.log('🔑 [REGISTER] Verifying Firebase token...');
       decodedToken = await auth.verifyIdToken(body.idToken, true); // checkRevoked = true
-
-      // Log critical token details for debugging
-      console.log('✅ [REGISTER] Firebase token verified successfully!');
-      console.log('📊 [REGISTER] Token details:', {
+      console.log('✅ [REGISTER] Token verified:', {
         uid: decodedToken.uid,
         email: decodedToken.email,
-        audience: decodedToken.aud, // Should match project ID
-        issuer: decodedToken.iss,   // Should contain project ID
-        authTime: new Date(decodedToken.auth_time * 1000).toISOString(),
-        projectId: decodedToken.aud, // This is the client project ID
+        projectId: decodedToken.aud,
       });
-
-      // Verify project ID matches
-      const expectedProjectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
-      if (decodedToken.aud !== expectedProjectId) {
-        console.error('❌ [REGISTER] PROJECT MISMATCH!', {
-          tokenProjectId: decodedToken.aud,
-          serverProjectId: expectedProjectId,
-          message: 'Frontend Firebase config is using a different project than the Admin SDK!'
-        });
-        return NextResponse.json(
-          {
-            message: 'Project mismatch between frontend and backend Firebase configuration',
-            details: `Token from project ${decodedToken.aud} but server expects ${expectedProjectId}`
-          },
-          { status: 401 }
-        );
-      }
-
-      // Ensure the token UID matches the provided UID
-      if (decodedToken.uid !== body.firebaseUid) {
-        console.error('❌ [REGISTER] UID mismatch - token UID does not match provided UID');
-        return NextResponse.json(
-          { message: 'Invalid authentication token' },
-          { status: 401 }
-        );
-      }
-
-      // Verify the email in the token matches the email in the request
-      if (decodedToken.email?.toLowerCase() !== body.email.toLowerCase()) {
-        console.error('❌ [REGISTER] Email mismatch - token email does not match provided email');
-        return NextResponse.json(
-          { message: 'Email mismatch in authentication token' },
-          { status: 401 }
-        );
-      }
-    } catch (error: any) {
-      console.error('🔥 [REGISTER] Firebase token verification failed:', {
-        message: error.message,
-        code: error.code,
-        stack: error.stack,
+    } catch (authError: any) {
+      console.error('🔥 [REGISTER] Firebase Auth error:', {
+        message: authError.message,
+        code: authError.code,
+        stack: authError.stack,
       });
       return NextResponse.json(
-        { message: 'Invalid Firebase token', details: error.message },
+        { message: 'Invalid or expired authentication token', details: authError.message },
         { status: 401 }
       );
     }
 
-    // Load Prisma
-    console.log('📦 [REGISTER] Loading Prisma...');
-    let prisma;
+    // Create or update user profile in Firestore
+    console.log('💾 [REGISTER] Creating user profile in Firestore...');
     try {
-      const prismaModule = await import('@/lib/prisma.server');
-      prisma = prismaModule.prisma;
-      console.log('✅ [REGISTER] Prisma loaded successfully');
-    } catch (prismaError: any) {
-      console.error('🔥 [REGISTER] Failed to load Prisma:', {
-        message: prismaError.message,
-        stack: prismaError.stack,
-        name: prismaError.name,
-      });
-      return NextResponse.json(
-        {
-          message: 'Server configuration error - Database not available',
-          details: process.env.NODE_ENV === 'development' ? prismaError.message : undefined
-        },
-        { status: 500 }
-      );
-    }
+      const { createUserProfile, getUserProfile } = await import('@/lib/firebaseAdmin.server');
 
-    // Check if user metadata already exists in Prisma (by Firebase UID)
-    // Note: We check by UID, not email, since Firebase is the source of truth for auth
-    console.log('🔍 [REGISTER] Checking if user metadata exists...');
-    let existingUser;
-    try {
-      existingUser = await prisma.user.findUnique({
-        where: { id: body.firebaseUid },
-        include: {
-          userProfile: true,
-        },
-      });
-      console.log('✅ [REGISTER] Existing user check completed:', existingUser ? 'Found' : 'Not found');
-    } catch (queryError: any) {
-      console.error('🔥 [REGISTER] Database query failed:', {
-        message: queryError.message,
-        code: queryError.code, // e.g., P2021 (table not found), P1001 (can't reach DB)
-        meta: queryError.meta,
-        name: queryError.name,
-        clientVersion: queryError.clientVersion,
-      });
-      return NextResponse.json(
-        {
-          message: 'Database query error',
-          code: queryError.code,
-          details: process.env.NODE_ENV === 'development' ? queryError.message : undefined
-        },
-        { status: 500 }
-      );
-    }
-
-    if (existingUser) {
-      console.warn(`⚠️ [REGISTER] User metadata already exists for UID: ${body.firebaseUid}`);
-      const vertical = existingUser.userProfile?.defaultVertical || body.vertical;
-
-      // Set custom claims if not already set (for existing users missing claims)
-      try {
-        const currentClaims = (await auth.getUser(body.firebaseUid)).customClaims;
-        if (!currentClaims?.vertical) {
-          await auth.setCustomUserClaims(body.firebaseUid, {
-            vertical: vertical,
-          });
-          console.log(`✅ [REGISTER] Added missing custom claims for existing user: vertical=${vertical}`);
-        }
-      } catch (claimsError: any) {
-        console.warn(`⚠️ [REGISTER] Failed to set custom claims for existing user:`, claimsError.message);
+      // Check if profile already exists
+      const existingProfile = await getUserProfile(decodedToken.uid);
+      if (existingProfile) {
+        console.log('⚠️ [REGISTER] User profile already exists:', decodedToken.uid);
+        return NextResponse.json(
+          {
+            message: 'User profile already exists',
+            redirectPath: resolveDashboardPath(existingProfile.vertical as Vertical),
+            user: {
+              uid: decodedToken.uid,
+              email: decodedToken.email,
+              fullName: existingProfile.fullName,
+              vertical: existingProfile.vertical,
+              planStatus: existingProfile.planStatus,
+            },
+          },
+          { status: 200 }
+        );
       }
 
-      return NextResponse.json(
-        {
-          message: 'User profile already exists',
-          redirectPath: resolveDashboardPath(vertical as Vertical),
-          user: {
-            id: existingUser.id,
-            fullName: existingUser.fullName,
-            email: existingUser.email,
-            defaultVertical: vertical,
-          },
-        },
-        { status: 200 } // 200 since user can proceed to dashboard
-      );
-    }
-
-    // Create user metadata in Prisma (Firebase UID as the primary key)
-    console.log('💾 [REGISTER] Creating user metadata in database...');
-    try {
-      const result = await prisma.$transaction(async (tx) => {
-        console.log('📝 [REGISTER] Transaction: Creating user record...');
-        // Create user record with Firebase UID as ID
-        const user = await tx.user.create({
-          data: {
-            id: body.firebaseUid, // Use Firebase UID as primary key
-            fullName: body.fullName.trim(),
-            email: body.email.toLowerCase(),
-            passwordHash: '', // Empty - Firebase handles passwords
-            lang: body.lang || 'en',
-          },
-        });
-        console.log('✅ [REGISTER] Transaction: User record created');
-
-        console.log('📝 [REGISTER] Transaction: Creating organization...');
-        // Create organization
-        const organization = await tx.organization.create({
-          data: {
-            ownerUid: user.id,
-            name: `${body.fullName.trim()}'s Organization`,
-          },
-        });
-        console.log('✅ [REGISTER] Transaction: Organization created');
-
-        console.log('📝 [REGISTER] Transaction: Creating membership...');
-        // Create membership
-        await tx.membership.create({
-          data: {
-            userId: user.id,
-            ownerUid: organization.id,
-            role: 'OWNER',
-          },
-        });
-        console.log('✅ [REGISTER] Transaction: Membership created');
-
-        console.log('📝 [REGISTER] Transaction: Creating user profile...');
-        // Create user profile with vertical
-        const userProfile = await tx.userProfile.create({
-          data: {
-            userId: user.id,
-            defaultVertical: body.vertical,
-            termsConsentAt: new Date(),
-            termsVersion: TERMS_VERSION,
-          },
-        });
-        console.log('✅ [REGISTER] Transaction: User profile created');
-
-        return { user, userProfile };
-      }, {
-        maxWait: 5000, // Maximum time to wait for a transaction slot (5s)
-        timeout: 10000, // Maximum time for transaction to complete (10s)
+      // Create new profile
+      const userDoc = await createUserProfile(decodedToken.uid, {
+        email: decodedToken.email!,
+        fullName: body.profile.fullName.trim(),
+        vertical: body.profile.vertical,
+        lang: body.profile.lang || 'en',
+        planStatus: 'basic',
       });
 
-      console.log(`✅ [REGISTER] User metadata created successfully: ${result.user.id}`);
+      console.log('✅ [REGISTER] User profile created in Firestore');
 
-      // Set Firebase custom claims for vertical (for fast token-based routing)
+      // Set Firebase custom claims for vertical (optional, for fast routing)
       try {
-        await auth.setCustomUserClaims(body.firebaseUid, {
-          vertical: body.vertical,
+        await auth.setCustomUserClaims(decodedToken.uid, {
+          vertical: body.profile.vertical,
+          planStatus: 'basic',
         });
-        console.log(`✅ [REGISTER] Firebase custom claims set: vertical=${body.vertical}`);
+        console.log(`✅ [REGISTER] Custom claims set: vertical=${body.profile.vertical}`);
       } catch (claimsError: any) {
-        console.warn(`⚠️ [REGISTER] Failed to set Firebase claims (non-critical):`, claimsError.message);
+        console.warn('⚠️ [REGISTER] Failed to set custom claims (non-critical):', claimsError.message);
       }
 
-      const redirectPath = resolveDashboardPath(body.vertical);
+      const redirectPath = resolveDashboardPath(body.profile.vertical);
 
       return NextResponse.json(
         {
           redirectPath,
           user: {
-            id: result.user.id,
-            fullName: result.user.fullName,
-            email: result.user.email,
-            defaultVertical: body.vertical,
+            uid: userDoc.uid,
+            email: userDoc.email,
+            fullName: userDoc.fullName,
+            vertical: userDoc.vertical,
+            planStatus: userDoc.planStatus,
           },
         },
         { status: 201 }
       );
-    } catch (error: any) {
-      console.error('🔥 [REGISTER] Database transaction failed:', {
-        message: error.message,
-        code: error.code, // e.g., P2002 (unique constraint), P2003 (foreign key)
-        meta: error.meta,
-        name: error.name,
-        clientVersion: error.clientVersion,
-        stack: error.stack,
+    } catch (firestoreError: any) {
+      console.error('🔥 [REGISTER] Firestore error:', {
+        message: firestoreError.message,
+        code: firestoreError.code,
+        stack: firestoreError.stack,
       });
       return NextResponse.json(
         {
-          message: 'Failed to create user metadata in database',
-          code: error.code,
-          details: error.message
+          message: 'Failed to create user profile',
+          details: firestoreError.message,
         },
         { status: 500 }
       );

@@ -106,3 +106,59 @@ export const adminDatabase = () => getDatabase(getFirebaseAdmin());
 
 // Export app getter for debug purposes
 export const getAdminApp = () => getFirebaseAdmin();
+
+// Firestore helpers for user profile management
+export async function createUserProfile(uid: string, data: {
+  email: string;
+  fullName: string;
+  vertical: string;
+  lang?: string;
+  planStatus?: 'basic' | 'premium';
+}) {
+  const firestore = adminFirestore();
+  const userRef = firestore.collection('users').doc(uid);
+
+  const userDoc = {
+    uid,
+    email: data.email,
+    fullName: data.fullName,
+    vertical: data.vertical,
+    lang: data.lang || 'en',
+    planStatus: data.planStatus || 'basic',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  await userRef.set(userDoc);
+  console.log('✅ [Firestore] User profile created:', uid);
+
+  return userDoc;
+}
+
+export async function getUserProfile(uid: string) {
+  const firestore = adminFirestore();
+  const userRef = firestore.collection('users').doc(uid);
+  const doc = await userRef.get();
+
+  if (!doc.exists) {
+    return null;
+  }
+
+  return doc.data();
+}
+
+export async function updateUserProfile(uid: string, data: Partial<{
+  fullName: string;
+  vertical: string;
+  planStatus: 'basic' | 'premium';
+}>) {
+  const firestore = adminFirestore();
+  const userRef = firestore.collection('users').doc(uid);
+
+  await userRef.update({
+    ...data,
+    updatedAt: new Date().toISOString(),
+  });
+
+  console.log('✅ [Firestore] User profile updated:', uid);
+}

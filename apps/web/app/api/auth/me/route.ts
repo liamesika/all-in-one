@@ -1,77 +1,98 @@
 // apps/web/app/api/auth/me/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 
-// Force dynamic route - prevent static optimization during build
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-const SESSION_COOKIE_NAME = 'session';
-
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+    console.log('🔍 [/api/auth/me] Fetching user profile');
 
-    // Return 401 immediately if no session cookie (don't log as error)
-    if (!sessionCookie) {
+    // Get Authorization header
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.error('❌ [/api/auth/me] Missing or invalid Authorization header');
       return NextResponse.json(
-        { message: 'No session found' },
+        { message: 'Missing authentication token' },
         { status: 401 }
       );
     }
 
-    // Only import expensive dependencies if we have a session
-    const { getFirebaseAdmin } = await import('@/lib/firebaseAdmin.server');
-    const { prisma } = await import('@/lib/prisma.server');
+    const idToken = authHeader.substring(7); // Remove 'Bearer ' prefix
 
-    // Verify the session cookie using Firebase Admin
+    // Verify token with Firebase Admin
     let decodedToken;
     try {
-      const admin = getFirebaseAdmin();
-      decodedToken = await admin.auth().verifySessionCookie(sessionCookie, true);
-    } catch (verifyError: any) {
-      // Session invalid or expired - return 401, not 500
+      const { adminAuth } = await import('@/lib/firebaseAdmin.server');
+      const auth = adminAuth();
+
+      decodedToken = await auth.verifyIdToken(idToken, true); // checkRevoked = true
+      console.log('✅ [/api/auth/me] Token verified:', {
+        uid: decodedToken.uid,
+        email: decodedToken.email,
+      });
+    } catch (authError: any) {
+      console.error('🔥 [/api/auth/me] Token verification failed:', authError.message);
       return NextResponse.json(
-        { message: 'Invalid or expired session' },
+        { message: 'Invalid or expired token' },
         { status: 401 }
       );
     }
 
-    // Get user data from database
-    const user = await prisma.user.findUnique({
-      where: { id: decodedToken.uid },
-      include: {
-        userProfile: true,
-      },
-    });
+    // Get user profile from Firestore
+    try {
+      const { getUserProfile } = await import('@/lib/firebaseAdmin.server');
+      const profile = await getUserProfile(decodedToken.uid);
 
-    if (!user) {
-      return NextResponse.json(
-        { message: 'User not found' },
-        { status: 404 }
-      );
+      if (!profile) {
+        console.warn('⚠️ [/api/auth/me] User profile not found in Firestore');
+
+        // Return Firebase user data even if Firestore profile doesn't exist
+        return NextResponse.json({
+          uid: decodedToken.uid,
+          email: decodedToken.email,
+          email_verified: decodedToken.email_verified,
+          name: decodedToken.name,
+          picture: decodedToken.picture,
+          claims: decodedToken,
+        });
+      }
+
+      console.log('✅ [/api/auth/me] User profile retrieved');
+
+      return NextResponse.json({
+        uid: decodedToken.uid,
+        email: decodedToken.email,
+        email_verified: decodedToken.email_verified,
+        fullName: profile.fullName,
+        vertical: profile.vertical,
+        planStatus: profile.planStatus,
+        lang: profile.lang,
+        claims: {
+          vertical: decodedToken.vertical,
+          planStatus: decodedToken.planStatus,
+        },
+      });
+    } catch (firestoreError: any) {
+      console.error('🔥 [/api/auth/me] Firestore error:', firestoreError.message);
+
+      // Fallback to Firebase Auth data only
+      return NextResponse.json({
+        uid: decodedToken.uid,
+        email: decodedToken.email,
+        email_verified: decodedToken.email_verified,
+        name: decodedToken.name,
+        picture: decodedToken.picture,
+        claims: decodedToken,
+      });
     }
-
-    // Return user profile
-    return NextResponse.json({
-      userId: user.id,
-      email: user.email,
-      fullName: user.fullName,
-      defaultVertical: user.userProfile?.defaultVertical || null,
-      lang: user.lang,
-    });
   } catch (error: any) {
-    console.error('🔥 [ME] Unexpected error:', {
+    console.error('🔥 [/api/auth/me] Unexpected error:', {
       message: error.message,
       stack: error.stack,
-      name: error.name,
     });
     return NextResponse.json(
-      {
-        message: 'Internal server error',
-        error: process.env.NODE_ENV === 'development' ? error.message : undefined,
-      },
+      { message: 'Failed to fetch user profile' },
       { status: 500 }
     );
   }

@@ -4,7 +4,7 @@ import { Suspense, useState, useId } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { LanguageProvider, useLanguage } from '@/lib/language-context';
 import { LanguageToggle } from '@/components/language-toggle';
-import { signIn, getIdToken } from '@/lib/firebase';
+import { signInWithEmail, getUserProfile } from '@/services/authClient';
 import { FirebaseError } from 'firebase/app';
 import { EffinityLogo } from '@/components/effinity-header';
 
@@ -46,10 +46,10 @@ function LoginForm() {
     setLoading(true);
 
     try {
-      console.log('🔐 [LOGIN] Starting Firebase sign-in...');
+      console.log('🔐 [LOGIN] Starting Firebase sign-in with authClient...');
 
-      // Sign in with Firebase - onAuthStateChanged will handle state updates
-      await signIn(email.trim(), password.trim());
+      // Sign in with Firebase using the auth service
+      await signInWithEmail(email.trim(), password.trim());
       console.log('✅ [LOGIN] Firebase sign-in successful');
 
       // Get the next parameter to redirect to the intended page
@@ -60,46 +60,14 @@ function LoginForm() {
         return;
       }
 
-      // Get Firebase ID token
-      console.log('🔑 [LOGIN] Getting Firebase ID token...');
-      const token = await getIdToken();
-
-      if (!token) {
-        throw new Error('Failed to get authentication token');
-      }
-
-      // Create backend session
-      console.log('📡 [LOGIN] Creating backend session...');
-      const sessionResponse = await fetch('/api/auth/firebase/session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ idToken: token }),
-      });
-
-      if (!sessionResponse.ok) {
-        const errorData = await sessionResponse.json();
-        console.error('❌ [LOGIN] Session creation failed:', errorData);
-        throw new Error('Failed to create session');
-      }
-      console.log('✅ [LOGIN] Backend session created');
-
       // Fetch user profile from backend to get vertical
-      console.log('📡 [LOGIN] Fetching user profile from backend...');
-      const profileResponse = await fetch('/api/auth/me', {
-        credentials: 'include',
-      });
+      console.log('📡 [LOGIN] Fetching user profile...');
+      const profile = await getUserProfile();
 
       let redirectPath = '/dashboard/e-commerce/dashboard'; // Default fallback
 
-      if (profileResponse.ok) {
-        const profile = await profileResponse.json();
+      if (profile && profile.vertical) {
         console.log('📊 [LOGIN] User profile:', profile);
-
-        const vertical = profile.defaultVertical;
-        console.log('🎯 [LOGIN] Vertical from profile:', vertical);
 
         // Map vertical to dashboard path
         const verticalPaths: Record<string, string> = {
@@ -109,11 +77,9 @@ function LoginForm() {
           'PRODUCTION': '/dashboard/production/dashboard',
         };
 
-        redirectPath = vertical
-          ? (verticalPaths[vertical] || '/dashboard/e-commerce/dashboard')
-          : '/dashboard/e-commerce/dashboard';
+        redirectPath = verticalPaths[profile.vertical] || '/dashboard/e-commerce/dashboard';
       } else {
-        console.warn('⚠️ [LOGIN] Failed to fetch user profile, using default dashboard');
+        console.warn('⚠️ [LOGIN] No profile found, using default dashboard');
       }
 
       console.log(`✅ [LOGIN] Redirecting to: ${redirectPath}`);
