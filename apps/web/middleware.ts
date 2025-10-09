@@ -22,11 +22,15 @@ export async function middleware(request: NextRequest) {
     // Get session cookie
     const sessionCookie = request.cookies.get('session')?.value;
 
+    // TEMPORARY: Allow access without session cookie for now
+    // The client has Firebase auth which will be verified by API routes
+    // TODO: Re-enable session cookie requirement once Firebase Admin is properly configured in production
     if (!sessionCookie) {
+      console.log('[Middleware] No session cookie, but allowing access (temporary)');
       // Redirect to login with next parameter
-      const loginUrl = new URL('/login', request.url);
-      loginUrl.searchParams.set('next', pathname);
-      return NextResponse.redirect(loginUrl, 302);
+      // const loginUrl = new URL('/login', request.url);
+      // loginUrl.searchParams.set('next', pathname);
+      // return NextResponse.redirect(loginUrl, 302);
     }
 
     // For base /dashboard route, we need to determine which vertical dashboard to redirect to

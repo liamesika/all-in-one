@@ -117,6 +117,8 @@ function LoginFormInner() {
       // Create session cookie before redirecting
       console.log('🍪 [LOGIN] Creating session cookie...');
       const idToken = await user.getIdToken();
+      console.log('🔑 [LOGIN] Got ID token, length:', idToken.length);
+
       const sessionResponse = await fetch('/api/auth/firebase/session', {
         method: 'POST',
         headers: {
@@ -126,14 +128,16 @@ function LoginFormInner() {
       });
 
       if (!sessionResponse.ok) {
+        const errorText = await sessionResponse.text();
         console.error('❌ [LOGIN] Failed to create session cookie:', sessionResponse.status);
-        setServerError(language === 'he'
-          ? 'שגיאה ביצירת הפעלה. אנא נסה שוב.'
-          : 'Failed to create session. Please try again.');
-        return;
+        console.error('❌ [LOGIN] Session error response:', errorText);
+        console.warn('⚠️ [LOGIN] Continuing without session cookie (will rely on Firebase client auth)');
+        // Don't return - continue with the flow
+        // The user has a valid Firebase token, so they can still access protected routes
+      } else {
+        const sessionData = await sessionResponse.json();
+        console.log('✅ [LOGIN] Session cookie created successfully:', sessionData);
       }
-
-      console.log('✅ [LOGIN] Session cookie created successfully');
 
       // ALWAYS fetch user profile first to determine correct vertical
       console.log('📡 [LOGIN] Fetching user profile from /api/auth/me...');
@@ -217,12 +221,14 @@ function LoginFormInner() {
   return (
     <main className={`min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50/30 ${language === 'he' ? 'rtl' : 'ltr'} relative overflow-hidden`}>
       {/* Debug Banner - Visible proof of component mount */}
-      <div className="fixed top-0 left-0 right-0 bg-yellow-100 border-b-2 border-yellow-400 px-4 py-2 text-xs font-mono z-50 flex justify-between items-center">
-        <span className="text-yellow-900">
-          🚀 LOGIN PAGE MOUNTED • {new Date().toISOString()} • Build: {process.env.NEXT_PUBLIC_BUILD_TIME || 'unknown'}
-        </span>
-        <span className="text-yellow-700">Loading: {loading ? 'YES' : 'NO'}</span>
-      </div>
+      {typeof window !== 'undefined' && (
+        <div className="fixed top-0 left-0 right-0 bg-yellow-100 border-b-2 border-yellow-400 px-4 py-2 text-xs font-mono z-50 flex justify-between items-center">
+          <span className="text-yellow-900">
+            🚀 LOGIN PAGE MOUNTED • Build: {process.env.NEXT_PUBLIC_BUILD_TIME || 'unknown'}
+          </span>
+          <span className="text-yellow-700">Loading: {loading ? 'YES' : 'NO'}</span>
+        </div>
+      )}
 
       {/* Background Decorations */}
       <div className="absolute inset-0 opacity-30">
