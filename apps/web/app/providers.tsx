@@ -45,9 +45,12 @@ export default function AppProviders({
   initialLang: 'he' | 'en';
 }) {
   const pathname = usePathname();
-  const isPublicRoute = PUBLIC_ROUTES.some(route => pathname.startsWith(route));
+  const isPublicRoute = pathname ? PUBLIC_ROUTES.some(route => pathname.startsWith(route)) : false;
 
-  console.log('🔵 [AppProviders] Pathname:', pathname, 'isPublicRoute:', isPublicRoute);
+  // Only log on client side to avoid SSR issues
+  if (typeof window !== 'undefined') {
+    console.log('🔵 [AppProviders] Pathname:', pathname, 'isPublicRoute:', isPublicRoute);
+  }
 
   return (
     <SWRConfig value={swrConfig}>

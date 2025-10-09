@@ -1,9 +1,6 @@
 'use client';
 
-// CRITICAL: Log BEFORE any imports to verify script is loading
-console.log('🚀 [LOGIN PAGE] Script loading started - timestamp:', Date.now());
-
-import { Suspense, useState, useId } from 'react';
+import { Suspense, useState, useId, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useLanguage } from '@/lib/language-context';
 import { LanguageToggle } from '@/components/language-toggle';
@@ -11,19 +8,10 @@ import { signInWithEmail, getUserProfile } from '@/services/authClient';
 import { FirebaseError } from 'firebase/app';
 import { EffinityLogo } from '@/components/effinity-header';
 
-console.log('🚀 [LOGIN PAGE] All imports loaded successfully');
-
 function LoginFormInner() {
-  console.log('🔵 [LOGIN] LoginFormInner component STARTING to render');
-
   const qp = useSearchParams();
-  console.log('🔵 [LOGIN] useSearchParams() completed');
-
   const router = useRouter();
-  console.log('🔵 [LOGIN] useRouter() completed');
-
   const { language, t } = useLanguage();
-  console.log('🔵 [LOGIN] useLanguage() completed, language:', language);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -32,9 +20,11 @@ function LoginFormInner() {
   const formId = useId();
   const statusId = useId();
 
-  // Debug: Confirm component is mounting
-  console.log('🔵 [LOGIN] LoginForm component mounted/rendered - all hooks initialized');
-  console.log('🔵 [LOGIN] Current state:', { email, password, loading });
+  // Client-side only logging
+  useEffect(() => {
+    console.log('🚀 [LOGIN PAGE] Component mounted on client');
+    console.log('🔵 [LOGIN] Current state:', { email, password, loading });
+  }, []);
 
   function validateForm(): boolean {
     const newErrors: Record<string, string> = {};
@@ -398,8 +388,6 @@ function LoginFormInner() {
 
 // Simple wrapper that doesn't use useSearchParams
 function LoginForm() {
-  console.log('🔵 [LOGIN] LoginForm wrapper rendering');
-
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-gray-50/30">
@@ -416,7 +404,5 @@ function LoginForm() {
 }
 
 export default function Page() {
-  console.log('🟢 [LOGIN PAGE] Page component rendering');
-
   return <LoginForm />;
 }
