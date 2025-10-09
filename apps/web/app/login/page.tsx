@@ -65,38 +65,59 @@ function LoginFormInner() {
       const { user } = await signInWithEmail(email, password);
       console.log('✅ [LOGIN] Firebase sign-in successful, UID:', user.uid);
 
-      // Get the next parameter to redirect to the intended page
-      const nextUrl = qp.get('next');
-      if (nextUrl) {
-        console.log(`🔀 [LOGIN] Redirecting to next URL: ${nextUrl}`);
-        router.push(nextUrl);
+      // ALWAYS fetch user profile first to determine correct vertical
+      console.log('📡 [LOGIN] Fetching user profile from /api/auth/me...');
+      const profile = await getUserProfile(user);
+
+      if (!profile || !profile.vertical) {
+        console.error('❌ [LOGIN] Failed to fetch user profile or missing vertical');
+        setServerError(language === 'he'
+          ? 'שגיאה בטעינת פרופיל משתמש. אנא נסה שוב.'
+          : 'Failed to load user profile. Please try again.');
         return;
       }
 
-      // Fetch user profile from backend to get vertical
-      // Pass the user object to ensure we have a valid token
-      console.log('📡 [LOGIN] Fetching user profile...');
-      const profile = await getUserProfile(user);
+      console.log('📊 [LOGIN] User profile fetched:', { uid: profile.uid, vertical: profile.vertical, email: profile.email });
 
-      let redirectPath = '/dashboard/e-commerce/dashboard'; // Default fallback
+      // Map vertical to dashboard path
+      const verticalPaths: Record<string, string> = {
+        'REAL_ESTATE': '/dashboard/real-estate/dashboard',
+        'E_COMMERCE': '/dashboard/e-commerce/dashboard',
+        'LAW': '/dashboard/law/dashboard',
+        'PRODUCTION': '/dashboard/production/dashboard',
+      };
 
-      if (profile && profile.vertical) {
-        console.log('📊 [LOGIN] User profile:', profile);
+      const correctDashboard = verticalPaths[profile.vertical] || '/dashboard/e-commerce/dashboard';
+      console.log('✅ [LOGIN] User vertical:', profile.vertical, '→ Dashboard:', correctDashboard);
 
-        // Map vertical to dashboard path
-        const verticalPaths: Record<string, string> = {
-          'REAL_ESTATE': '/dashboard/real-estate/dashboard',
-          'E_COMMERCE': '/dashboard/e-commerce/dashboard',
-          'LAW': '/dashboard/law/dashboard',
-          'PRODUCTION': '/dashboard/production/dashboard',
-        };
+      // Check if there's a next parameter
+      const nextUrl = qp.get('next');
+      let redirectPath = correctDashboard;
 
-        redirectPath = verticalPaths[profile.vertical] || '/dashboard/e-commerce/dashboard';
-      } else {
-        console.warn('⚠️ [LOGIN] No profile found, using default dashboard');
+      if (nextUrl) {
+        console.log('🔍 [LOGIN] next parameter present:', nextUrl);
+
+        // Extract vertical from next URL (e.g., /dashboard/real-estate/... → real-estate)
+        const nextVerticalMatch = nextUrl.match(/\/dashboard\/(real-estate|e-commerce|law|production)\//);
+        const nextVertical = nextVerticalMatch ? nextVerticalMatch[1] : null;
+
+        console.log('🔍 [LOGIN] Extracted vertical from next:', nextVertical);
+
+        // Validate: only honor next if it matches user's vertical
+        const userVerticalSlug = profile.vertical.toLowerCase().replace('_', '-');
+
+        if (nextVertical && nextVertical === userVerticalSlug) {
+          console.log('✅ [LOGIN] next parameter matches user vertical, honoring it');
+          redirectPath = nextUrl;
+        } else {
+          console.warn('⚠️ [LOGIN] next parameter vertical conflict or invalid');
+          console.warn(`   User vertical: ${userVerticalSlug}, next vertical: ${nextVertical}`);
+          console.warn('   Overriding with correct dashboard:', correctDashboard);
+          redirectPath = correctDashboard;
+        }
       }
 
-      console.log(`✅ [LOGIN] Redirecting to: ${redirectPath}`);
+      console.log(`🚀 [LOGIN] Final redirect path: ${redirectPath}`);
       router.push(redirectPath);
     } catch (error: any) {
       console.error('❌ [LOGIN] Error:', error);
