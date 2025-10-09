@@ -228,16 +228,6 @@ function LoginFormInner() {
 
   return (
     <main className={`min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50/30 ${language === 'he' ? 'rtl' : 'ltr'} relative overflow-hidden`}>
-      {/* Debug Banner - Visible proof of component mount */}
-      {typeof window !== 'undefined' && (
-        <div className="fixed top-0 left-0 right-0 bg-yellow-100 border-b-2 border-yellow-400 px-4 py-2 text-xs font-mono z-50 flex justify-between items-center">
-          <span className="text-yellow-900">
-            🚀 LOGIN PAGE MOUNTED • Build: {process.env.NEXT_PUBLIC_BUILD_TIME || 'unknown'}
-          </span>
-          <span className="text-yellow-700">Loading: {loading ? 'YES' : 'NO'}</span>
-        </div>
-      )}
-
       {/* Background Decorations */}
       <div className="absolute inset-0 opacity-30">
         <div className="absolute top-32 left-1/4 w-96 h-96 bg-blue-200 rounded-full blur-3xl" />

@@ -1,111 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
 import { Button } from '../components/ui';
 import EffinityHeader from '../components/effinity-header';
-import { useAuth } from '../lib/auth-context';
 
 type Industry = 'ecommerce' | 'realestate' | 'law';
 
 export default function LandingPage() {
   const [industry, setIndustry] = useState<Industry>('ecommerce');
-  const [redirecting, setRedirecting] = useState(false);
-  const { user, loading, getToken } = useAuth();
-  const router = useRouter();
-
-  // Redirect logged-in users to their dashboard
-  useEffect(() => {
-    const redirectToUserDashboard = async () => {
-      if (!loading && user && !redirecting) {
-        try {
-          setRedirecting(true);
-          console.log('🔄 Authenticated user detected, determining dashboard...');
-
-          const userDashboard = await determineUserDashboard(user);
-          console.log('➡️ Redirecting to:', userDashboard);
-
-          // Store the dashboard for next time (but don't rely on it for primary routing)
-          localStorage.setItem('lastDashboard', userDashboard);
-
-          router.replace(userDashboard);
-        } catch (error) {
-          console.error('❌ Error determining user dashboard:', error);
-          // Fallback to e-commerce if there's an error
-          router.replace('/dashboard/e-commerce/dashboard');
-        }
-      }
-    };
-
-    redirectToUserDashboard();
-  }, [user, loading, router, redirecting, getToken]);
-
-  // Helper function to determine which dashboard to redirect to
-  const determineUserDashboard = async (user: any) => {
-    try {
-      // First, try to get user's defaultVertical from API
-      const token = await getToken();
-      if (token) {
-        const response = await fetch('/api/auth/me', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (response.ok) {
-          const userData = await response.json();
-          const defaultVertical = userData.defaultVertical;
-
-          console.log('👤 User defaultVertical:', defaultVertical);
-
-          if (defaultVertical) {
-            const verticalMap: Record<string, string> = {
-              'REAL_ESTATE': '/dashboard/real-estate/dashboard',
-              'E_COMMERCE': '/dashboard/e-commerce/dashboard',
-              'LAW': '/dashboard/law/dashboard'
-            };
-
-            const dashboardPath = verticalMap[defaultVertical];
-            if (dashboardPath) {
-              return dashboardPath;
-            }
-          }
-        }
-      }
-    } catch (error) {
-      console.error('⚠️ Error fetching user data:', error);
-    }
-
-    // Fallback logic: check localStorage for last visited dashboard
-    const lastDashboard = localStorage.getItem('lastDashboard');
-    const validDashboards = ['/dashboard/e-commerce/dashboard', '/dashboard/real-estate/dashboard', '/dashboard/law/dashboard'];
-
-    if (lastDashboard && validDashboards.includes(lastDashboard)) {
-      console.log('📍 Using last visited dashboard:', lastDashboard);
-      return lastDashboard;
-    }
-
-    // Final fallback to e-commerce dashboard (force deploy cache bust)
-    console.log('🏠 Using default dashboard: e-commerce');
-    return '/dashboard/e-commerce/dashboard';
-  };
-
-  // Show loading state while checking authentication or redirecting
-  if (loading || (user && redirecting)) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-600">
-            {loading ? 'Loading...' : 'Redirecting to your dashboard...'}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // Only render landing page for non-authenticated users
-  if (user && !redirecting) {
-    return null; // Will redirect in useEffect, but shouldn't reach here
-  }
 
   return (
     <div className="min-h-screen bg-white text-gray-900 flex flex-col">
