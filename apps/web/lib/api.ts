@@ -324,7 +324,7 @@ export const orgApi = {
 // User/auth API
 export const userApi = {
   getMe: () =>
-    ApiUtils.getCached('/auth/me', 60000),
+    ApiUtils.getCached('/api/auth/me', 60000),
 
   getMemberships: () =>
     ApiUtils.getCached('/organizations/me/memberships', 60000),

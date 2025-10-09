@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { usePathname } from 'next/navigation';
 import { SWRConfig } from 'swr';
 import { Toaster } from 'react-hot-toast';
 import { LanguageProvider } from '../lib/language-context';
@@ -8,6 +9,9 @@ import { AuthProvider } from '../lib/auth-context';
 import { OrganizationProvider } from '../lib/organization-context';
 import { MustChangePasswordGate } from '../components/auth/must-change-password-gate';
 import { ApiUtils } from '../lib/api';
+
+// Public routes that don't need authentication
+const PUBLIC_ROUTES = ['/login', '/register', '/', '/real-estate', '/e-commerce', '/law', '/industries'];
 
 // SWR configuration
 const swrConfig = {
@@ -40,41 +44,78 @@ export default function AppProviders({
   children: React.ReactNode;
   initialLang: 'he' | 'en';
 }) {
+  const pathname = usePathname();
+  const isPublicRoute = PUBLIC_ROUTES.some(route => pathname.startsWith(route));
+
+  console.log('🔵 [AppProviders] Pathname:', pathname, 'isPublicRoute:', isPublicRoute);
+
   return (
     <SWRConfig value={swrConfig}>
-      <AuthProvider>
+      {isPublicRoute ? (
+        // Public routes: No AuthProvider, no /api/auth/me calls
         <LanguageProvider initialLang={initialLang}>
-          <MustChangePasswordGate>
-            <OrganizationProvider>
-              {children}
-              <Toaster
-                position="top-right"
-                toastOptions={{
-                  duration: 4000,
-                  style: {
-                    background: '#363636',
-                    color: '#fff',
-                  },
-                  success: {
-                    duration: 3000,
-                    iconTheme: {
-                      primary: '#10B981',
-                      secondary: '#fff',
-                    },
-                  },
-                  error: {
-                    duration: 5000,
-                    iconTheme: {
-                      primary: '#EF4444',
-                      secondary: '#fff',
-                    },
-                  },
-                }}
-              />
-            </OrganizationProvider>
-          </MustChangePasswordGate>
+          {children}
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: '#363636',
+                color: '#fff',
+              },
+              success: {
+                duration: 3000,
+                iconTheme: {
+                  primary: '#10B981',
+                  secondary: '#fff',
+                },
+              },
+              error: {
+                duration: 5000,
+                iconTheme: {
+                  primary: '#EF4444',
+                  secondary: '#fff',
+                },
+              },
+            }}
+          />
         </LanguageProvider>
-      </AuthProvider>
+      ) : (
+        // Protected routes: Include AuthProvider
+        <AuthProvider>
+          <LanguageProvider initialLang={initialLang}>
+            <MustChangePasswordGate>
+              <OrganizationProvider>
+                {children}
+                <Toaster
+                  position="top-right"
+                  toastOptions={{
+                    duration: 4000,
+                    style: {
+                      background: '#363636',
+                      color: '#fff',
+                    },
+                    success: {
+                      duration: 3000,
+                      iconTheme: {
+                        primary: '#10B981',
+                        secondary: '#fff',
+                      },
+                    },
+                    error: {
+                      duration: 5000,
+                      iconTheme: {
+                        primary: '#EF4444',
+                        secondary: '#fff',
+                      },
+                    },
+                  }}
+                />
+              </OrganizationProvider>
+            </MustChangePasswordGate>
+          </LanguageProvider>
+        </AuthProvider>
+      )}
     </SWRConfig>
   );
 }
