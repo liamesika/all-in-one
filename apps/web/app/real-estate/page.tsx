@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
 
 export default function RealEstateRedirect() {
-  redirect('/dashboard/real-estate');
+  redirect('/dashboard/real-estate/dashboard');
 }

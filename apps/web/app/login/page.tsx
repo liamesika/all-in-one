@@ -171,23 +171,31 @@ function LoginFormInner() {
       if (nextUrl) {
         console.log('🔍 [LOGIN] next parameter present:', nextUrl);
 
-        // Extract vertical from next URL (e.g., /dashboard/real-estate/... → real-estate)
-        const nextVerticalMatch = nextUrl.match(/\/dashboard\/(real-estate|e-commerce|law|production)\//);
-        const nextVertical = nextVerticalMatch ? nextVerticalMatch[1] : null;
-
-        console.log('🔍 [LOGIN] Extracted vertical from next:', nextVertical);
-
-        // Validate: only honor next if it matches user's vertical
-        const userVerticalSlug = profile.vertical.toLowerCase().replace('_', '-');
-
-        if (nextVertical && nextVertical === userVerticalSlug) {
-          console.log('✅ [LOGIN] next parameter matches user vertical, honoring it');
-          redirectPath = nextUrl;
-        } else {
-          console.warn('⚠️ [LOGIN] next parameter vertical conflict or invalid');
-          console.warn(`   User vertical: ${userVerticalSlug}, next vertical: ${nextVertical}`);
-          console.warn('   Overriding with correct dashboard:', correctDashboard);
+        // CRITICAL: next must start with /dashboard/ to be valid
+        if (!nextUrl.startsWith('/dashboard/')) {
+          console.warn('⚠️ [LOGIN] next parameter does not start with /dashboard/, ignoring');
+          console.warn(`   Invalid next: ${nextUrl}`);
+          console.warn('   Using canonical dashboard:', correctDashboard);
           redirectPath = correctDashboard;
+        } else {
+          // Extract vertical from next URL (e.g., /dashboard/real-estate/... → real-estate)
+          const nextVerticalMatch = nextUrl.match(/\/dashboard\/(real-estate|e-commerce|law|production)\//);
+          const nextVertical = nextVerticalMatch ? nextVerticalMatch[1] : null;
+
+          console.log('🔍 [LOGIN] Extracted vertical from next:', nextVertical);
+
+          // Validate: only honor next if it matches user's vertical
+          const userVerticalSlug = profile.vertical.toLowerCase().replace('_', '-');
+
+          if (nextVertical && nextVertical === userVerticalSlug) {
+            console.log('✅ [LOGIN] next parameter matches user vertical, honoring it');
+            redirectPath = nextUrl;
+          } else {
+            console.warn('⚠️ [LOGIN] next parameter vertical conflict or invalid');
+            console.warn(`   User vertical: ${userVerticalSlug}, next vertical: ${nextVertical}`);
+            console.warn('   Overriding with correct dashboard:', correctDashboard);
+            redirectPath = correctDashboard;
+          }
         }
       }
 

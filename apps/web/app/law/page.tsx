@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
 
 export default function LawRedirect() {
-  redirect('/dashboard/law');
+  redirect('/dashboard/law/dashboard');
 }
