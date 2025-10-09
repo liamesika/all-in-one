@@ -130,7 +130,7 @@ function RealEstateDashboardContent({
       }
     });
     
-    const newUrl = `/real-estate/dashboard?${params.toString()}`;
+    const newUrl = `/dashboard/real-estate/dashboard?${params.toString()}`;
     if (newUrl !== window.location.pathname + window.location.search) {
       router.replace(newUrl, { scroll: false });
     }
@@ -143,19 +143,19 @@ function RealEstateDashboardContent({
 
   // Drill-down handlers
   const handleTaskClick = (taskId: string) => {
-    router.push(`/real-estate/tasks/${taskId}`);
+    router.push(`/dashboard/real-estate/tasks/${taskId}`);
   };
 
   const handleMatterClick = (matterId: string) => {
-    router.push(`/real-estate/matters/${matterId}`);
+    router.push(`/dashboard/real-estate/matters/${matterId}`);
   };
 
   const handleViewMatterDetails = () => {
-    router.push('/real-estate/matters');
+    router.push('/dashboard/real-estate/matters');
   };
 
   const handleViewFinancialDetails = () => {
-    router.push('/real-estate/financial-reports');
+    router.push('/dashboard/real-estate/financial-reports');
   };
 
   return (
@@ -224,13 +224,13 @@ function RealEstateDashboardContent({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <LeadsQualityWidget 
                 data={dashboardData.widgets.leadsQuality}
-                onViewDetails={() => router.push('/real-estate/leads')}
-                onLeadClick={(leadId) => router.push(`/real-estate/leads/${leadId}`)}
+                onViewDetails={() => router.push('/dashboard/real-estate/leads')}
+                onLeadClick={(leadId) => router.push(`/dashboard/real-estate/leads/${leadId}`)}
               />
               <ListingsPerformanceWidget 
                 data={dashboardData.widgets.listingsPerformance}
-                onViewDetails={() => router.push('/real-estate/properties')}
-                onListingClick={(listingId) => router.push(`/real-estate/properties/${listingId}`)}
+                onViewDetails={() => router.push('/dashboard/real-estate/properties')}
+                onListingClick={(listingId) => router.push(`/dashboard/real-estate/properties/${listingId}`)}
               />
             </div>
 
@@ -238,13 +238,13 @@ function RealEstateDashboardContent({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <CompsWidget 
                 data={dashboardData.widgets.comps}
-                onViewDetails={() => router.push('/real-estate/comps')}
-                onCompClick={(compId) => router.push(`/real-estate/comps/${compId}`)}
+                onViewDetails={() => router.push('/dashboard/real-estate/comps')}
+                onCompClick={(compId) => router.push(`/dashboard/real-estate/comps/${compId}`)}
               />
               <OpenHouseWidget 
                 data={dashboardData.widgets.openHouse}
-                onViewDetails={() => router.push('/real-estate/open-houses')}
-                onEventClick={(eventId) => router.push(`/real-estate/open-houses/${eventId}`)}
+                onViewDetails={() => router.push('/dashboard/real-estate/open-houses')}
+                onEventClick={(eventId) => router.push(`/dashboard/real-estate/open-houses/${eventId}`)}
               />
             </div>
 
@@ -252,13 +252,13 @@ function RealEstateDashboardContent({
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <AutoMarketingWidget
                 data={dashboardData.widgets.autoMarketing}
-                onViewDetails={() => router.push('/real-estate/marketing')}
-                onCampaignClick={(campaignId) => router.push(`/real-estate/marketing/${campaignId}`)}
+                onViewDetails={() => router.push('/dashboard/real-estate/marketing')}
+                onCampaignClick={(campaignId) => router.push(`/dashboard/real-estate/marketing/${campaignId}`)}
               />
               <NeighborhoodGuideWidget
                 data={dashboardData.widgets.neighborhoodGuides}
-                onViewDetails={() => router.push('/real-estate/neighborhood-guides')}
-                onGuideClick={(guideId) => router.push(`/real-estate/neighborhood-guides/${guideId}`)}
+                onViewDetails={() => router.push('/dashboard/real-estate/neighborhood-guides')}
+                onGuideClick={(guideId) => router.push(`/dashboard/real-estate/neighborhood-guides/${guideId}`)}
               />
               <ImportedPropertiesWidget />
             </div>
@@ -267,15 +267,15 @@ function RealEstateDashboardContent({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <RevenueWidget 
                 data={dashboardData.widgets.revenue}
-                onViewDetails={() => router.push('/real-estate/revenue')}
-                onDealClick={(dealId) => router.push(`/real-estate/deals/${dealId}`)}
+                onViewDetails={() => router.push('/dashboard/real-estate/revenue')}
+                onDealClick={(dealId) => router.push(`/dashboard/real-estate/deals/${dealId}`)}
               />
               <OperationsWidget 
                 alerts={dashboardData.widgets.operations.alerts}
                 tasks={dashboardData.widgets.operations.tasks}
-                onViewDetails={() => router.push('/real-estate/operations')}
-                onAlertClick={(alertId) => router.push(`/real-estate/alerts/${alertId}`)}
-                onTaskClick={(taskId) => router.push(`/real-estate/tasks/${taskId}`)}
+                onViewDetails={() => router.push('/dashboard/real-estate/operations')}
+                onAlertClick={(alertId) => router.push(`/dashboard/real-estate/alerts/${alertId}`)}
+                onTaskClick={(taskId) => router.push(`/dashboard/real-estate/tasks/${taskId}`)}
               />
             </div>
           </div>

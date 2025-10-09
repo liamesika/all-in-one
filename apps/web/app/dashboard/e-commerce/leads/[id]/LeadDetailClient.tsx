@@ -364,7 +364,7 @@ function LeadDetailClient({ ownerUid, leadId }: { ownerUid: string; leadId: stri
           </h1>
           <p className="text-gray-600 mt-2">{error || 'Lead details could not be loaded'}</p>
           <button
-            onClick={() => router.push('/e-commerce/leads')}
+            onClick={() => router.push('/dashboard/e-commerce/leads')}
             className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
             {language === 'he' ? 'חזרה ללידים' : 'Back to Leads'}
@@ -382,7 +382,7 @@ function LeadDetailClient({ ownerUid, leadId }: { ownerUid: string; leadId: stri
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => router.push('/e-commerce/leads')}
+                onClick={() => router.push('/dashboard/e-commerce/leads')}
                 className="text-gray-600 hover:text-gray-900"
               >
                 ← {language === 'he' ? 'חזרה ללידים' : 'Back to Leads'}

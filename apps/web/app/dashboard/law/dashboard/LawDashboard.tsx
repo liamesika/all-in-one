@@ -111,11 +111,11 @@ function LawDashboardContent({
   };
 
   const handleViewMatterDetails = () => {
-    router.push('/law/matters');
+    router.push('/dashboard/law/matters');
   };
 
   const handleViewFinancialDetails = () => {
-    router.push('/law/financial-reports');
+    router.push('/dashboard/law/financial-reports');
   };
 
   return (
@@ -186,7 +186,7 @@ function LawDashboardContent({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <IntakeFunnel 
                 data={dashboardData.widgets.intakeFunnel}
-                onViewDetails={() => router.push('/law/intake')}
+                onViewDetails={() => router.push('/dashboard/law/intake')}
               />
               <MatterPipeline 
                 data={dashboardData.widgets.matterPipeline}
@@ -204,7 +204,7 @@ function LawDashboardContent({
               />
               <WorkloadHeatmap 
                 data={dashboardData.widgets.workloadHeatmap}
-                onViewDetails={() => router.push('/law/workload')}
+                onViewDetails={() => router.push('/dashboard/law/workload')}
               />
             </div>
 
@@ -212,11 +212,11 @@ function LawDashboardContent({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <ProductivityMetrics 
                 data={dashboardData.widgets.productivity}
-                onViewDetails={() => router.push('/law/productivity')}
+                onViewDetails={() => router.push('/dashboard/law/productivity')}
               />
               <DocumentsAI 
                 data={dashboardData.widgets.documentsAI}
-                onViewDetails={() => router.push('/law/documents')}
+                onViewDetails={() => router.push('/dashboard/law/documents')}
               />
             </div>
           </div>

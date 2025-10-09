@@ -6,7 +6,7 @@ export default function ShopifyCsvRedirect() {
   const router = useRouter();
   
   useEffect(() => {
-    router.replace('/e-commerce/shopify-csv');
+    router.replace('/dashboard/e-commerce/shopify-csv');
   }, [router]);
   
   return (

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname, search } = request.nextUrl;
 
   // Skip middleware for API routes and static files
   if (
@@ -11,6 +11,22 @@ export async function middleware(request: NextRequest) {
     pathname.match(/\.(ico|png|jpg|jpeg|svg|css|js|woff|woff2|ttf|eot)$/)
   ) {
     return NextResponse.next();
+  }
+
+  // CRITICAL: Normalize non-canonical vertical paths to canonical /dashboard/<vertical>/...
+  // Match: /(real-estate|e-commerce|law|production)/... (missing /dashboard/ prefix)
+  const nonCanonicalMatch = pathname.match(/^\/(real-estate|e-commerce|law|production)(\/.*)?$/);
+  if (nonCanonicalMatch) {
+    const vertical = nonCanonicalMatch[1];
+    const restOfPath = nonCanonicalMatch[2] || '';
+    const canonicalPath = `/dashboard/${vertical}${restOfPath}`;
+    const redirectUrl = new URL(canonicalPath + search, request.url);
+
+    console.log('[Middleware] Non-canonical path detected, redirecting:');
+    console.log('  From:', pathname + search);
+    console.log('  To:', canonicalPath + search);
+
+    return NextResponse.redirect(redirectUrl, 308); // 308 = Permanent Redirect, preserves method
   }
 
   // Only apply auth checks to dashboard routes
