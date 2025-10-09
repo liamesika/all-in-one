@@ -20,11 +20,47 @@ function LoginFormInner() {
   const formId = useId();
   const statusId = useId();
 
-  // Client-side only logging
+  // Client-side only logging and auth check
   useEffect(() => {
-    console.log('🚀 [LOGIN PAGE] Component mounted on client');
+    const timestamp = new Date().toISOString();
+    console.log('🚀 [LOGIN PAGE] Component mounted on client at', timestamp);
     console.log('🔵 [LOGIN] Current state:', { email, password, loading });
-  }, []);
+
+    // Check if user is already authenticated
+    async function checkExistingAuth() {
+      try {
+        console.log('🔍 [LOGIN] Checking for existing authentication...');
+        const { getCurrentUserToken } = await import('@/services/authClient');
+        const token = await getCurrentUserToken();
+
+        if (token) {
+          console.log('✅ [LOGIN] User already authenticated, fetching profile...');
+          const profile = await getUserProfile();
+
+          if (profile && profile.vertical) {
+            console.log('📊 [LOGIN] Existing user profile:', { uid: profile.uid, vertical: profile.vertical });
+
+            const verticalPaths: Record<string, string> = {
+              'REAL_ESTATE': '/dashboard/real-estate/dashboard',
+              'E_COMMERCE': '/dashboard/e-commerce/dashboard',
+              'LAW': '/dashboard/law/dashboard',
+              'PRODUCTION': '/dashboard/production/dashboard',
+            };
+
+            const dashboardPath = verticalPaths[profile.vertical] || '/dashboard/e-commerce/dashboard';
+            console.log('🚀 [LOGIN] Auto-redirecting authenticated user to:', dashboardPath);
+            router.push(dashboardPath);
+          }
+        } else {
+          console.log('ℹ️ [LOGIN] No existing authentication, showing login form');
+        }
+      } catch (error) {
+        console.log('ℹ️ [LOGIN] Auth check failed (expected for logged out users):', error);
+      }
+    }
+
+    checkExistingAuth();
+  }, [router]);
 
   function validateForm(): boolean {
     const newErrors: Record<string, string> = {};
@@ -146,6 +182,14 @@ function LoginFormInner() {
 
   return (
     <main className={`min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50/30 ${language === 'he' ? 'rtl' : 'ltr'} relative overflow-hidden`}>
+      {/* Debug Banner - Visible proof of component mount */}
+      <div className="fixed top-0 left-0 right-0 bg-yellow-100 border-b-2 border-yellow-400 px-4 py-2 text-xs font-mono z-50 flex justify-between items-center">
+        <span className="text-yellow-900">
+          🚀 LOGIN PAGE MOUNTED • {new Date().toISOString()} • Build: {process.env.NEXT_PUBLIC_BUILD_TIME || 'unknown'}
+        </span>
+        <span className="text-yellow-700">Loading: {loading ? 'YES' : 'NO'}</span>
+      </div>
+
       {/* Background Decorations */}
       <div className="absolute inset-0 opacity-30">
         <div className="absolute top-32 left-1/4 w-96 h-96 bg-blue-200 rounded-full blur-3xl" />

@@ -154,9 +154,10 @@ const nextConfig = {
   // Production optimizations
   ...(process.env.NODE_ENV === 'production' && {
     compiler: {
-      removeConsole: {
-        exclude: ['error'],
-      },
+      // Temporarily disabled to debug login flow
+      // removeConsole: {
+      //   exclude: ['error'],
+      // },
     },
   }),
 };
