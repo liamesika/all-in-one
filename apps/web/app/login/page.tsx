@@ -34,22 +34,35 @@ function LoginFormInner() {
         const token = await getCurrentUserToken();
 
         if (token) {
-          console.log('✅ [LOGIN] User already authenticated, fetching profile...');
-          const profile = await getUserProfile();
+          console.log('✅ [LOGIN] User already authenticated, creating session...');
 
-          if (profile && profile.vertical) {
-            console.log('📊 [LOGIN] Existing user profile:', { uid: profile.uid, vertical: profile.vertical });
+          // Create session cookie
+          const sessionResponse = await fetch('/api/auth/firebase/session', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ idToken: token }),
+          });
 
-            const verticalPaths: Record<string, string> = {
-              'REAL_ESTATE': '/dashboard/real-estate/dashboard',
-              'E_COMMERCE': '/dashboard/e-commerce/dashboard',
-              'LAW': '/dashboard/law/dashboard',
-              'PRODUCTION': '/dashboard/production/dashboard',
-            };
+          if (sessionResponse.ok) {
+            console.log('✅ [LOGIN] Session cookie created for existing user');
 
-            const dashboardPath = verticalPaths[profile.vertical] || '/dashboard/e-commerce/dashboard';
-            console.log('🚀 [LOGIN] Auto-redirecting authenticated user to:', dashboardPath);
-            router.push(dashboardPath);
+            const profile = await getUserProfile();
+            if (profile && profile.vertical) {
+              console.log('📊 [LOGIN] Existing user profile:', { uid: profile.uid, vertical: profile.vertical });
+
+              const verticalPaths: Record<string, string> = {
+                'REAL_ESTATE': '/dashboard/real-estate/dashboard',
+                'E_COMMERCE': '/dashboard/e-commerce/dashboard',
+                'LAW': '/dashboard/law/dashboard',
+                'PRODUCTION': '/dashboard/production/dashboard',
+              };
+
+              const dashboardPath = verticalPaths[profile.vertical] || '/dashboard/e-commerce/dashboard';
+              console.log('🚀 [LOGIN] Auto-redirecting authenticated user to:', dashboardPath);
+              router.push(dashboardPath);
+            }
           }
         } else {
           console.log('ℹ️ [LOGIN] No existing authentication, showing login form');
@@ -100,6 +113,27 @@ function LoginFormInner() {
       // Note: authClient handles trimming and normalization
       const { user } = await signInWithEmail(email, password);
       console.log('✅ [LOGIN] Firebase sign-in successful, UID:', user.uid);
+
+      // Create session cookie before redirecting
+      console.log('🍪 [LOGIN] Creating session cookie...');
+      const idToken = await user.getIdToken();
+      const sessionResponse = await fetch('/api/auth/firebase/session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (!sessionResponse.ok) {
+        console.error('❌ [LOGIN] Failed to create session cookie:', sessionResponse.status);
+        setServerError(language === 'he'
+          ? 'שגיאה ביצירת הפעלה. אנא נסה שוב.'
+          : 'Failed to create session. Please try again.');
+        return;
+      }
+
+      console.log('✅ [LOGIN] Session cookie created successfully');
 
       // ALWAYS fetch user profile first to determine correct vertical
       console.log('📡 [LOGIN] Fetching user profile from /api/auth/me...');
