@@ -135,6 +135,7 @@ export async function signInWithEmail(email: string, password: string): Promise<
 
   try {
     // Try with normalized credentials first (new users)
+    console.log('🔑 [Auth Client] Attempting login with normalized credentials...');
     const userCredential = await signInWithEmailAndPassword(firebaseAuth, normalizedEmail, normalizedPassword);
 
     console.log('✅ [Auth Client] Sign in successful (normalized):', userCredential.user.uid);
@@ -145,6 +146,15 @@ export async function signInWithEmail(email: string, password: string): Promise<
       user: userCredential.user,
     };
   } catch (error: any) {
+    console.error('❌ [Auth Client] Normalized login failed:', error.code, error.message);
+    console.log('🔍 [Auth Client] Error details:', {
+      code: error.code,
+      emailDifferent: email !== normalizedEmail,
+      passwordDifferent: password !== normalizedPassword,
+      originalEmailLength: email.length,
+      normalizedEmailLength: normalizedEmail.length,
+    });
+
     // If normalized login fails with invalid-credential, try original input
     // This handles legacy users created before normalization was added
     if (error.code === 'auth/invalid-credential' &&
@@ -152,8 +162,10 @@ export async function signInWithEmail(email: string, password: string): Promise<
 
       console.warn('⚠️ [Auth Client] Normalized login failed, trying original credentials (legacy user)');
       console.log('🔍 [Auth Client] Original email:', email, 'Length:', email.length);
+      console.log('🔍 [Auth Client] Original password length:', password.length);
 
       try {
+        console.log('🔑 [Auth Client] Attempting login with original (untrimmed) credentials...');
         const userCredential = await signInWithEmailAndPassword(firebaseAuth, email, password);
 
         console.log('✅ [Auth Client] Sign in successful (legacy):', userCredential.user.uid);
@@ -166,11 +178,13 @@ export async function signInWithEmail(email: string, password: string): Promise<
         };
       } catch (legacyError: any) {
         console.error('❌ [Auth Client] Both normalized and legacy login failed');
+        console.error('❌ [Auth Client] Legacy error:', legacyError.code, legacyError.message);
         throw legacyError;
       }
     }
 
     // Re-throw other errors
+    console.error('❌ [Auth Client] Re-throwing error (no fallback applicable)');
     throw error;
   }
 }
