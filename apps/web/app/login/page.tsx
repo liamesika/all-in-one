@@ -21,6 +21,10 @@ function LoginForm() {
   const formId = useId();
   const statusId = useId();
 
+  // Debug: Confirm component is mounting
+  console.log('🔵 [LOGIN] LoginForm component mounted/rendered');
+  console.log('🔵 [LOGIN] Current state:', { email, password, loading });
+
   function validateForm(): boolean {
     const newErrors: Record<string, string> = {};
 
@@ -38,10 +42,16 @@ function LoginForm() {
   }
 
   async function onSubmit(e: React.FormEvent) {
+    console.log('🟢 [LOGIN] onSubmit function called!', { email, password });
     e.preventDefault();
+    console.log('🟢 [LOGIN] preventDefault called');
 
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      console.log('❌ [LOGIN] Validation failed, returning early');
+      return;
+    }
 
+    console.log('✅ [LOGIN] Validation passed');
     setServerError(null);
     setLoading(true);
 
