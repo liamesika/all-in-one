@@ -12,7 +12,7 @@ const SESSION_TTL_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
 export async function POST(request: NextRequest) {
   try {
     // Dynamic import to prevent build-time evaluation
-    const { getFirebaseAdmin } = await import('@/lib/firebaseAdmin.server');
+    const { adminAuth } = await import('@/lib/firebaseAdmin.server');
 
     const body = await request.json();
     const idToken: string | undefined = body?.idToken;
@@ -27,10 +27,10 @@ export async function POST(request: NextRequest) {
 
     console.log('🔑 [SESSION] Got idToken', idToken.substring(0, 12) + '...');
 
-    // Check if Firebase Admin is configured
-    let admin;
+    // Get Firebase Admin Auth instance
+    let auth;
     try {
-      admin = getFirebaseAdmin();
+      auth = adminAuth();
     } catch (error: any) {
       console.error('🔥 [SESSION] Firebase Admin not configured:', error.message);
       return NextResponse.json(
@@ -42,13 +42,11 @@ export async function POST(request: NextRequest) {
     const expiresIn = SESSION_TTL_MS;
 
     // Verify the ID token first
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const decodedToken = await auth.verifyIdToken(idToken);
     console.log('✅ [SESSION] Token verified for user:', decodedToken.uid);
 
     // Create session cookie
-    const sessionCookie = await admin
-      .auth()
-      .createSessionCookie(idToken, { expiresIn });
+    const sessionCookie = await auth.createSessionCookie(idToken, { expiresIn });
 
     console.log('✅ [SESSION] Created session cookie');
 
