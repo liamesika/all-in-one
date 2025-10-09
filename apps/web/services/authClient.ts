@@ -122,6 +122,7 @@ export async function signUpWithEmail(data: SignUpData): Promise<{ uid: string; 
 
 /**
  * Sign in with email and password
+ * Handles both new users (normalized) and legacy users (pre-normalization)
  */
 export async function signInWithEmail(email: string, password: string): Promise<{ uid: string; user: User }> {
   // Normalize email and password (trim whitespace, lowercase email)
@@ -132,15 +133,46 @@ export async function signInWithEmail(email: string, password: string): Promise<
   console.log('🔍 [Auth Client] Firebase project:', firebaseAuth.app.options.projectId);
   console.log('🔍 [Auth Client] Email length:', normalizedEmail.length, 'Password length:', normalizedPassword.length);
 
-  const userCredential = await signInWithEmailAndPassword(firebaseAuth, normalizedEmail, normalizedPassword);
+  try {
+    // Try with normalized credentials first (new users)
+    const userCredential = await signInWithEmailAndPassword(firebaseAuth, normalizedEmail, normalizedPassword);
 
-  console.log('✅ [Auth Client] Sign in successful:', userCredential.user.uid);
-  console.log('✅ [Auth Client] User email from Firebase:', userCredential.user.email);
+    console.log('✅ [Auth Client] Sign in successful (normalized):', userCredential.user.uid);
+    console.log('✅ [Auth Client] User email from Firebase:', userCredential.user.email);
 
-  return {
-    uid: userCredential.user.uid,
-    user: userCredential.user,
-  };
+    return {
+      uid: userCredential.user.uid,
+      user: userCredential.user,
+    };
+  } catch (error: any) {
+    // If normalized login fails with invalid-credential, try original input
+    // This handles legacy users created before normalization was added
+    if (error.code === 'auth/invalid-credential' &&
+        (email !== normalizedEmail || password !== normalizedPassword)) {
+
+      console.warn('⚠️ [Auth Client] Normalized login failed, trying original credentials (legacy user)');
+      console.log('🔍 [Auth Client] Original email:', email, 'Length:', email.length);
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(firebaseAuth, email, password);
+
+        console.log('✅ [Auth Client] Sign in successful (legacy):', userCredential.user.uid);
+        console.log('⚠️ [Auth Client] Legacy user detected - email:', userCredential.user.email);
+        console.warn('⚠️ [Auth Client] This user should be migrated to use normalized credentials');
+
+        return {
+          uid: userCredential.user.uid,
+          user: userCredential.user,
+        };
+      } catch (legacyError: any) {
+        console.error('❌ [Auth Client] Both normalized and legacy login failed');
+        throw legacyError;
+      }
+    }
+
+    // Re-throw other errors
+    throw error;
+  }
 }
 
 /**
