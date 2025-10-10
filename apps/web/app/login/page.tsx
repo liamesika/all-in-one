@@ -238,9 +238,17 @@ function LoginFormInner() {
         <div className="w-full max-w-md">
           {/* Enhanced EFFINITY Header */}
           <header className="text-center mb-12" role="banner">
-            <div className="inline-flex justify-center mb-8">
+            <a href="/" className="inline-flex justify-center mb-8 group" aria-label="Back to home">
               <EffinityLogo size="lg" />
-            </div>
+            </a>
+            <p className="text-sm text-gray-500">
+              <a href="/" className="hover:text-blue-600 transition-colors duration-200 inline-flex items-center gap-1">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                {language === 'he' ? 'חזרה לדף הבית' : 'Back to home'}
+              </a>
+            </p>
           </header>
 
         <div className="bg-white/95 backdrop-blur-md rounded-2xl border border-gray-200 p-8 shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1">

@@ -3,10 +3,11 @@
 import React, { useState } from 'react';
 import { Button } from '../components/ui';
 import EffinityHeader from '../components/effinity-header';
+import { LanguageProvider } from '../lib/language-context';
 
 type Industry = 'ecommerce' | 'realestate' | 'law';
 
-export default function LandingPage() {
+function LandingPageContent() {
   const [industry, setIndustry] = useState<Industry>('ecommerce');
 
   return (
@@ -48,7 +49,7 @@ export default function LandingPage() {
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
-              Get Started Free
+              Get Started 
             </Button>
             <Button
               href="/login"
@@ -485,5 +486,13 @@ export default function LandingPage() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function LandingPage() {
+  return (
+    <LanguageProvider>
+      <LandingPageContent />
+    </LanguageProvider>
   );
 }

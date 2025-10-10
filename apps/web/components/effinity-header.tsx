@@ -1,9 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Button } from './ui';
 import { useAuth } from '../lib/auth-context';
 import { signOut } from '../lib/firebase';
+import { useLanguage } from '../lib/language-context';
 
 interface EffinityHeaderProps {
   variant?: 'landing' | 'dashboard' | 'auth';
@@ -19,6 +21,18 @@ export function EffinityHeader({
   className = ''
 }: EffinityHeaderProps) {
   const { user, loading } = useAuth();
+  const { language, toggleLanguage } = useLanguage();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -32,7 +46,11 @@ export function EffinityHeader({
   };
 
   const headerStyles = {
-    landing: 'sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-gray-200 animate-fade-in',
+    landing: `sticky top-0 z-50 transition-all duration-300 ${
+      isScrolled
+        ? 'bg-white shadow-md'
+        : 'bg-white/95 backdrop-blur-md border-b border-gray-200'
+    }`,
     dashboard: 'bg-white border-b border-gray-200',
     auth: 'bg-transparent'
   };
@@ -41,22 +59,16 @@ export function EffinityHeader({
     <header className={`${headerStyles[variant]} ${className}`}>
       <div className="mx-auto max-w-7xl px-6 py-4 flex items-center justify-between">
         {/* Effinity Brand Logo */}
-        <a href="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1">
-            <div className="w-6 h-6 text-white">
-              {/* Effinity Star Icon */}
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-              </svg>
-            </div>
-          </div>
-          <div className="group-hover:translate-x-1 transition-transform duration-300">
-            <h1 className="text-base font-semibold text-gray-900 group-hover:text-blue-600 transition-colors duration-300">
-              EFFINITY
-            </h1>
-            <p className="text-xs font-normal text-gray-600 leading-none">
-              AI-powered efficiency
-            </p>
+        <a href="/" className="flex items-center gap-3 group" aria-label="EFFINITY Home">
+          <div className="relative h-8 w-auto flex items-center">
+            <Image
+              src="/logo/logo-white-bg.png"
+              alt="EFFINITY Logo"
+              width={120}
+              height={32}
+              className="h-8 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+              priority
+            />
           </div>
         </a>
         
@@ -121,9 +133,21 @@ export function EffinityHeader({
           </nav>
         )}
         
-        {/* Authentication Buttons */}
+        {/* Language Toggle & Authentication Buttons */}
         {showAuth && (
-          <div className="flex gap-3">
+          <div className="flex items-center gap-3">
+            {/* Language Toggle */}
+            <button
+              onClick={toggleLanguage}
+              className="hidden md:flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200 rounded-lg hover:bg-gray-50"
+              aria-label={language === 'en' ? 'Switch to Hebrew' : 'Switch to English'}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+              </svg>
+              <span className="text-xs font-semibold">{language === 'en' ? 'HE' : 'EN'}</span>
+            </button>
+
             {user ? (
               // Authenticated user UI
               <div className="flex items-center gap-4">
@@ -189,43 +213,115 @@ export function EffinityHeader({
         )}
 
         {/* Mobile Menu Button */}
-        <button className="md:hidden p-2 text-gray-600 hover:text-blue-600 transition-colors duration-200">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
+        <button
+          className="md:hidden p-2 text-gray-600 hover:text-blue-600 transition-colors duration-200"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={isMobileMenuOpen}
+        >
+          {isMobileMenuOpen ? (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          )}
         </button>
       </div>
+
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && variant === 'landing' && (
+        <div className="md:hidden absolute top-full left-0 right-0 bg-white border-b border-gray-200 shadow-lg">
+          <nav className="max-w-7xl mx-auto px-6 py-4 flex flex-col gap-4">
+            <a
+              href="#industries"
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Industries
+            </a>
+            <a
+              href="#about"
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              About
+            </a>
+            <a
+              href="#contact"
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Contact
+            </a>
+
+            {/* Language Toggle (Mobile) */}
+            <button
+              onClick={toggleLanguage}
+              className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+              aria-label={language === 'en' ? 'Switch to Hebrew' : 'Switch to English'}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+              </svg>
+              <span>{language === 'en' ? 'עברית' : 'English'}</span>
+            </button>
+
+            {!user && (
+              <>
+                <div className="border-t border-gray-200 my-2" />
+                <Button
+                  href="/login"
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-center"
+                >
+                  Log in
+                </Button>
+                <Button
+                  href="/register"
+                  variant="primary"
+                  size="sm"
+                  className="w-full justify-center bg-gradient-to-r from-blue-600 to-blue-700"
+                >
+                  Sign up
+                </Button>
+              </>
+            )}
+          </nav>
+        </div>
+      )}
     </header>
   );
 }
 
 // Export individual brand components for flexibility
-export const EffinityLogo = ({ size = 'default', showText = true }: { size?: 'sm' | 'default' | 'lg', showText?: boolean }) => {
+export const EffinityLogo = ({ size = 'default', showText = false }: { size?: 'sm' | 'default' | 'lg', showText?: boolean }) => {
   const sizes = {
-    sm: { container: 'w-8 h-8', icon: 'w-4 h-4', text: 'text-xs' },
-    default: { container: 'w-10 h-10', icon: 'w-6 h-6', text: 'text-base' },
-    lg: { container: 'w-12 h-12', icon: 'w-7 h-7', text: 'text-xl' }
+    sm: { height: 24, width: 90 },
+    default: { height: 32, width: 120 },
+    lg: { height: 40, width: 150 }
   };
-  
+
+  const heightClass = {
+    sm: 'h-6',
+    default: 'h-8',
+    lg: 'h-10'
+  };
+
   return (
     <div className="flex items-center gap-3 group">
-      <div className={`${sizes[size].container} bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1`}>
-        <div className={`${sizes[size].icon} text-white`}>
-          <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-          </svg>
-        </div>
+      <div className={`relative ${heightClass[size]} w-auto flex items-center`}>
+        <Image
+          src="/logo/logo-white-bg.png"
+          alt="EFFINITY Logo"
+          width={sizes[size].width}
+          height={sizes[size].height}
+          className={`${heightClass[size]} w-auto object-contain transition-transform duration-300 group-hover:scale-105`}
+        />
       </div>
-      {showText && (
-        <div className="group-hover:translate-x-1 transition-transform duration-300">
-          <h1 className={`${sizes[size].text} font-semibold text-gray-900 group-hover:text-blue-600 transition-colors duration-300`}>
-            EFFINITY
-          </h1>
-          <p className="text-xs font-normal text-gray-600 leading-none">
-            AI-powered efficiency
-          </p>
-        </div>
-      )}
     </div>
   );
 };
