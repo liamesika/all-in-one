@@ -58,6 +58,11 @@ enum PropertyStatus {
   ARCHIVED
 }
 
+enum TransactionType {
+  SALE
+  RENT
+}
+
 enum PropertyType {
   APARTMENT
   HOUSE
@@ -502,8 +507,9 @@ model Property {
   neighborhood String?
   description  String?
 
-  // חשוב: שיהיה מסוג enum ולא String:
-  status PropertyStatus @default(DRAFT)
+  // Transaction and status
+  status          PropertyStatus   @default(DRAFT)
+  transactionType TransactionType  @default(SALE)
 
   type       PropertyType? // אם יש לך כבר Enum כזה – השאירי; אם אין, זה יכול להיות גם String? לשלב ה-MVP
   photos         PropertyPhoto[]  @relation("PropertyToPhotos")
@@ -512,7 +518,12 @@ model Property {
   organization   Organization?    @relation(fields: [orgId], references: [id])
   rooms          Int?
   size           Int?
-  price          Int?
+
+  // Pricing fields (type-specific)
+  price                Int?     // For SALE transactions
+  rentPriceMonthly     Int?     // For RENT transactions
+  rentTerms            String?  // Lease terms, deposit info, etc.
+
   currency       String?          @default("ILS")
   slug           String?          @unique
   agentName      String?
