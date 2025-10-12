@@ -19,7 +19,10 @@ interface Property {
   name: string;
   address: string;
   city: string;
-  price: number;
+  transactionType: 'SALE' | 'RENT';
+  price?: number;
+  rentPriceMonthly?: number;
+  rentTerms?: string;
   rooms: number;
   size: number;
   status: string;
@@ -52,7 +55,12 @@ export default function PublicPropertyLanding({ property }: { property: Property
     ? property.images
     : ['https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200'];
 
-  const pricePerSqm = Math.round(property.price / property.size);
+  const isSale = property.transactionType === 'SALE';
+  const pricePerSqm = isSale && property.price
+    ? Math.round(property.price / property.size)
+    : property.rentPriceMonthly
+    ? Math.round(property.rentPriceMonthly / property.size)
+    : null;
   const amenitiesList = property.amenities?.split(',').map((a) => a.trim()) || [];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -88,8 +96,13 @@ export default function PublicPropertyLanding({ property }: { property: Property
   };
 
   const handleWhatsApp = () => {
+    const priceText = isSale && property.price
+      ? `listed at ₪${property.price.toLocaleString()}`
+      : !isSale && property.rentPriceMonthly
+      ? `at ₪${property.rentPriceMonthly.toLocaleString()}/month`
+      : '';
     const message = encodeURIComponent(
-      `Hi, I'm interested in ${property.name} at ${property.address}. Can you provide more details?`
+      `Hi, I'm interested in ${isSale ? 'purchasing' : 'renting'} ${property.name} at ${property.address}${priceText ? ' ' + priceText : ''}. Can you provide more details?`
     );
     const phone = property.agentPhone?.replace(/[^\d+]/g, '') || '';
     window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
@@ -144,10 +157,12 @@ export default function PublicPropertyLanding({ property }: { property: Property
           </>
         )}
 
-        {/* Status Badge */}
+        {/* Transaction Type Badge */}
         <div className="absolute top-4 left-4">
-          <span className="px-4 py-2 bg-green-500 text-white rounded-full text-sm font-semibold shadow-lg">
-            For Sale
+          <span className={`px-4 py-2 text-white rounded-full text-sm font-semibold shadow-lg ${
+            isSale ? 'bg-blue-600' : 'bg-green-600'
+          }`}>
+            {isSale ? 'For Sale' : 'For Rent'}
           </span>
         </div>
       </div>
@@ -166,19 +181,52 @@ export default function PublicPropertyLanding({ property }: { property: Property
               </div>
 
               <div className="flex flex-wrap items-center gap-6 pt-4 border-t border-gray-200">
-                <div>
-                  <div className="text-sm text-gray-500">Price</div>
-                  <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                    ₪{property.price.toLocaleString()}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-sm text-gray-500">Price per sqm</div>
-                  <div className="text-xl font-semibold text-gray-900">
-                    ₪{pricePerSqm.toLocaleString()}/m²
-                  </div>
-                </div>
+                {isSale ? (
+                  // Sale pricing
+                  <>
+                    <div>
+                      <div className="text-sm text-gray-500">Price</div>
+                      <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                        {property.price ? `₪${property.price.toLocaleString()}` : 'Contact for price'}
+                      </div>
+                    </div>
+                    {pricePerSqm && (
+                      <div>
+                        <div className="text-sm text-gray-500">Price per sqm</div>
+                        <div className="text-xl font-semibold text-gray-900">
+                          ₪{pricePerSqm.toLocaleString()}/m²
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  // Rental pricing
+                  <>
+                    <div>
+                      <div className="text-sm text-gray-500">Monthly Rent</div>
+                      <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
+                        {property.rentPriceMonthly ? `₪${property.rentPriceMonthly.toLocaleString()}/mo` : 'Contact for price'}
+                      </div>
+                    </div>
+                    {pricePerSqm && (
+                      <div>
+                        <div className="text-sm text-gray-500">Rent per sqm</div>
+                        <div className="text-xl font-semibold text-gray-900">
+                          ₪{pricePerSqm.toLocaleString()}/m²/mo
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
+
+              {/* Rental Terms */}
+              {!isSale && property.rentTerms && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="text-sm text-gray-500 mb-1">Rental Terms</div>
+                  <div className="text-sm text-gray-700">{property.rentTerms}</div>
+                </div>
+              )}
             </div>
 
             {/* Key Features */}
@@ -363,11 +411,21 @@ export default function PublicPropertyLanding({ property }: { property: Property
               addressLocality: property.city,
               addressCountry: 'IL',
             },
-            offers: {
-              '@type': 'Offer',
-              price: property.price,
-              priceCurrency: 'ILS',
-            },
+            offers: isSale
+              ? {
+                  '@type': 'Offer',
+                  price: property.price,
+                  priceCurrency: 'ILS',
+                }
+              : {
+                  '@type': 'Offer',
+                  priceSpecification: {
+                    '@type': 'UnitPriceSpecification',
+                    price: property.rentPriceMonthly,
+                    priceCurrency: 'ILS',
+                    unitCode: 'MON',
+                  },
+                },
           }),
         }}
       />

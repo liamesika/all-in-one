@@ -6,7 +6,10 @@ interface Property {
   name: string;
   address: string;
   city: string;
-  price: number;
+  transactionType: 'SALE' | 'RENT';
+  price?: number;
+  rentPriceMonthly?: number;
+  rentTerms?: string;
   rooms: number;
   size: number;
   status: string;
@@ -32,7 +35,10 @@ async function getPropertyBySlug(slug: string): Promise<Property | null> {
       name: 'Luxury Penthouse - Tel Aviv',
       address: 'Rothschild Blvd 10',
       city: 'Tel Aviv',
+      transactionType: 'SALE',
       price: 4500000,
+      rentPriceMonthly: undefined,
+      rentTerms: undefined,
       rooms: 5,
       size: 180,
       status: 'LISTED',
@@ -51,11 +57,14 @@ async function getPropertyBySlug(slug: string): Promise<Property | null> {
       name: 'Modern Apartment - Ramat Aviv',
       address: 'Einstein St 25',
       city: 'Tel Aviv',
-      price: 2800000,
+      transactionType: 'RENT',
+      price: undefined,
+      rentPriceMonthly: 8500,
+      rentTerms: 'Minimum 12 months lease, 2 months deposit required',
       rooms: 4,
       size: 120,
       status: 'LISTED',
-      description: 'Beautiful modern apartment in sought-after Ramat Aviv neighborhood. Close to Tel Aviv University, parks, and shopping centers.',
+      description: 'Beautiful modern apartment in sought-after Ramat Aviv neighborhood. Close to Tel Aviv University, parks, and shopping centers. Perfect for families looking for a comfortable rental.',
       amenities: 'Parking, Elevator, Balcony',
       images: ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800'],
       agentName: 'Sarah Levi',
@@ -77,11 +86,21 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     };
   }
 
-  const pricePerSqm = Math.round(property.price / property.size);
+  const priceInfo = property.transactionType === 'SALE' && property.price
+    ? `₪${property.price.toLocaleString()}`
+    : property.rentPriceMonthly
+    ? `₪${property.rentPriceMonthly.toLocaleString()}/month`
+    : 'Contact for price';
+
+  const pricePerSqm = property.transactionType === 'SALE' && property.price
+    ? Math.round(property.price / property.size)
+    : property.rentPriceMonthly
+    ? Math.round(property.rentPriceMonthly / property.size)
+    : null;
 
   return {
-    title: `${property.name} | ${property.address} | ₪${property.price.toLocaleString()}`,
-    description: `${property.rooms} rooms, ${property.size} sqm (₪${pricePerSqm.toLocaleString()}/sqm) in ${property.city}. ${property.description?.substring(0, 150)}`,
+    title: `${property.name} | ${property.address} | ${priceInfo}`,
+    description: `${property.rooms} rooms, ${property.size} sqm${pricePerSqm ? ` (₪${pricePerSqm.toLocaleString()}/${property.transactionType === 'RENT' ? 'sqm/month' : 'sqm'})` : ''} in ${property.city}. ${property.description?.substring(0, 150)}`,
     openGraph: {
       title: property.name,
       description: property.description || `${property.rooms} rooms, ${property.size} sqm`,
