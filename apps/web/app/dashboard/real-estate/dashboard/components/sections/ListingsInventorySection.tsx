@@ -23,18 +23,34 @@ export function ListingsInventorySection({ data }: ListingsInventorySectionProps
 
   return (
     <section
-      className="rounded-xl p-6 animate-fade-in"
+      className="rounded-xl p-8 mb-6 border border-gray-800 shadow-2xl animate-fade-in"
       style={{
-        background: 'var(--re-midnight-blue)',
-        boxShadow: 'var(--re-shadow-md)',
+        background: 'linear-gradient(135deg, #1A2F4B 0%, #0E1A2B 100%)',
       }}
     >
-      <h2
-        className="text-2xl font-bold mb-6"
-        style={{ color: 'var(--re-white)' }}
-      >
-        {lang === 'he' ? 'רשימות ומלאי' : 'Listings & Inventory'}
-      </h2>
+      <div className="flex items-center gap-4 mb-8">
+        <div
+          className="w-14 h-14 rounded-xl flex items-center justify-center shadow-lg"
+          style={{
+            background: 'linear-gradient(135deg, #2979FF 0%, #6EA8FE 100%)',
+          }}
+        >
+          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+        </div>
+        <div className="flex-1">
+          <h2 className="text-2xl font-bold text-white">
+            {lang === 'he' ? 'רשימות ומלאי' : 'Listings & Inventory'}
+          </h2>
+          <p className="text-sm" style={{ color: '#9EA7B3' }}>
+            {lang === 'he' ? 'נהל את תיק הנכסים שלך' : 'Manage your property portfolio'}
+          </p>
+        </div>
+        <button className="px-4 py-2 rounded-lg text-white transition-all" style={{ background: '#2979FF' }}>
+          {lang === 'he' ? 'צפה בפרטים' : 'View Details'}
+        </button>
+      </div>
 
       {/* KPIs Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

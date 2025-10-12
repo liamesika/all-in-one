@@ -22,18 +22,23 @@ export function ClientExperienceSection({ data }: ClientExperienceSectionProps) 
 
   return (
     <section
-      className="rounded-xl p-6 animate-fade-in"
+      className="rounded-xl p-8 mb-6 border border-gray-800 shadow-2xl animate-fade-in"
       style={{
-        background: 'var(--re-midnight-blue)',
-        boxShadow: 'var(--re-shadow-md)',
+        background: 'linear-gradient(135deg, #1A2F4B 0%, #0E1A2B 100%)',
       }}
     >
-      <h2
-        className="text-2xl font-bold mb-6"
-        style={{ color: 'var(--re-white)' }}
-      >
-        {lang === 'he' ? 'חוויית לקוח' : 'Client Experience'}
-      </h2>
+      <div className="flex items-center gap-4 mb-8">
+        <div className="w-14 h-14 rounded-xl flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #2979FF 0%, #6EA8FE 100%)' }}>
+          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+          </svg>
+        </div>
+        <div className="flex-1">
+          <h2 className="text-2xl font-bold text-white">{lang === 'he' ? 'חוויית לקוח' : 'Client Experience'}</h2>
+          <p className="text-sm" style={{ color: '#9EA7B3' }}>{lang === 'he' ? 'מעקב שביעות רצון לקוחות' : 'Monitor client satisfaction'}</p>
+        </div>
+        <button className="px-4 py-2 rounded-lg text-white transition-all" style={{ background: '#2979FF' }}>{lang === 'he' ? 'צפה בפרטים' : 'View Details'}</button>
+      </div>
 
       {/* KPIs Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

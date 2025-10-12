@@ -41,9 +41,9 @@ export function RealEstateHeader() {
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
+      className="fixed top-0 left-0 right-0 z-50 border-b border-gray-800 transition-all duration-300"
       style={{
-        background: 'var(--re-header-gradient)',
+        background: '#0E1A2B',
         boxShadow: 'var(--re-shadow-lg)'
       }}
     >
@@ -54,18 +54,13 @@ export function RealEstateHeader() {
             className="flex items-center gap-3 cursor-pointer group"
             onClick={() => router.push('/dashboard/real-estate/dashboard')}
           >
-            <div className="relative w-10 h-10 flex items-center justify-center bg-white/10 rounded-lg backdrop-blur-sm group-hover:bg-white/20 transition-all duration-300">
-              <Image
-                src="/logo/logo-white-bg.png"
-                alt="EFFINITY"
-                width={32}
-                height={32}
-                className="object-contain"
-              />
-            </div>
-            <span className="text-2xl font-bold text-white tracking-tight group-hover:text-blue-100 transition-colors duration-300">
-              EFFINITY
-            </span>
+            <Image
+              src="/logo/logo-silver.png"
+              alt="EFFINITY"
+              width={140}
+              height={40}
+              className="object-contain group-hover:opacity-90 transition-opacity duration-300"
+            />
           </div>
 
           {/* Desktop Navigation */}
