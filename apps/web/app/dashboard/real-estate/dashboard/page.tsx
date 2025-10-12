@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { RealEstateDashboard } from './RealEstateDashboard';
+import { RealEstateDashboardNewComponent } from './RealEstateDashboardNew';
 import { LangProvider } from '@/components/i18n/LangProvider';
 
 export const dynamic = 'force-dynamic';
@@ -116,37 +116,64 @@ export default async function RealEstateDashboardPage({
   
   return (
     <LangProvider initialLang="en">
-      <div className="min-h-screen bg-white">
-        <Suspense fallback={<DashboardSkeleton />}>
-          <RealEstateDashboard
-            data={data}
-            initialFilters={resolvedSearchParams}
-          />
-        </Suspense>
-      </div>
+      <Suspense fallback={<DashboardSkeleton />}>
+        <RealEstateDashboardNewComponent
+          data={data}
+          initialFilters={resolvedSearchParams}
+        />
+      </Suspense>
     </LangProvider>
   );
 }
 
 function DashboardSkeleton() {
   return (
-    <div className="min-h-screen bg-gray-50 animate-pulse">
-      <div className="h-24 bg-gradient-to-r from-blue-600 to-blue-800"></div>
-      <div className="max-w-8xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-4 gap-4 mb-8">
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="bg-white rounded-xl h-24"></div>
+    <div
+      className="min-h-screen animate-pulse"
+      style={{ background: 'var(--re-deep-navy)' }}
+    >
+      {/* Header Skeleton */}
+      <div
+        className="h-20 w-full"
+        style={{
+          background: 'var(--re-header-gradient)',
+        }}
+      ></div>
+
+      {/* Content Skeleton */}
+      <div className="px-6 py-8">
+        {/* Alerts Banner Skeleton */}
+        <div
+          className="rounded-lg h-12 mb-6"
+          style={{ background: 'var(--re-midnight-blue)' }}
+        ></div>
+
+        {/* Filter Bar Skeleton */}
+        <div
+          className="rounded-xl h-16 mb-6"
+          style={{ background: 'var(--re-midnight-blue)' }}
+        ></div>
+
+        {/* KPI Grid Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className="rounded-xl h-32"
+              style={{ background: 'var(--re-midnight-blue)' }}
+            ></div>
           ))}
         </div>
-        <div className="grid grid-cols-12 gap-6">
-          <div className="col-span-8 space-y-6">
-            <div className="bg-white rounded-2xl h-64"></div>
-            <div className="bg-white rounded-2xl h-64"></div>
-          </div>
-          <div className="col-span-4 space-y-6">
-            <div className="bg-white rounded-2xl h-64"></div>
-            <div className="bg-white rounded-2xl h-64"></div>
-          </div>
+
+        {/* Sections Skeleton */}
+        <div className="space-y-8">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className="rounded-xl h-96"
+              style={{ background: 'var(--re-midnight-blue)' }}
+            ></div>
+          ))}
         </div>
       </div>
     </div>

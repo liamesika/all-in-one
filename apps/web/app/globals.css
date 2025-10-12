@@ -157,6 +157,31 @@ html, body {
   --radius-2xl: 1rem; /* 16px */
   --radius-3xl: 1.5rem; /* 24px */
   --radius-full: 9999px;
+
+  /* ===== Real Estate Premium Dark Blue Theme ===== */
+  /* Primary Colors */
+  --re-deep-navy: #0E1A2B;
+  --re-royal-blue: #2979FF;
+  --re-midnight-blue: #1A2F4B;
+
+  /* Secondary Colors */
+  --re-steel-gray: #9EA7B3;
+  --re-silver-mist: #CFD4DD;
+  --re-sky-blue: #6EA8FE;
+
+  /* Neutrals */
+  --re-white: #FFFFFF;
+  --re-slate-black: #0A0F18;
+
+  /* Gradients */
+  --re-header-gradient: linear-gradient(135deg, #0E1A2B 0%, #1A2F4B 40%, #2979FF 100%);
+
+  /* Shadows for dark theme */
+  --re-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --re-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --re-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+  --re-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+  --re-shadow-glow: 0 0 20px rgba(41, 121, 255, 0.3);
 }
 
 /* ===== Component Utilities ===== */
