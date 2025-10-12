@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import {
+  detectLanguage,
+  determineConversationLanguage,
+  getLanguageInstruction,
+  type DetectedLanguage,
+} from '@/lib/languageDetection';
 
 // Initialize OpenAI client (server-side only)
 const openai = process.env.OPENAI_API_KEY ? new OpenAI({
@@ -8,7 +14,13 @@ const openai = process.env.OPENAI_API_KEY ? new OpenAI({
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, context, conversationHistory } = await request.json();
+    const {
+      message,
+      context,
+      conversationHistory,
+      conversationLocale,
+      forceLocale,
+    } = await request.json();
 
     if (!message || typeof message !== 'string') {
       return NextResponse.json(
@@ -17,12 +29,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Detect language for this message
+    const detection = detectLanguage(message);
+    const responseLocale = determineConversationLanguage(
+      message,
+      conversationLocale,
+      forceLocale
+    );
+
     let response: string;
 
     // Only use OpenAI if API key is available
     if (openai) {
-      // Build system prompt based on page context
-      const systemPrompt = buildSystemPrompt(context);
+      // Build system prompt based on page context and language
+      const systemPrompt = buildSystemPrompt(context, responseLocale);
 
       // Build conversation history for OpenAI
       const messages: any[] = [
@@ -59,18 +79,25 @@ export async function POST(request: NextRequest) {
       response = completion.choices[0]?.message?.content || 'Sorry, I couldn\'t generate a response.';
     } else {
       // Fallback response when OpenAI is not available
-      response = getFallbackResponse(context, message);
+      response = getFallbackResponse(context, message, responseLocale);
     }
 
     // Log for telemetry (production should use proper logging service)
     console.log('[AI Advisor] Request processed:', {
       page: context.page,
       userMessage: message.substring(0, 50),
+      detectedLanguage: detection.language,
+      responseLanguage: responseLocale,
       timestamp: new Date().toISOString(),
     });
 
     return NextResponse.json({
       message: response,
+      locale: responseLocale,
+      detection: {
+        language: detection.language,
+        confidence: detection.confidence,
+      },
       timestamp: new Date().toISOString(),
     });
 
@@ -88,10 +115,15 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function buildSystemPrompt(context: any): string {
+function buildSystemPrompt(context: any, locale: DetectedLanguage): string {
   const { page, data } = context;
 
+  // Get language-specific instruction
+  const languageInstruction = getLanguageInstruction(locale);
+
   const basePrompt = `You are an expert Real Estate Advisor AI assistant. You provide actionable, practical advice to real estate agents and brokers. You think like a successful real estate professional with years of experience in lead management, property marketing, pricing strategies, and client relationships.
+
+${languageInstruction}
 
 Key guidelines:
 - Be concise and actionable (2-3 sentences max unless asked for more detail)
@@ -99,8 +131,7 @@ Key guidelines:
 - Use real estate industry terminology appropriately
 - Focus on ROI, conversion rates, and time efficiency
 - Be encouraging but realistic
-- When suggesting actions, be specific (e.g., "Call John Doe within 2 hours" vs "Follow up with leads")
-- Support both English and Hebrew seamlessly`;
+- When suggesting actions, be specific (e.g., "Call John Doe within 2 hours" vs "Follow up with leads")`;
 
   const contextPrompts: Record<string, string> = {
     dashboard: `\n\nCurrent context: User is on the main dashboard. Help them prioritize tasks, identify opportunities in their pipeline, and suggest data-driven actions based on KPIs like lead conversion rates, days on market, and pipeline value.`,
@@ -131,10 +162,31 @@ Key guidelines:
   return basePrompt + contextPrompt + dataContext;
 }
 
-function getFallbackResponse(context: any, message: string): string {
+function getFallbackResponse(context: any, message: string, locale: DetectedLanguage): string {
   const lowerMessage = message.toLowerCase();
 
-  // Simple keyword matching for common queries
+  // Hebrew responses
+  if (locale === 'he') {
+    if (lowerMessage.includes('lead') || lowerMessage.includes('ליד')) {
+      return 'התמקדו תחילה במעקב אחר לידים חמים - אלו עם מימון מאושר מראש ולוח זמנים דחוף. השתמשו בבוט סיווג הלידים להערכה שיטתית של לידים חדשים.';
+    }
+
+    if (lowerMessage.includes('property') || lowerMessage.includes('נכס')) {
+      return 'בדקו את רשימות הנכסים שלכם וודאו שלכל אחד יש תמונות איכותיות ותיאורים מושכים. השתמשו במחולל מודעות AI ליצירת עותק שיווקי מקצועי במספר שפות.';
+    }
+
+    if (lowerMessage.includes('price') || lowerMessage.includes('מחיר')) {
+      return 'נתחו נכסים דומים באזור כדי להבטיח תמחור תחרותי. נכסים שמחירם 5-10% מתחת לממוצע השוק מייצרים בדרך כלל פי 3 יותר פניות.';
+    }
+
+    if (lowerMessage.includes('market') || lowerMessage.includes('שוק')) {
+      return 'עקבו אחר מגמות השוק המקומי שלכם מדי שבוע. התמקדו בנכסים שנמצאים בשוק יותר מ-30 יום - ייתכן שהם צריכים התאמות במחיר או בשיווק.';
+    }
+
+    return 'אני כאן כדי לעזור עם ניהול לידים, שיווק נכסים, אסטרטגיות תמחור ויחסי לקוחות. אילו אתגרים ספציפיים אתם מתמודדים איתם?';
+  }
+
+  // English responses
   if (lowerMessage.includes('lead') || lowerMessage.includes('ליד')) {
     return 'Focus on following up with hot leads first - those with pre-approved financing and urgent timelines. Use the Lead Qualification Bot to assess new leads systematically.';
   }
@@ -151,6 +203,5 @@ function getFallbackResponse(context: any, message: string): string {
     return 'Monitor your local market trends weekly. Focus on properties that have been on the market for 30+ days - they may need pricing or marketing adjustments.';
   }
 
-  // Default fallback
   return `I'm here to help with lead management, property marketing, pricing strategies, and client relationships. While AI features are currently in demo mode, I can still provide general guidance. What specific challenge are you facing?`;
 }
