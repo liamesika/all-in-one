@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { PrismaClient } from '@prisma/client';
 
 const openai = process.env.OPENAI_API_KEY ? new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 }) : null;
 
+const prisma = new PrismaClient();
+
 export async function POST(request: NextRequest) {
   try {
     const { property } = await request.json();
+    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
 
     if (!property) {
       return NextResponse.json(
@@ -16,7 +20,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, address, price, rooms, size, description, amenities } = property;
+    const { id: propertyId, name, address, price, rooms, size, description, amenities } = property;
 
     let generatedDescription: any;
 
@@ -81,10 +85,44 @@ Format as JSON: { "english": "...", "hebrew": "..." }`;
 
     console.log('[Ad Generator] Generated ad for property:', name);
 
+    // Persist landing page to database
+    let landingPageId: string | null = null;
+    if (propertyId) {
+      try {
+        // Generate simple HTML for the landing page
+        const html = generateLandingPageHTML({
+          name,
+          address,
+          price,
+          rooms,
+          size,
+          description: generatedDescription,
+          seoTitle,
+          seoDescription,
+        });
+
+        const landingPage = await prisma.landingPage.create({
+          data: {
+            propertyId,
+            ownerUid,
+            url: landingPageUrl,
+            html,
+          },
+        });
+
+        landingPageId = landingPage.id;
+        console.log('[Ad Generator] Landing page persisted:', landingPageId);
+      } catch (dbError) {
+        console.error('[Ad Generator] Failed to persist landing page:', dbError);
+        // Continue even if DB persistence fails
+      }
+    }
+
     return NextResponse.json({
       generatedDescription,
       priceRecommendation,
       landingPageUrl,
+      landingPageId,
       slug,
       seo: {
         title: seoTitle,
@@ -172,4 +210,60 @@ function generateSlug(name: string, address?: string): string {
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .substring(0, 60) + '-' + Date.now().toString(36);
+}
+
+function generateLandingPageHTML(data: any): string {
+  const { name, address, price, rooms, size, description, seoTitle, seoDescription } = data;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${seoTitle}</title>
+  <meta name="description" content="${seoDescription}">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .header { text-align: center; padding: 40px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .header h1 { font-size: 2.5rem; margin-bottom: 10px; }
+    .header p { font-size: 1.2rem; opacity: 0.9; }
+    .details { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 40px 0; }
+    .detail-card { background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; }
+    .detail-card .label { font-size: 0.875rem; color: #666; margin-bottom: 5px; }
+    .detail-card .value { font-size: 1.5rem; font-weight: bold; color: #667eea; }
+    .description { margin: 40px 0; }
+    .description h2 { margin-bottom: 20px; }
+    .description p { margin-bottom: 15px; }
+    .cta { text-align: center; margin: 40px 0; }
+    .cta-button { display: inline-block; padding: 15px 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; font-size: 1.125rem; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="container">
+      <h1>${name}</h1>
+      <p>${address || ''}</p>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="details">
+      ${price ? `<div class="detail-card"><div class="label">Price</div><div class="value">₪${price.toLocaleString()}</div></div>` : ''}
+      ${rooms ? `<div class="detail-card"><div class="label">Rooms</div><div class="value">${rooms}</div></div>` : ''}
+      ${size ? `<div class="detail-card"><div class="label">Size</div><div class="value">${size} m²</div></div>` : ''}
+    </div>
+
+    <div class="description">
+      <h2>About This Property</h2>
+      <p>${description?.english || 'Contact us for more details about this exceptional property.'}</p>
+    </div>
+
+    <div class="cta">
+      <a href="mailto:info@effinity.co.il" class="cta-button">Contact Us to Schedule a Viewing</a>
+    </div>
+  </div>
+</body>
+</html>`;
 }

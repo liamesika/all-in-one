@@ -506,17 +506,19 @@ model Property {
   status PropertyStatus @default(DRAFT)
 
   type       PropertyType? // אם יש לך כבר Enum כזה – השאירי; אם אין, זה יכול להיות גם String? לשלב ה-MVP
-  photos       PropertyPhoto[]  @relation("PropertyToPhotos")
-  leads        RealEstateLead[] @relation("PropertyToLeads")
-  organization Organization?    @relation(fields: [orgId], references: [id])
-  rooms        Int?
-  size       Int?
-  price      Int?
-  currency   String?          @default("ILS")
-  slug       String?          @unique
-  agentName  String?
-  agentPhone String?
-  photosJson Json?
+  photos         PropertyPhoto[]  @relation("PropertyToPhotos")
+  leads          RealEstateLead[] @relation("PropertyToLeads")
+  landingPages   LandingPage[]
+  organization   Organization?    @relation(fields: [orgId], references: [id])
+  rooms          Int?
+  size           Int?
+  price          Int?
+  currency       String?          @default("ILS")
+  slug           String?          @unique
+  agentName      String?
+  agentPhone     String?
+  photosJson     Json?
+  assignedAgentId String?         // For Company accounts: assign property to specific agent
 
   // Import and sync tracking
   provider      PropertyProvider @default(MANUAL)
@@ -573,6 +575,20 @@ model PropertyPhoto {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([propertyId])
+}
+
+model LandingPage {
+  id         String   @id @default(cuid())
+  propertyId String
+  ownerUid   String
+  url        String
+  html       String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([ownerUid])
   @@index([propertyId])
 }
 
