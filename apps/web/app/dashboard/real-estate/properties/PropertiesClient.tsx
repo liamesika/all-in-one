@@ -22,6 +22,13 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
   const [showPropertyForm, setShowPropertyForm] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [editingProperty, setEditingProperty] = useState<any>(null);
+  const [transactionTypeFilter, setTransactionTypeFilter] = useState<'ALL' | 'SALE' | 'RENT'>('ALL');
+
+  // Filter properties by transaction type
+  const filteredProperties = properties.filter(property => {
+    if (transactionTypeFilter === 'ALL') return true;
+    return property.transactionType === transactionTypeFilter;
+  });
 
   const handleGenerateAd = (property: any) => {
     setSelectedProperty(property);
@@ -61,7 +68,7 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
 
   return (
     <main className={`p-8 max-w-6xl mx-auto ${language === 'he' ? 'rtl' : 'ltr'}`}>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-extrabold" style={{ color: brand.primary }}>
           {language === 'he' ? 'נכסים' : 'Properties'}
         </h1>
@@ -101,7 +108,23 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
         </div>
       </div>
 
-      <div className="mt-6 rounded-2xl border bg-white shadow-xl overflow-hidden">
+      {/* Transaction Type Filter */}
+      <div className="mb-4">
+        <label className="text-sm font-medium text-gray-700 mr-3">
+          {language === 'he' ? 'סוג עסקה:' : 'Transaction Type:'}
+        </label>
+        <select
+          value={transactionTypeFilter}
+          onChange={(e) => setTransactionTypeFilter(e.target.value as 'ALL' | 'SALE' | 'RENT')}
+          className="px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="ALL">{language === 'he' ? 'כל הנכסים' : 'All Properties'}</option>
+          <option value="SALE">{language === 'he' ? 'למכירה' : 'For Sale'}</option>
+          <option value="RENT">{language === 'he' ? 'להשכרה' : 'For Rent'}</option>
+        </select>
+      </div>
+
+      <div className="rounded-2xl border bg-white shadow-xl overflow-hidden">
         <div className="px-4 py-3 text-sm text-gray-600 bg-gray-50">
           {language === 'he' ? 'רשימת נכסים' : 'Properties List'}
         </div>
@@ -111,6 +134,8 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
               <tr className="bg-gray-50">
                 <th className="p-3 font-medium">{language === 'he' ? 'שם' : 'Name'}</th>
                 <th className="p-3 font-medium">{language === 'he' ? 'עיר' : 'City'}</th>
+                <th className="p-3 font-medium">{language === 'he' ? 'סוג' : 'Type'}</th>
+                <th className="p-3 font-medium">{language === 'he' ? 'מחיר' : 'Price'}</th>
                 <th className="p-3 font-medium">{language === 'he' ? 'ציון' : 'Score'}</th>
                 <th className="p-3 font-medium">{language === 'he' ? 'סטטוס' : 'Status'}</th>
                 <th className="p-3 font-medium">{language === 'he' ? 'פורסם' : 'Published'}</th>
@@ -118,27 +143,52 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
               </tr>
             </thead>
             <tbody>
-              {properties.length > 0 ? (
-                properties.map((r) => (
-                  <tr
-                    key={r.id}
-                    className="border-t hover:bg-gray-50 transition"
-                  >
-                    <td className="p-3 font-semibold">{r.name}</td>
-                    <td className="p-3">{r.city || "-"}</td>
-                    <td className="p-3">
-                      <ScoreBadge property={r} language={language as 'en' | 'he'} size="sm" />
-                    </td>
-                    <td className="p-3">
-                      <span className="px-2 py-1 rounded-lg text-xs bg-gray-100">
-                        {r.status}
-                      </span>
-                    </td>
-                    <td className="p-3">
-                      {r.publishedAt
-                        ? new Date(r.publishedAt).toLocaleDateString("he-IL")
-                        : "-"}
-                    </td>
+              {filteredProperties.length > 0 ? (
+                filteredProperties.map((r) => {
+                  const transactionType = r.transactionType || 'SALE';
+                  const isSale = transactionType === 'SALE';
+
+                  return (
+                    <tr
+                      key={r.id}
+                      className="border-t hover:bg-gray-50 transition"
+                    >
+                      <td className="p-3 font-semibold">{r.name}</td>
+                      <td className="p-3">{r.city || "-"}</td>
+                      <td className="p-3">
+                        <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
+                          isSale
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-green-100 text-green-700'
+                        }`}>
+                          {isSale
+                            ? (language === 'he' ? 'למכירה' : 'For Sale')
+                            : (language === 'he' ? 'להשכרה' : 'For Rent')
+                          }
+                        </span>
+                      </td>
+                      <td className="p-3 font-semibold">
+                        {isSale ? (
+                          r.price ? `₪${r.price.toLocaleString()}` : '-'
+                        ) : (
+                          r.rentPriceMonthly
+                            ? `₪${r.rentPriceMonthly.toLocaleString()}${language === 'he' ? '/חודש' : '/mo'}`
+                            : '-'
+                        )}
+                      </td>
+                      <td className="p-3">
+                        <ScoreBadge property={r} language={language as 'en' | 'he'} size="sm" />
+                      </td>
+                      <td className="p-3">
+                        <span className="px-2 py-1 rounded-lg text-xs bg-gray-100">
+                          {r.status}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        {r.publishedAt
+                          ? new Date(r.publishedAt).toLocaleDateString("he-IL")
+                          : "-"}
+                      </td>
                     <td className="p-3">
                       <div className="flex gap-2 justify-end">
                         <button
@@ -166,10 +216,11 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
                       </div>
                     </td>
                   </tr>
-                ))
+                  );
+                })
               ) : (
                 <tr>
-                  <td className="p-8 text-gray-500" colSpan={5}>
+                  <td className="p-8 text-gray-500" colSpan={8}>
                     {language === 'he'
                       ? 'אין עדיין נכסים. לחצי "נכס חדש" כדי להוסיף.'
                       : 'No properties yet. Click "New Property" to add one.'}
