@@ -20,6 +20,7 @@ import {
   Globe,
 } from 'lucide-react';
 import { PropertyAdGenerator } from '@/components/real-estate/PropertyAdGenerator';
+import { ScoreBadge } from '@/components/real-estate/ScoreBadge';
 
 interface Property {
   id: string;
@@ -156,6 +157,7 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">{property.name}</h1>
                 <div className="flex items-center gap-2 mt-1">
+                  <ScoreBadge property={property} language={language as 'en' | 'he'} size="md" showLabel />
                   {getStatusBadge(property.status)}
                   {property.publishedAt && (
                     <span className="text-sm text-gray-500">

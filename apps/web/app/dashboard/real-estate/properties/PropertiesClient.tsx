@@ -6,6 +6,7 @@ import { Sparkles, Plus, Upload } from "lucide-react";
 import { PropertyAdGenerator } from "@/components/real-estate/PropertyAdGenerator";
 import { PropertyFormModal } from "@/components/real-estate/properties/PropertyFormModal";
 import { ImportPropertiesModal } from "@/components/real-estate/ImportPropertiesModal";
+import { ScoreBadge } from "@/components/real-estate/ScoreBadge";
 import { useLanguage } from "@/lib/language-context";
 
 const brand = {
@@ -110,6 +111,7 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
               <tr className="bg-gray-50">
                 <th className="p-3 font-medium">{language === 'he' ? 'שם' : 'Name'}</th>
                 <th className="p-3 font-medium">{language === 'he' ? 'עיר' : 'City'}</th>
+                <th className="p-3 font-medium">{language === 'he' ? 'ציון' : 'Score'}</th>
                 <th className="p-3 font-medium">{language === 'he' ? 'סטטוס' : 'Status'}</th>
                 <th className="p-3 font-medium">{language === 'he' ? 'פורסם' : 'Published'}</th>
                 <th className="p-3 font-medium">{language === 'he' ? 'פעולות' : 'Actions'}</th>
@@ -124,6 +126,9 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
                   >
                     <td className="p-3 font-semibold">{r.name}</td>
                     <td className="p-3">{r.city || "-"}</td>
+                    <td className="p-3">
+                      <ScoreBadge property={r} language={language as 'en' | 'he'} size="sm" />
+                    </td>
                     <td className="p-3">
                       <span className="px-2 py-1 rounded-lg text-xs bg-gray-100">
                         {r.status}
