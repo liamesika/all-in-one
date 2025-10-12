@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useLanguage } from '@/lib/language-context';
-import { X, Loader2, CheckCircle2, AlertCircle, Upload } from 'lucide-react';
+import { X, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ImageUploader } from '@/components/common/ImageUploader';
 
 interface PropertyFormData {
   title: string;
@@ -353,20 +354,21 @@ export function PropertyFormModal({ isOpen, onClose, onSuccess, property }: Prop
               />
             </div>
 
-            {/* Images Upload Placeholder */}
+            {/* Images Upload */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 {language === 'he' ? 'תמונות' : 'Images'}
+                <span className="text-gray-500 text-xs font-normal mr-2">
+                  ({language === 'he' ? 'אופציונלי' : 'Optional'})
+                </span>
               </label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                <Upload className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-600 text-sm">
-                  {language === 'he' ? 'העלאת תמונות תהיה זמינה בקרוב' : 'Image upload coming soon'}
-                </p>
-                <p className="text-gray-500 text-xs mt-1">
-                  {language === 'he' ? 'נשמור את הנכס ותוכל להעלות תמונות מאוחר יותר' : 'Save property now and upload images later'}
-                </p>
-              </div>
+              <ImageUploader
+                maxImages={10}
+                maxSizeMB={5}
+                value={formData.images}
+                onChange={(urls) => handleChange('images', urls)}
+                disabled={loading}
+              />
             </div>
           </div>
 
