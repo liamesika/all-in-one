@@ -90,9 +90,26 @@ html, body {
 .m-24 { margin: 3rem; }
 .m-32 { margin: 4rem; }
 
-/* ===== Color System - Professional Blue Palette ===== */
+/* ===== Color System - Dark Theme Palette ===== */
 :root {
-  /* Primary Blue Scale */
+  /* Dark Theme - Primary Background */
+  --color-navy-dark: #070F23;
+  --color-navy-light: #0D162F;
+  --color-navy-lighter: #151F3D;
+
+  /* Blue Accents for Data & Active Elements */
+  --color-blue-accent: #3B82F6;
+  --color-blue-accent-light: #60A5FA;
+  --color-blue-accent-hover: #2563EB;
+  --color-blue-glow: rgba(59, 130, 246, 0.3);
+
+  /* Typography Colors */
+  --color-text-white: #FFFFFF;
+  --color-text-gray: #A0A4AB;
+  --color-text-gray-light: #C0C4CB;
+  --color-text-gray-dark: #6B7280;
+
+  /* Primary Blue Scale (Original - Keep for compatibility) */
   --color-blue-50: #eff6ff;
   --color-blue-100: #dbeafe;
   --color-blue-200: #bfdbfe;
