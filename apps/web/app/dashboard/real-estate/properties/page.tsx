@@ -1,29 +1,64 @@
-'use client';
+import PropertiesClient from './PropertiesClient';
 
-import { useLanguage } from '@/lib/language-context';
+// Fetch properties server-side
+async function getProperties() {
+  try {
+    // TODO: Replace with actual API call when backend is ready
+    // const apiBase = process.env.API_BASE ?? "http://localhost:4000";
+    // const res = await fetch(`${apiBase}/api/real-estate/properties`, {
+    //   cache: 'no-store',
+    //   headers: { 'x-owner-uid': 'demo-user' }
+    // });
+    // if (!res.ok) throw new Error('Failed to fetch');
+    // return res.json();
 
-export default function PropertiesPage() {
-  const { language } = useLanguage();
+    // Mock data for now
+    return [
+      {
+        id: '1',
+        name: 'Luxury Penthouse - Tel Aviv',
+        city: 'Tel Aviv',
+        address: 'Rothschild Blvd 10',
+        price: 4500000,
+        rooms: 5,
+        size: 180,
+        status: 'LISTED',
+        publishedAt: new Date().toISOString(),
+        slug: 'luxury-penthouse-tel-aviv',
+      },
+      {
+        id: '2',
+        name: 'Modern Apartment - Ramat Aviv',
+        city: 'Tel Aviv',
+        address: 'Einstein St 25',
+        price: 2800000,
+        rooms: 4,
+        size: 120,
+        status: 'LISTED',
+        publishedAt: new Date(Date.now() - 86400000 * 7).toISOString(),
+        slug: 'modern-apartment-ramat-aviv',
+      },
+      {
+        id: '3',
+        name: 'Garden House - Herzliya',
+        city: 'Herzliya',
+        address: 'Sokolov St 45',
+        price: 5200000,
+        rooms: 6,
+        size: 220,
+        status: 'DRAFT',
+        publishedAt: null,
+        slug: null,
+      },
+    ];
+  } catch (error) {
+    console.error('Failed to fetch properties:', error);
+    return [];
+  }
+}
 
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
-      <div className="max-w-2xl w-full bg-white rounded-2xl shadow-lg p-8 text-center">
-        <div className="text-6xl mb-6">🏠</div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          {language === 'he' ? 'בתחזוקה' : 'Under Maintenance'}
-        </h1>
-        <p className="text-gray-600 mb-6">
-          {language === 'he'
-            ? 'דף הנכסים בשדרוג כרגע. נחזור בקרוב!'
-            : 'The properties page is being upgraded. We\'ll be back soon!'}
-        </p>
-        <a
-          href="/dashboard"
-          className="inline-block bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors"
-        >
-          {language === 'he' ? 'חזרה לדשבורד' : 'Back to Dashboard'}
-        </a>
-      </div>
-    </div>
-  );
+export default async function PropertiesPage() {
+  const properties = await getProperties();
+
+  return <PropertiesClient initialData={properties} />;
 }
