@@ -1,14 +1,16 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { X, MessageCircle, Send, Minimize2, Maximize2, Loader2 } from 'lucide-react';
+import { X, MessageCircle, Send, Minimize2, Maximize2, Loader2, Languages } from 'lucide-react';
 import { useLanguage } from '@/lib/language-context';
+import { type DetectedLanguage } from '@/lib/languageDetection';
 
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  locale?: DetectedLanguage;
 }
 
 interface AIAdvisorBotProps {
@@ -25,14 +27,19 @@ export function AIAdvisorBot({ pageContext }: AIAdvisorBotProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [conversationLocale, setConversationLocale] = useState<DetectedLanguage | undefined>();
+  const [forceLocale, setForceLocale] = useState<DetectedLanguage | undefined>();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Determine current chat language (forceLocale > conversationLocale > language)
+  const chatLocale: DetectedLanguage = forceLocale || conversationLocale || (language as DetectedLanguage);
 
   // Load saved state from localStorage
   useEffect(() => {
     const savedState = localStorage.getItem('ai-advisor-state');
     if (savedState) {
       try {
-        const { isOpen: savedIsOpen, messages: savedMessages } = JSON.parse(savedState);
+        const { isOpen: savedIsOpen, messages: savedMessages, conversationLocale: savedLocale, forceLocale: savedForce } = JSON.parse(savedState);
         setIsOpen(savedIsOpen);
         if (savedMessages && Array.isArray(savedMessages)) {
           setMessages(savedMessages.map((msg: any) => ({
@@ -40,6 +47,8 @@ export function AIAdvisorBot({ pageContext }: AIAdvisorBotProps) {
             timestamp: new Date(msg.timestamp)
           })));
         }
+        if (savedLocale) setConversationLocale(savedLocale);
+        if (savedForce) setForceLocale(savedForce);
       } catch (error) {
         console.error('Failed to restore AI Advisor state:', error);
       }
@@ -51,10 +60,12 @@ export function AIAdvisorBot({ pageContext }: AIAdvisorBotProps) {
     if (messages.length > 0 || isOpen) {
       localStorage.setItem('ai-advisor-state', JSON.stringify({
         isOpen,
-        messages
+        messages,
+        conversationLocale,
+        forceLocale
       }));
     }
-  }, [isOpen, messages]);
+  }, [isOpen, messages, conversationLocale, forceLocale]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -75,34 +86,42 @@ export function AIAdvisorBot({ pageContext }: AIAdvisorBotProps) {
   }, [isOpen, pageContext.page]);
 
   const getContextualGreeting = () => {
-    const greetings: Record<string, string> = {
-      'dashboard': language === 'he'
-        ? 'שלום! אני היועץ הנדל"ני שלך. אני רואה שיש לך 45 לידים חדשים השבוע. האם תרצה שאני אעזור לך לתעדף אותם או להציע פעולות הבאות?'
-        : 'Hi! I\'m your Real Estate Advisor. I see you have 45 new leads this week. Would you like me to help prioritize them or suggest next actions?',
-      'leads': language === 'he'
-        ? 'שלום! נראה שאתה בדף הלידים. אני יכול לעזור לך לנתח, לסנן או לתת המלצות איך לטפל בלידים החמים ביותר.'
-        : 'Hi! I see you\'re on the Leads page. I can help you analyze, filter, or recommend how to handle your hottest leads.',
-      'properties': language === 'he'
-        ? 'שלום! אני כאן לעזור עם הנכסים שלך. רוצה שאציע אילו נכסים לקדם, איך לשפר מודעות, או להשוות מחירים?'
-        : 'Hi! I\'m here to help with your properties. Want me to suggest which properties to promote, how to improve ads, or compare prices?',
-      'property-detail': language === 'he'
-        ? 'שלום! אני רואה שאתה צופה בנכס ספציפי. אני יכול לעזור עם ניתוח שוק, הצעות מחיר, או יצירת חומרי שיווק.'
-        : 'Hi! I see you\'re viewing a specific property. I can help with market analysis, pricing suggestions, or creating marketing materials.',
-      'ad-generator': language === 'he'
-        ? 'שלום! אני מומחה במודעות נדל"ן. אעזור לך ליצור תיאורים מושכים, לבחור תמונות, ולהציע מחירים אטרקטיביים.'
-        : 'Hi! I\'m an expert in real estate ads. I\'ll help you create compelling descriptions, choose photos, and suggest attractive prices.',
-      'comps': language === 'he'
-        ? 'שלום! בוא נעשה ניתוח השוואת מחירים. אני אעזור לך להבין טרנדים, למצוא עסקאות דומות ולתמחר נכון.'
-        : 'Hi! Let\'s do a price comparison analysis. I\'ll help you understand trends, find similar deals, and price correctly.',
-      'open-house': language === 'he'
-        ? 'שלום! אני אעזור לך לתכנן ולנהל את האירוע שלך בצורה מקצועית. מוכן להתחיל?'
-        : 'Hi! I\'ll help you plan and manage your open house professionally. Ready to get started?',
-      'marketing': language === 'he'
-        ? 'שלום! בוא ניצור קמפיין שיווקי מנצח. אני אעזור עם העתקות, תמונות, וטרגוטינג.'
-        : 'Hi! Let\'s create a winning marketing campaign. I\'ll help with copy, images, and targeting.'
+    const greetings: Record<string, Record<DetectedLanguage, string>> = {
+      'dashboard': {
+        he: 'שלום! אני היועץ הנדל"ני שלך. אני רואה שיש לך 45 לידים חדשים השבוע. האם תרצה שאני אעזור לך לתעדף אותם או להציע פעולות הבאות?',
+        en: 'Hi! I\'m your Real Estate Advisor. I see you have 45 new leads this week. Would you like me to help prioritize them or suggest next actions?'
+      },
+      'leads': {
+        he: 'שלום! נראה שאתה בדף הלידים. אני יכול לעזור לך לנתח, לסנן או לתת המלצות איך לטפל בלידים החמים ביותר.',
+        en: 'Hi! I see you\'re on the Leads page. I can help you analyze, filter, or recommend how to handle your hottest leads.'
+      },
+      'properties': {
+        he: 'שלום! אני כאן לעזור עם הנכסים שלך. רוצה שאציע אילו נכסים לקדם, איך לשפר מודעות, או להשוות מחירים?',
+        en: 'Hi! I\'m here to help with your properties. Want me to suggest which properties to promote, how to improve ads, or compare prices?'
+      },
+      'property-detail': {
+        he: 'שלום! אני רואה שאתה צופה בנכס ספציפי. אני יכול לעזור עם ניתוח שוק, הצעות מחיר, או יצירת חומרי שיווק.',
+        en: 'Hi! I see you\'re viewing a specific property. I can help with market analysis, pricing suggestions, or creating marketing materials.'
+      },
+      'ad-generator': {
+        he: 'שלום! אני מומחה במודעות נדל"ן. אעזור לך ליצור תיאורים מושכים, לבחור תמונות, ולהציע מחירים אטרקטיביים.',
+        en: 'Hi! I\'m an expert in real estate ads. I\'ll help you create compelling descriptions, choose photos, and suggest attractive prices.'
+      },
+      'comps': {
+        he: 'שלום! בוא נעשה ניתוח השוואת מחירים. אני אעזור לך להבין טרנדים, למצוא עסקאות דומות ולתמחר נכון.',
+        en: 'Hi! Let\'s do a price comparison analysis. I\'ll help you understand trends, find similar deals, and price correctly.'
+      },
+      'open-house': {
+        he: 'שלום! אני אעזור לך לתכנן ולנהל את האירוע שלך בצורה מקצועית. מוכן להתחיל?',
+        en: 'Hi! I\'ll help you plan and manage your open house professionally. Ready to get started?'
+      },
+      'marketing': {
+        he: 'שלום! בוא ניצור קמפיין שיווקי מנצח. אני אעזור עם העתקות, תמונות, וטרגוטינג.',
+        en: 'Hi! Let\'s create a winning marketing campaign. I\'ll help with copy, images, and targeting.'
+      }
     };
 
-    return greetings[pageContext.page] || greetings['dashboard'];
+    return greetings[pageContext.page]?.[chatLocale] || greetings['dashboard'][chatLocale];
   };
 
   const sendMessage = async () => {
@@ -129,7 +148,9 @@ export function AIAdvisorBot({ pageContext }: AIAdvisorBotProps) {
         body: JSON.stringify({
           message: userMessage.content,
           context: pageContext,
-          conversationHistory: messages.slice(-5) // Last 5 messages for context
+          conversationHistory: messages.slice(-5), // Last 5 messages for context
+          conversationLocale,
+          forceLocale
         }),
       });
 
@@ -139,11 +160,17 @@ export function AIAdvisorBot({ pageContext }: AIAdvisorBotProps) {
 
       const data = await response.json();
 
+      // Update conversation locale based on detection
+      if (data.locale && !forceLocale) {
+        setConversationLocale(data.locale);
+      }
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: data.message,
-        timestamp: new Date()
+        timestamp: new Date(),
+        locale: data.locale
       };
 
       setMessages(prev => [...prev, assistantMessage]);
@@ -152,15 +179,21 @@ export function AIAdvisorBot({ pageContext }: AIAdvisorBotProps) {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: language === 'he'
+        content: chatLocale === 'he'
           ? 'סליחה, נתקלתי בבעיה. אנא נסה שוב.'
           : 'Sorry, I encountered an error. Please try again.',
-        timestamp: new Date()
+        timestamp: new Date(),
+        locale: chatLocale
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const toggleLanguage = () => {
+    const newLocale: DetectedLanguage = chatLocale === 'he' ? 'en' : 'he';
+    setForceLocale(newLocale);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -175,12 +208,12 @@ export function AIAdvisorBot({ pageContext }: AIAdvisorBotProps) {
       <button
         onClick={() => setIsOpen(true)}
         className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 group"
-        aria-label={language === 'he' ? 'פתח יועץ AI' : 'Open AI Advisor'}
+        aria-label={chatLocale === 'he' ? 'פתח יועץ AI' : 'Open AI Advisor'}
       >
         <MessageCircle className="w-6 h-6" />
         <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse" />
         <div className="absolute bottom-full right-0 mb-2 px-3 py-1 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-          {language === 'he' ? 'יועץ נדל"ן AI' : 'Real Estate AI Advisor'}
+          {chatLocale === 'he' ? 'יועץ נדל"ן AI' : 'Real Estate AI Advisor'}
         </div>
       </button>
     );
@@ -192,19 +225,31 @@ export function AIAdvisorBot({ pageContext }: AIAdvisorBotProps) {
         isMinimized
           ? 'bottom-6 right-6 w-80 h-16'
           : 'bottom-6 right-6 w-96 h-[600px]'
-      } ${language === 'he' ? 'rtl' : 'ltr'}`}
+      }`}
       style={{ maxHeight: 'calc(100vh - 100px)' }}
+      dir={chatLocale === 'he' ? 'rtl' : 'ltr'}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-t-lg">
         <div className="flex items-center gap-2">
           <MessageCircle className="w-5 h-5" />
           <h3 className="font-semibold text-sm">
-            {language === 'he' ? 'יועץ נדל"ן AI' : 'Real Estate AI Advisor'}
+            {chatLocale === 'he' ? 'יועץ נדל"ן AI' : 'Real Estate AI Advisor'}
           </h3>
           <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={toggleLanguage}
+            className="hover:bg-blue-500 p-1 rounded transition-colors group relative"
+            aria-label="Toggle Language"
+            title={chatLocale === 'he' ? 'Switch to English' : 'עבור לעברית'}
+          >
+            <Languages className="w-4 h-4" />
+            <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-gray-900 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+              {chatLocale === 'he' ? 'EN' : 'עב'}
+            </span>
+          </button>
           <button
             onClick={() => setIsMinimized(!isMinimized)}
             className="hover:bg-blue-500 p-1 rounded transition-colors"
@@ -240,7 +285,7 @@ export function AIAdvisorBot({ pageContext }: AIAdvisorBotProps) {
                 >
                   <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                   <span className="text-xs opacity-70 mt-1 block">
-                    {message.timestamp.toLocaleTimeString(language === 'he' ? 'he-IL' : 'en-US', {
+                    {message.timestamp.toLocaleTimeString(chatLocale === 'he' ? 'he-IL' : 'en-US', {
                       hour: '2-digit',
                       minute: '2-digit'
                     })}
@@ -266,10 +311,9 @@ export function AIAdvisorBot({ pageContext }: AIAdvisorBotProps) {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={language === 'he' ? 'שאל אותי משהו...' : 'Ask me anything...'}
+                placeholder={chatLocale === 'he' ? 'שאל אותי משהו...' : 'Ask me anything...'}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 disabled={isLoading}
-                dir={language === 'he' ? 'rtl' : 'ltr'}
               />
               <button
                 onClick={sendMessage}
