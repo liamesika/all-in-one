@@ -27,7 +27,10 @@ interface Property {
   name: string;
   address?: string;
   city?: string;
+  transactionType?: 'SALE' | 'RENT';
   price?: number;
+  rentPriceMonthly?: number;
+  rentTerms?: string;
   rooms?: number;
   size?: number;
   status?: string;
@@ -156,7 +159,20 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
               </button>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">{property.name}</h1>
-                <div className="flex items-center gap-2 mt-1">
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  {/* Transaction Type Badge */}
+                  {property.transactionType && (
+                    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                      property.transactionType === 'SALE'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-green-100 text-green-700'
+                    }`}>
+                      {property.transactionType === 'SALE'
+                        ? (language === 'he' ? 'למכירה' : 'For Sale')
+                        : (language === 'he' ? 'להשכרה' : 'For Rent')
+                      }
+                    </span>
+                  )}
                   <ScoreBadge property={property} language={language as 'en' | 'he'} size="md" showLabel />
                   {getStatusBadge(property.status)}
                   {property.publishedAt && (
@@ -342,13 +358,39 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
             {/* Price & Key Stats */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
               <div className="text-center mb-6">
-                <div className="text-3xl font-bold text-blue-600 mb-2">
-                  {property.price ? `₪${property.price.toLocaleString()}` : language === 'he' ? 'ליצירת קשר' : 'Contact for price'}
-                </div>
-                {property.price && property.size && (
-                  <div className="text-sm text-gray-500">
-                    ₪{Math.round(property.price / property.size).toLocaleString()}/{language === 'he' ? 'מ״ר' : 'sqm'}
-                  </div>
+                {property.transactionType === 'RENT' ? (
+                  // Rental pricing
+                  <>
+                    <div className="text-sm text-gray-500 mb-1">
+                      {language === 'he' ? 'שכירות חודשית' : 'Monthly Rent'}
+                    </div>
+                    <div className="text-3xl font-bold text-green-600 mb-2">
+                      {property.rentPriceMonthly
+                        ? `₪${property.rentPriceMonthly.toLocaleString()}${language === 'he' ? '/חודש' : '/mo'}`
+                        : (language === 'he' ? 'ליצירת קשר' : 'Contact for price')
+                      }
+                    </div>
+                    {property.rentPriceMonthly && property.size && (
+                      <div className="text-sm text-gray-500">
+                        ₪{Math.round(property.rentPriceMonthly / property.size).toLocaleString()}/{language === 'he' ? 'מ״ר/חודש' : 'sqm/mo'}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  // Sale pricing
+                  <>
+                    <div className="text-sm text-gray-500 mb-1">
+                      {language === 'he' ? 'מחיר מכירה' : 'Sale Price'}
+                    </div>
+                    <div className="text-3xl font-bold text-blue-600 mb-2">
+                      {property.price ? `₪${property.price.toLocaleString()}` : language === 'he' ? 'ליצירת קשר' : 'Contact for price'}
+                    </div>
+                    {property.price && property.size && (
+                      <div className="text-sm text-gray-500">
+                        ₪{Math.round(property.price / property.size).toLocaleString()}/{language === 'he' ? 'מ״ר' : 'sqm'}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 
@@ -390,6 +432,18 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
                       <div className="text-gray-900">
                         {property.size} {language === 'he' ? 'מ״ר' : 'sqm'}
                       </div>
+                    </div>
+                  </div>
+                )}
+
+                {property.rentTerms && property.transactionType === 'RENT' && (
+                  <div className="flex items-start gap-3">
+                    <DollarSign className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <div className="text-sm font-medium text-gray-500">
+                        {language === 'he' ? 'תנאי שכירות' : 'Rental Terms'}
+                      </div>
+                      <div className="text-gray-900 text-sm">{property.rentTerms}</div>
                     </div>
                   </div>
                 )}
