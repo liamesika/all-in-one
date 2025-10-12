@@ -122,7 +122,7 @@ function RegisterForm() {
         : 'Password must contain at least 8 characters, uppercase, lowercase and number';
     }
 
-    if (formData.vertical === Vertical.PRODUCTION && !formData.accountType) {
+    if ((formData.vertical === Vertical.PRODUCTION || formData.vertical === Vertical.REAL_ESTATE) && !formData.accountType) {
       newErrors.accountType = language === 'he' ? 'חובה לבחור סוג חשבון' : 'Account type is required';
     }
 
@@ -311,7 +311,7 @@ function RegisterForm() {
                           const newVertical = e.target.value as Vertical;
                           updateField('vertical', newVertical);
                           // Reset account type when changing vertical
-                          if (newVertical !== Vertical.PRODUCTION) {
+                          if (newVertical !== Vertical.PRODUCTION && newVertical !== Vertical.REAL_ESTATE) {
                             updateField('accountType', undefined);
                           }
                         }}
@@ -328,8 +328,8 @@ function RegisterForm() {
             </div>
           </div>
 
-          {/* Account Type Selection - Only for Production */}
-          {formData.vertical === Vertical.PRODUCTION && (
+          {/* Account Type Selection - For Production and Real Estate */}
+          {(formData.vertical === Vertical.PRODUCTION || formData.vertical === Vertical.REAL_ESTATE) && (
             <div className="space-y-3">
               <span className="block text-sm font-semibold text-gray-700 mb-3">
                 {language === 'he' ? 'בחר סוג חשבון' : 'Choose account type'} <span className="text-red-500">*</span>

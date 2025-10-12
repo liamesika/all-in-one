@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-// Temporary fallback: replaced framer-motion for Vercel build compatibility
-// import { motion } from "framer-motion";
-import { ArrowUp, Phone } from "lucide-react"
+import { useState } from "react";
+import { Sparkles } from "lucide-react";
+import { PropertyAdGenerator } from "@/components/real-estate/PropertyAdGenerator";
+import { useLanguage } from "@/lib/language-context";
 
 const brand = {
   primary: "#0a3d91",
@@ -11,11 +12,24 @@ const brand = {
 };
 
 export default function PropertiesClient({ initialData }: { initialData: any[] }) {
+  const { language } = useLanguage();
+  const [selectedProperty, setSelectedProperty] = useState<any>(null);
+  const [showAdGenerator, setShowAdGenerator] = useState(false);
+
+  const handleGenerateAd = (property: any) => {
+    setSelectedProperty(property);
+    setShowAdGenerator(true);
+  };
+
+  const handleCloseAdGenerator = () => {
+    setShowAdGenerator(false);
+    setSelectedProperty(null);
+  };
   return (
-    <main className="p-8 max-w-6xl mx-auto" dir="rtl">
+    <main className={`p-8 max-w-6xl mx-auto ${language === 'he' ? 'rtl' : 'ltr'}`}>
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-extrabold" style={{ color: brand.primary }}>
-          נכסים
+          {language === 'he' ? 'נכסים' : 'Properties'}
         </h1>
 
         <Link
@@ -25,21 +39,23 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
           onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.backgroundColor = brand.primaryHover)}
           onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.backgroundColor = brand.primary)}
         >
-          + נכס חדש
+          {language === 'he' ? '+ נכס חדש' : '+ New Property'}
         </Link>
       </div>
 
       <div className="mt-6 rounded-2xl border bg-white shadow-xl overflow-hidden">
-        <div className="px-4 py-3 text-sm text-gray-600 bg-gray-50">רשימת נכסים</div>
+        <div className="px-4 py-3 text-sm text-gray-600 bg-gray-50">
+          {language === 'he' ? 'רשימת נכסים' : 'Properties List'}
+        </div>
         <div className="overflow-x-auto">
           <table className="min-w-full text-right">
             <thead className="text-sm text-gray-600">
               <tr className="bg-gray-50">
-                <th className="p-3 font-medium">שם</th>
-                <th className="p-3 font-medium">עיר</th>
-                <th className="p-3 font-medium">סטטוס</th>
-                <th className="p-3 font-medium">פורסם</th>
-                <th className="p-3 font-medium">פעולות</th>
+                <th className="p-3 font-medium">{language === 'he' ? 'שם' : 'Name'}</th>
+                <th className="p-3 font-medium">{language === 'he' ? 'עיר' : 'City'}</th>
+                <th className="p-3 font-medium">{language === 'he' ? 'סטטוס' : 'Status'}</th>
+                <th className="p-3 font-medium">{language === 'he' ? 'פורסם' : 'Published'}</th>
+                <th className="p-3 font-medium">{language === 'he' ? 'פעולות' : 'Actions'}</th>
               </tr>
             </thead>
             <tbody>
@@ -62,24 +78,29 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
                         : "-"}
                     </td>
                     <td className="p-3">
-                      <div className="flex gap-3 justify-end">
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          onClick={() => handleGenerateAd(r)}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm rounded-lg hover:shadow-md transition-all"
+                          title={language === 'he' ? 'צור מודעה עם AI' : 'Generate Ad with AI'}
+                        >
+                          <Sparkles className="w-4 h-4" />
+                          {language === 'he' ? 'AI' : 'AI'}
+                        </button>
                         <Link
-                          href={`/real-estate/properties/${r.id}/edit`}
-                          className="underline hover:opacity-80"
+                          href={`/dashboard/real-estate/properties/${r.id}`}
+                          className="px-3 py-1.5 text-sm underline hover:opacity-80"
                           style={{ color: brand.primary }}
                         >
-                          עריכה
+                          {language === 'he' ? 'צפייה' : 'View'}
                         </Link>
-                        {r.slug ? (
-                          <a
-                            href={`/p/${r.slug}`}
-                            target="_blank"
-                            className="underline hover:opacity-80"
-                            style={{ color: brand.primary }}
-                          >
-                            צפייה
-                          </a>
-                        ) : null}
+                        <Link
+                          href={`/real-estate/properties/${r.id}/edit`}
+                          className="px-3 py-1.5 text-sm underline hover:opacity-80"
+                          style={{ color: brand.primary }}
+                        >
+                          {language === 'he' ? 'עריכה' : 'Edit'}
+                        </Link>
                       </div>
                     </td>
                   </tr>
@@ -87,7 +108,9 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
               ) : (
                 <tr>
                   <td className="p-8 text-gray-500" colSpan={5}>
-                    אין עדיין נכסים. לחצי “נכס חדש” כדי להוסיף.
+                    {language === 'he'
+                      ? 'אין עדיין נכסים. לחצי "נכס חדש" כדי להוסיף.'
+                      : 'No properties yet. Click "New Property" to add one.'}
                   </td>
                 </tr>
               )}
@@ -95,6 +118,16 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
           </table>
         </div>
       </div>
+
+      {/* Ad Generator Modal */}
+      {showAdGenerator && selectedProperty && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <PropertyAdGenerator
+            property={selectedProperty}
+            onClose={handleCloseAdGenerator}
+          />
+        </div>
+      )}
     </main>
   );
 }

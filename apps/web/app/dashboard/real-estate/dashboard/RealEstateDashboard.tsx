@@ -180,23 +180,32 @@ function RealEstateDashboardContent({
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <button className="bg-white text-blue-700 px-8 py-4 rounded-xl font-semibold hover:bg-gray-50 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 animate-fade-in flex items-center gap-2">
+            <button
+              onClick={() => router.push('/dashboard/real-estate/revenue')}
+              className="bg-white text-blue-700 px-8 py-4 rounded-xl font-semibold hover:bg-gray-50 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 animate-fade-in flex items-center gap-2"
+            >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
               {lang === 'he' ? 'דוח ביצועים' : 'Performance Report'}
             </button>
-            <button className="border-2 border-white/30 text-white px-8 py-4 rounded-xl font-semibold hover:bg-white/10 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 animate-fade-in flex items-center gap-2">
+            <button
+              onClick={() => router.push('/dashboard/real-estate/leads')}
+              className="border-2 border-white/30 text-white px-8 py-4 rounded-xl font-semibold hover:bg-white/10 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 animate-fade-in flex items-center gap-2"
+            >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
               </svg>
-              {lang === 'he' ? 'קמפיינים חדשים' : 'New Campaigns'}
+              {lang === 'he' ? 'לידים חדשים' : 'New Leads'}
             </button>
-            <button className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 animate-fade-in flex items-center gap-2">
+            <button
+              onClick={() => router.push('/dashboard/real-estate/properties')}
+              className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 animate-fade-in flex items-center gap-2"
+            >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
-              {lang === 'he' ? 'נכסים חדשים' : 'New Properties'}
+              {lang === 'he' ? 'נכסים' : 'Properties'}
             </button>
           </div>
         </div>
@@ -211,7 +220,21 @@ function RealEstateDashboardContent({
         />
 
         {/* KPI Strip */}
-        <KPIStrip kpis={dashboardData.kpis} />
+        <KPIStrip kpis={dashboardData.kpis} onKPIClick={(kpiKey) => {
+          const kpiRoutes: Record<string, string> = {
+            newLeads: '/dashboard/real-estate/leads',
+            conversionRates: '/dashboard/real-estate/revenue',
+            timeToContact: '/dashboard/real-estate/leads',
+            scheduledViewings: '/dashboard/real-estate/properties',
+            offersCreated: '/dashboard/real-estate/revenue',
+            avgDOM: '/dashboard/real-estate/properties',
+            roasCAC: '/dashboard/real-estate/revenue',
+            pipelineValue: '/dashboard/real-estate/revenue',
+          };
+          if (kpiRoutes[kpiKey]) {
+            router.push(kpiRoutes[kpiKey]);
+          }
+        }} />
 
         {/* Main Dashboard Grid */}
         <div className="grid grid-cols-12 gap-6 mt-8">
@@ -526,7 +549,7 @@ function DashboardFilters({
 }
 
 // KPI Strip Component for Real Estate
-function KPIStrip({ kpis }: { kpis: DashboardData['kpis'] }) {
+function KPIStrip({ kpis, onKPIClick }: { kpis: DashboardData['kpis']; onKPIClick?: (kpiKey: string) => void }) {
   const { lang } = useLang();
 
   const kpiItems = [
@@ -606,7 +629,11 @@ function KPIStrip({ kpis }: { kpis: DashboardData['kpis'] }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-4 mb-8">
       {kpiItems.map((item) => (
-        <div key={item.key} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+        <div
+          key={item.key}
+          onClick={() => onKPIClick?.(item.key)}
+          className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all duration-200 transform hover:-translate-y-1"
+        >
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
