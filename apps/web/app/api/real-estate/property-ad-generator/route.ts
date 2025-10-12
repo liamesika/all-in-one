@@ -26,8 +26,8 @@ export async function POST(request: NextRequest) {
 
     // Only use OpenAI if API key is available
     if (openai) {
-      // Generate marketing description
-      const descriptionPrompt = `You are a professional real estate copywriter. Write a compelling, engaging property listing description in both English and Hebrew for the following property:
+      // Generate rich marketing description with perfect language separation
+      const descriptionPrompt = `You are a professional Israeli real estate copywriter who creates compelling, persuasive property listings.
 
 Property Details:
 - Name: ${name}
@@ -35,21 +35,50 @@ Property Details:
 - Price: ${price ? `₪${price.toLocaleString()}` : 'Contact for price'}
 - Rooms: ${rooms || 'N/A'}
 - Size: ${size ? `${size} sqm` : 'N/A'}
-${description ? `- Additional info: ${description}` : ''}
+- Status: For Sale
+${description ? `- Context: ${description}` : ''}
 ${amenities ? `- Amenities: ${amenities}` : ''}
 
-Write TWO versions:
-1. English version (150-200 words, engaging, highlighting best features, call-to-action)
-2. Hebrew version (150-200 words, same style)
+Write TWO complete versions with PERFECT language separation:
 
-Format as JSON: { "english": "...", "hebrew": "..." }`;
+1. ENGLISH VERSION (200-250 words):
+   - Attention-grabbing headline
+   - Key benefits (location, size, features)
+   - Lifestyle narrative (who will love this property and why)
+   - Location advantages (neighborhood, transport, amenities)
+   - Size breakdown and layout appeal
+   - Strong call-to-action
+   - 100% English, no Hebrew mixing
+
+2. HEBREW VERSION (200-250 words):
+   - כותרת מושכת
+   - יתרונות מרכזיים (מיקום, גודל, תכונות)
+   - נרטיב סגנון חיים
+   - יתרונות מיקום
+   - פירוט שטחים
+   - קריאה לפעולה חזקה
+   - 100% עברית, ללא ערבוב אנגלית
+
+Return JSON with this EXACT structure:
+{
+  "en": {
+    "title": "compelling headline in English",
+    "description": "full marketing copy in English"
+  },
+  "he": {
+    "title": "כותרת מושכת בעברית",
+    "description": "תיאור שיווקי מלא בעברית"
+  }
+}
+
+CRITICAL: Keep languages 100% separate. No mixed HE/EN text.`;
 
       const descriptionResponse = await openai.chat.completions.create({
         model: 'gpt-4',
         messages: [
           {
             role: 'system',
-            content: 'You are an expert real estate copywriter who creates compelling property listings that convert browsers into buyers.',
+            content: 'You are an expert Israeli real estate copywriter who creates compelling property listings in perfect English and Hebrew (no mixed language).',
           },
           {
             role: 'user',
@@ -57,7 +86,7 @@ Format as JSON: { "english": "...", "hebrew": "..." }`;
           },
         ],
         temperature: 0.8,
-        max_tokens: 800,
+        max_tokens: 1000,
         response_format: { type: 'json_object' },
       });
 
@@ -65,10 +94,16 @@ Format as JSON: { "english": "...", "hebrew": "..." }`;
         descriptionResponse.choices[0]?.message?.content || '{}'
       );
     } else {
-      // Fallback descriptions when OpenAI is not available
+      // Fallback descriptions with perfect language separation
       generatedDescription = {
-        english: `Discover this exceptional ${rooms || ''}-room property located at ${address || 'a prime location'}. ${size ? `Spanning ${size} square meters, ` : ''}this residence offers the perfect blend of comfort and convenience. ${description || 'Contact us today to schedule a private viewing and experience this remarkable property firsthand.'}`,
-        hebrew: `גלו את הנכס היוצא דופן הזה ${rooms ? `בן ${rooms} חדרים` : ''} הממוקם ב${address || 'מיקום מעולה'}. ${size ? `על שטח של ${size} מ"ר, ` : ''}הנכס מציע שילוב מושלם של נוחות ונוחיות. ${description || 'צרו קשר היום לתיאום צפייה פרטית ולחוות את הנכס הייחודי הזה.'}`
+        en: {
+          title: `Stunning ${rooms || ''}-Room Property in ${address || 'Prime Location'}`,
+          description: `Discover this exceptional ${rooms || ''}-room property located at ${address || 'a prime location'}. ${size ? `Spanning ${size} square meters, ` : ''}this residence offers the perfect blend of comfort and modern living. The property features ${amenities || 'premium amenities'} and is situated in one of the most sought-after neighborhoods. With easy access to transportation, shopping, and entertainment, this home is perfect for families and professionals alike. ${description || 'Contact us today to schedule a private viewing and experience this remarkable property firsthand. Don\'t miss this opportunity to own your dream home!'}`,
+        },
+        he: {
+          title: `נכס מדהים ${rooms ? `בן ${rooms} חדרים` : ''} ב${address || 'מיקום מעולה'}`,
+          description: `גלו את הנכס היוצא דופן הזה ${rooms ? `בן ${rooms} חדרים` : ''} הממוקם ב${address || 'מיקום מעולה'}. ${size ? `על שטח של ${size} מ"ר, ` : ''}הנכס מציע שילוב מושלם של נוחות וחיים מודרניים. הנכס כולל ${amenities || 'שירותים מובחרים'} וממוקם באחת השכונות המבוקשות ביותר. עם גישה נוחה לתחבורה ציבורית, קניות ובידור, בית זה מושלם למשפחות ואנשי מקצוע כאחד. ${description || 'צרו קשר היום לתיאום צפייה פרטית ולחוות את הנכס הייחודי הזה. אל תפספסו את ההזדמנות להפוך את הבית הזה לביתכם!'}`,
+        },
       };
     }
 
