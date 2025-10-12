@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Plus } from "lucide-react";
 import { PropertyAdGenerator } from "@/components/real-estate/PropertyAdGenerator";
+import { PropertyFormModal } from "@/components/real-estate/properties/PropertyFormModal";
 import { useLanguage } from "@/lib/language-context";
 
 const brand = {
@@ -13,8 +14,11 @@ const brand = {
 
 export default function PropertiesClient({ initialData }: { initialData: any[] }) {
   const { language } = useLanguage();
+  const [properties, setProperties] = useState(initialData);
   const [selectedProperty, setSelectedProperty] = useState<any>(null);
   const [showAdGenerator, setShowAdGenerator] = useState(false);
+  const [showPropertyForm, setShowPropertyForm] = useState(false);
+  const [editingProperty, setEditingProperty] = useState<any>(null);
 
   const handleGenerateAd = (property: any) => {
     setSelectedProperty(property);
@@ -25,6 +29,26 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
     setShowAdGenerator(false);
     setSelectedProperty(null);
   };
+
+  const handleCreateProperty = () => {
+    setEditingProperty(null);
+    setShowPropertyForm(true);
+  };
+
+  const handleEditProperty = (property: any) => {
+    setEditingProperty(property);
+    setShowPropertyForm(true);
+  };
+
+  const handlePropertySaved = (savedProperty: any) => {
+    if (editingProperty) {
+      // Update existing property
+      setProperties(prev => prev.map(p => p.id === savedProperty.id ? savedProperty : p));
+    } else {
+      // Add new property
+      setProperties(prev => [savedProperty, ...prev]);
+    }
+  };
   return (
     <main className={`p-8 max-w-6xl mx-auto ${language === 'he' ? 'rtl' : 'ltr'}`}>
       <div className="flex items-center justify-between">
@@ -32,15 +56,16 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
           {language === 'he' ? 'נכסים' : 'Properties'}
         </h1>
 
-        <Link
-          href="/real-estate/properties/new"
-          className="px-5 py-3 rounded-xl text-white font-semibold shadow-md transition"
+        <button
+          onClick={handleCreateProperty}
+          className="flex items-center gap-2 px-5 py-3 rounded-xl text-white font-semibold shadow-md transition hover:shadow-lg"
           style={{ backgroundColor: brand.primary }}
-          onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.backgroundColor = brand.primaryHover)}
-          onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.backgroundColor = brand.primary)}
+          onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.backgroundColor = brand.primaryHover)}
+          onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.backgroundColor = brand.primary)}
         >
-          {language === 'he' ? '+ נכס חדש' : '+ New Property'}
-        </Link>
+          <Plus className="w-5 h-5" />
+          {language === 'he' ? 'נכס חדש' : 'New Property'}
+        </button>
       </div>
 
       <div className="mt-6 rounded-2xl border bg-white shadow-xl overflow-hidden">
@@ -59,8 +84,8 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
               </tr>
             </thead>
             <tbody>
-              {initialData.length > 0 ? (
-                initialData.map((r) => (
+              {properties.length > 0 ? (
+                properties.map((r) => (
                   <tr
                     key={r.id}
                     className="border-t hover:bg-gray-50 transition"
@@ -94,13 +119,13 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
                         >
                           {language === 'he' ? 'צפייה' : 'View'}
                         </Link>
-                        <Link
-                          href={`/real-estate/properties/${r.id}/edit`}
+                        <button
+                          onClick={() => handleEditProperty(r)}
                           className="px-3 py-1.5 text-sm underline hover:opacity-80"
                           style={{ color: brand.primary }}
                         >
                           {language === 'he' ? 'עריכה' : 'Edit'}
-                        </Link>
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -128,6 +153,17 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
           />
         </div>
       )}
+
+      {/* Property Form Modal */}
+      <PropertyFormModal
+        isOpen={showPropertyForm}
+        onClose={() => {
+          setShowPropertyForm(false);
+          setEditingProperty(null);
+        }}
+        onSuccess={handlePropertySaved}
+        property={editingProperty}
+      />
     </main>
   );
 }
