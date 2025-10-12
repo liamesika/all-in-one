@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Sparkles, Plus } from "lucide-react";
+import { Sparkles, Plus, Upload } from "lucide-react";
 import { PropertyAdGenerator } from "@/components/real-estate/PropertyAdGenerator";
 import { PropertyFormModal } from "@/components/real-estate/properties/PropertyFormModal";
+import { ImportPropertiesModal } from "@/components/real-estate/ImportPropertiesModal";
 import { useLanguage } from "@/lib/language-context";
 
 const brand = {
@@ -18,6 +19,7 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
   const [selectedProperty, setSelectedProperty] = useState<any>(null);
   const [showAdGenerator, setShowAdGenerator] = useState(false);
   const [showPropertyForm, setShowPropertyForm] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [editingProperty, setEditingProperty] = useState<any>(null);
 
   const handleGenerateAd = (property: any) => {
@@ -49,6 +51,13 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
       setProperties(prev => [savedProperty, ...prev]);
     }
   };
+
+  const handleImportComplete = () => {
+    // Refresh properties list - in real app, fetch from API
+    console.log('Import complete, refreshing properties list');
+    // TODO: Fetch updated properties from API
+  };
+
   return (
     <main className={`p-8 max-w-6xl mx-auto ${language === 'he' ? 'rtl' : 'ltr'}`}>
       <div className="flex items-center justify-between">
@@ -56,16 +65,39 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
           {language === 'he' ? 'נכסים' : 'Properties'}
         </h1>
 
-        <button
-          onClick={handleCreateProperty}
-          className="flex items-center gap-2 px-5 py-3 rounded-xl text-white font-semibold shadow-md transition hover:shadow-lg"
-          style={{ backgroundColor: brand.primary }}
-          onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.backgroundColor = brand.primaryHover)}
-          onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.backgroundColor = brand.primary)}
-        >
-          <Plus className="w-5 h-5" />
-          {language === 'he' ? 'נכס חדש' : 'New Property'}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowImportModal(true)}
+            className="flex items-center gap-2 px-5 py-3 rounded-xl border-2 font-semibold shadow-md transition hover:shadow-lg"
+            style={{
+              borderColor: brand.primary,
+              color: brand.primary,
+              backgroundColor: 'white'
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.backgroundColor = brand.primary;
+              (e.currentTarget as HTMLButtonElement).style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'white';
+              (e.currentTarget as HTMLButtonElement).style.color = brand.primary;
+            }}
+          >
+            <Upload className="w-5 h-5" />
+            {language === 'he' ? 'ייבוא CSV' : 'Import CSV'}
+          </button>
+
+          <button
+            onClick={handleCreateProperty}
+            className="flex items-center gap-2 px-5 py-3 rounded-xl text-white font-semibold shadow-md transition hover:shadow-lg"
+            style={{ backgroundColor: brand.primary }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.backgroundColor = brand.primaryHover)}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.backgroundColor = brand.primary)}
+          >
+            <Plus className="w-5 h-5" />
+            {language === 'he' ? 'נכס חדש' : 'New Property'}
+          </button>
+        </div>
       </div>
 
       <div className="mt-6 rounded-2xl border bg-white shadow-xl overflow-hidden">
@@ -164,6 +196,14 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
         onSuccess={handlePropertySaved}
         property={editingProperty}
       />
+
+      {/* Import Properties Modal */}
+      {showImportModal && (
+        <ImportPropertiesModal
+          onClose={() => setShowImportModal(false)}
+          onImportComplete={handleImportComplete}
+        />
+      )}
     </main>
   );
 }
