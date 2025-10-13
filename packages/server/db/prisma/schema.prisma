@@ -184,6 +184,47 @@ enum ConnectionProvider {
   LINKEDIN_ADS
 }
 
+enum IntegrationType {
+  HUBSPOT
+  ZOHO
+  MONDAY
+  SALESFORCE
+  GOOGLE_CALENDAR
+  OUTLOOK_CALENDAR
+  APPLE_CALENDAR
+  FACEBOOK_LEADS
+  INSTAGRAM_LEADS
+  LINKEDIN_LEADS
+  TIKTOK_LEADS
+  GUESTY
+  AIRBNB
+  YAD2
+  MADLAN
+  ZILLOW
+  ZAPIER
+  MAKE
+  CUSTOM_WEBHOOK
+}
+
+enum IntegrationStatus {
+  CONNECTED
+  DISCONNECTED
+  ERROR
+  SYNCING
+}
+
+enum AutomationStatus {
+  ACTIVE
+  PAUSED
+  DRAFT
+}
+
+enum AutomationExecutionStatus {
+  SUCCESS
+  FAILED
+  PARTIAL
+}
+
 enum JobType {
   SYNC_ACCOUNTS
   FETCH_INSIGHTS
@@ -1792,4 +1833,92 @@ model ProductionFileAsset {
   @@index([organizationId])
   @@index([projectId])
   @@index([folder])
+}
+
+// ========= INTEGRATIONS HUB ========= //
+
+// External platform integrations for EFFINITY
+model Integration {
+  id            String              @id @default(cuid())
+  ownerUid      String
+  orgId         String?
+  platform      IntegrationType
+  status        IntegrationStatus   @default(DISCONNECTED)
+  credentials   Json?               // Encrypted credentials
+  settings      Json?               // Platform-specific settings
+  lastSyncAt    DateTime?
+  syncCount     Int                 @default(0)
+  errorMessage  String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  syncLogs      IntegrationSyncLog[]
+
+  @@index([ownerUid])
+  @@index([orgId])
+  @@index([platform])
+  @@index([status])
+  @@index([ownerUid, platform])
+  @@index([ownerUid, status])
+}
+
+// Sync logs for integration operations
+model IntegrationSyncLog {
+  id              String      @id @default(cuid())
+  integrationId   String
+  integration     Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  syncType        String      // LEADS, PROPERTIES, CONTACTS, EVENTS
+  itemsSynced     Int         @default(0)
+  itemsFailed     Int         @default(0)
+  status          String      // SUCCESS, PARTIAL, FAILED
+  errorDetails    Json?
+  startedAt       DateTime    @default(now())
+  completedAt     DateTime?
+
+  @@index([integrationId])
+  @@index([startedAt])
+  @@index([status])
+}
+
+// ========= AUTOMATION ENGINE ========= //
+
+// Workflow automation rules
+model Automation {
+  id          String             @id @default(cuid())
+  ownerUid    String
+  orgId       String?
+  name        String
+  description String?
+  status      AutomationStatus   @default(PAUSED)
+  trigger     Json               // { type, config }
+  actions     Json               // [{ type, config, order }]
+  conditions  Json?              // Optional filters
+  stats       Json?              // { totalRuns, successCount, failCount, lastRunAt }
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  executions  AutomationExecution[]
+
+  @@index([ownerUid])
+  @@index([orgId])
+  @@index([status])
+  @@index([ownerUid, status])
+  @@index([orgId, status])
+}
+
+// Automation execution logs
+model AutomationExecution {
+  id            String                    @id @default(cuid())
+  automationId  String
+  automation    Automation                @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  status        AutomationExecutionStatus @default(SUCCESS)
+  triggeredBy   Json                      // { entityType, entityId, event }
+  actionsLog    Json                      // [{ action, status, result, error }]
+  startedAt     DateTime                  @default(now())
+  completedAt   DateTime?
+  errorMessage  String?
+
+  @@index([automationId])
+  @@index([startedAt])
+  @@index([status])
 }

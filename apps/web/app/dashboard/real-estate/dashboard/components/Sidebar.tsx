@@ -43,6 +43,12 @@ export function Sidebar({ currentPath = 'dashboard' }: SidebarProps) {
       icon: '📢'
     },
     {
+      href: '/real-estate/automations',
+      label: lang === 'he' ? 'אוטומציות' : 'Automations',
+      key: 'automations',
+      icon: '⚡'
+    },
+    {
       href: '/real-estate/clients',
       label: lang === 'he' ? 'לקוחות' : 'Clients',
       key: 'clients',
@@ -65,6 +71,12 @@ export function Sidebar({ currentPath = 'dashboard' }: SidebarProps) {
       label: lang === 'he' ? 'דוחות' : 'Reports',
       key: 'reports',
       icon: '📈'
+    },
+    {
+      href: '/dashboard/real-estate/integrations',
+      label: lang === 'he' ? 'אינטגרציות' : 'Integrations',
+      key: 'integrations',
+      icon: '🔌'
     }
   ];
 
