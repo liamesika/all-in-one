@@ -1,8 +1,22 @@
-# AI Advisor - Model Configuration
+# AI Configuration & Language Detection Policy
 
 ## Overview
 
-The Real Estate AI Advisor is an intelligent assistant that provides context-aware guidance for property management, lead qualification, and market analysis.
+The EFFINITY Real Estate platform uses AI to provide intelligent property recommendations, lead qualification, and market insights. All AI interactions follow a strict language detection and response policy.
+
+## ⚠️ CRITICAL: Language Policy
+
+### UI & Code Language Rules
+- **All UI text, code, and documentation**: English only
+- **i18n JSON files**: Support both English (en) and Hebrew (he)
+- **AI Responses**: Auto-detected based on user input language
+- **Never mix EN/HE in UI**: All strings must come from i18n JSONs
+
+### AI Language Detection Rules
+1. **Hebrew Input** (≥70% Hebrew characters) → AI responds in Hebrew (RTL layout)
+2. **English/Other Input** → AI responds in English (LTR layout)
+3. **Detection Logic**: Uses language detection utility at `apps/web/lib/languageDetection.ts`
+4. **Override**: Manual language toggle available for user preference
 
 ## Model Information
 
@@ -67,17 +81,48 @@ const languageInstruction = getLanguageInstruction(locale);
 // Injected into system prompt to enforce language
 ```
 
-## Features
+## AI Features & Endpoints
+
+### 1. AI Advisor (Property Recommendations)
+- **Route**: `POST /api/real-estate/ai-advisor`
+- **Model**: GPT-4o
+- **Input**: User query + agent's property inventory + transaction type context
+- **Output**:
+  - Conversational response in detected language
+  - 3-5 recommended properties from agent inventory
+  - Awareness of Sale vs. Rent transaction type
+- **Rate Limiting**: 60 requests per minute per user
+
+### 2. Lead Qualification & Analysis
+- **Route**: `POST /api/real-estate/qualify-lead`
+- **Model**: GPT-4o
+- **Input**: Lead information + optional notes + agent inventory
+- **Output**:
+  - Qualification score (0-100)
+  - Insights about lead quality and intent
+  - 3-5 recommended properties matching lead criteria
+  - Transaction type awareness (Sale/Rent)
+- **Rate Limiting**: 20 requests per minute
+
+### 3. Property Ad Generator
+- **Route**: `POST /api/real-estate/property-ad-generator`
+- **Model**: GPT-4o
+- **Input**: Property details + target platform + language preference
+- **Output**:
+  - Optimized ad copy in requested language
+  - Platform-specific formatting (Facebook, Instagram, Google, etc.)
+  - Sale vs. Rent specific language and CTAs
+- **Rate Limiting**: 30 requests per minute
 
 ### Context Awareness
 
 The AI Advisor receives page context to provide relevant suggestions:
 
 - **Dashboard**: Lead prioritization, next actions
-- **Leads**: Lead analysis, filtering recommendations
-- **Properties**: Marketing suggestions, pricing analysis
-- **Property Detail**: Market analysis, pricing suggestions
-- **Ad Generator**: Copy optimization, photo selection
+- **Leads**: Lead analysis, filtering recommendations, property matching
+- **Properties**: Marketing suggestions, pricing analysis, scoring insights
+- **Property Detail**: Market analysis, pricing suggestions, comps analysis
+- **Ad Generator**: Copy optimization, photo selection, platform-specific CTAs
 
 ### Conversation History
 
@@ -176,14 +221,39 @@ console.log('[AI Advisor] Request processed', {
 });
 ```
 
-## Security
+## Security & Privacy
 
-**Best Practices**:
-- API key stored in environment variables only
-- Never exposed to client
-- Server-side validation of all inputs
-- Rate limiting to prevent abuse
-- No PII in logs
+### API Key Management
+- **Never expose API keys on client side**
+- All AI requests go through backend API routes only
+- Keys stored in environment variables: `OPENAI_API_KEY`
+- Production keys use Vercel Environment Variables (Secrets)
+- Principle of least privilege: API keys have minimum required permissions
+
+### Input Sanitization
+- All user input sanitized before sending to AI
+- HTML/SQL injection prevention via validation middleware
+- Maximum input length: 5000 characters
+- Profanity filtering for public-facing content
+- XSS protection: escape all user-generated content
+
+### CSRF Protection
+- All AI endpoints require authentication (Firebase UID)
+- CSRF tokens on form submissions
+- Origin validation on all POST requests
+- Verify `ownerUid` matches authenticated user
+
+### Rate Limiting
+- Implemented per-user limits based on Firebase UID
+- Different limits for different AI endpoints
+- 429 response when limit exceeded
+- Prevents abuse and controls costs
+
+### Data Privacy
+- No PII stored in AI request logs
+- Conversation history cleared after session
+- Property data limited to what user owns (ownerUid scoping)
+- GDPR compliance: users can request data deletion
 
 ## Troubleshooting
 

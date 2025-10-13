@@ -7,6 +7,7 @@ import { PropertyAdGenerator } from "@/components/real-estate/PropertyAdGenerato
 import { PropertyFormModal } from "@/components/real-estate/properties/PropertyFormModal";
 import { ImportPropertiesModal } from "@/components/real-estate/ImportPropertiesModal";
 import { ScoreBadge } from "@/components/real-estate/ScoreBadge";
+import { AssignAgentButton } from "@/components/real-estate/AssignAgentButton";
 import { useLanguage } from "@/lib/language-context";
 
 const brand = {
@@ -23,11 +24,25 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
   const [showImportModal, setShowImportModal] = useState(false);
   const [editingProperty, setEditingProperty] = useState<any>(null);
   const [transactionTypeFilter, setTransactionTypeFilter] = useState<'ALL' | 'SALE' | 'RENT'>('ALL');
+  const [assignedAgentFilter, setAssignedAgentFilter] = useState<string>('ALL');
+  const [accountType, setAccountType] = useState<'COMPANY' | 'FREELANCER'>('COMPANY'); // TODO: Get from auth context
 
-  // Filter properties by transaction type
+  // Filter properties by transaction type and assigned agent
   const filteredProperties = properties.filter(property => {
-    if (transactionTypeFilter === 'ALL') return true;
-    return property.transactionType === transactionTypeFilter;
+    // Transaction type filter
+    if (transactionTypeFilter !== 'ALL' && property.transactionType !== transactionTypeFilter) {
+      return false;
+    }
+
+    // Assigned agent filter (Company only)
+    if (accountType === 'COMPANY' && assignedAgentFilter !== 'ALL') {
+      if (assignedAgentFilter === 'UNASSIGNED') {
+        return !property.assignedAgentId;
+      }
+      return property.assignedAgentId === assignedAgentFilter;
+    }
+
+    return true;
   });
 
   const handleGenerateAd = (property: any) => {
@@ -64,6 +79,15 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
     // Refresh properties list - in real app, fetch from API
     console.log('Import complete, refreshing properties list');
     // TODO: Fetch updated properties from API
+  };
+
+  const handleAgentAssigned = (propertyId: string, agentId: string | null, agentName: string | null) => {
+    // Update property in local state immediately (no page reload)
+    setProperties(prev => prev.map(p =>
+      p.id === propertyId
+        ? { ...p, assignedAgentId: agentId, assignedAgentName: agentName }
+        : p
+    ));
   };
 
   return (
@@ -108,20 +132,41 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
         </div>
       </div>
 
-      {/* Transaction Type Filter */}
-      <div className="mb-4">
-        <label className="text-sm font-medium text-gray-700 mr-3">
-          {language === 'he' ? 'סוג עסקה:' : 'Transaction Type:'}
-        </label>
-        <select
-          value={transactionTypeFilter}
-          onChange={(e) => setTransactionTypeFilter(e.target.value as 'ALL' | 'SALE' | 'RENT')}
-          className="px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="ALL">{language === 'he' ? 'כל הנכסים' : 'All Properties'}</option>
-          <option value="SALE">{language === 'he' ? 'למכירה' : 'For Sale'}</option>
-          <option value="RENT">{language === 'he' ? 'להשכרה' : 'For Rent'}</option>
-        </select>
+      {/* Filters */}
+      <div className="mb-4 flex flex-wrap gap-4 items-center">
+        {/* Transaction Type Filter */}
+        <div>
+          <label className="text-sm font-medium text-gray-700 mr-2">
+            {language === 'he' ? 'סוג עסקה:' : 'Transaction Type:'}
+          </label>
+          <select
+            value={transactionTypeFilter}
+            onChange={(e) => setTransactionTypeFilter(e.target.value as 'ALL' | 'SALE' | 'RENT')}
+            className="px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="ALL">{language === 'he' ? 'כל הנכסים' : 'All Properties'}</option>
+            <option value="SALE">{language === 'he' ? 'למכירה' : 'For Sale'}</option>
+            <option value="RENT">{language === 'he' ? 'להשכרה' : 'For Rent'}</option>
+          </select>
+        </div>
+
+        {/* Assigned Agent Filter (Company only) */}
+        {accountType === 'COMPANY' && (
+          <div>
+            <label className="text-sm font-medium text-gray-700 mr-2">
+              {language === 'he' ? 'סוכן מוקצה:' : 'Assigned Agent:'}
+            </label>
+            <select
+              value={assignedAgentFilter}
+              onChange={(e) => setAssignedAgentFilter(e.target.value)}
+              className="px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="ALL">{language === 'he' ? 'כל הסוכנים' : 'All Agents'}</option>
+              <option value="UNASSIGNED">{language === 'he' ? 'לא מוקצה' : 'Unassigned'}</option>
+              {/* TODO: Fetch and populate actual agents from organization */}
+            </select>
+          </div>
+        )}
       </div>
 
       <div className="rounded-2xl border bg-white shadow-xl overflow-hidden">
@@ -137,6 +182,9 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
                 <th className="p-3 font-medium">{language === 'he' ? 'סוג' : 'Type'}</th>
                 <th className="p-3 font-medium">{language === 'he' ? 'מחיר' : 'Price'}</th>
                 <th className="p-3 font-medium">{language === 'he' ? 'ציון' : 'Score'}</th>
+                {accountType === 'COMPANY' && (
+                  <th className="p-3 font-medium">{language === 'he' ? 'סוכן' : 'Agent'}</th>
+                )}
                 <th className="p-3 font-medium">{language === 'he' ? 'סטטוס' : 'Status'}</th>
                 <th className="p-3 font-medium">{language === 'he' ? 'פורסם' : 'Published'}</th>
                 <th className="p-3 font-medium">{language === 'he' ? 'פעולות' : 'Actions'}</th>
@@ -179,6 +227,18 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
                       <td className="p-3">
                         <ScoreBadge property={r} language={language as 'en' | 'he'} size="sm" />
                       </td>
+                      {accountType === 'COMPANY' && (
+                        <td className="p-3">
+                          <AssignAgentButton
+                            propertyId={r.id}
+                            currentAgentId={r.assignedAgentId}
+                            currentAgentName={r.assignedAgentName}
+                            onAssignSuccess={(agentId, agentName) => handleAgentAssigned(r.id, agentId, agentName)}
+                            accountType={accountType}
+                            className="text-xs"
+                          />
+                        </td>
+                      )}
                       <td className="p-3">
                         <span className="px-2 py-1 rounded-lg text-xs bg-gray-100">
                           {r.status}
@@ -220,7 +280,7 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
                 })
               ) : (
                 <tr>
-                  <td className="p-8 text-gray-500" colSpan={8}>
+                  <td className="p-8 text-gray-500" colSpan={accountType === 'COMPANY' ? 9 : 8}>
                     {language === 'he'
                       ? 'אין עדיין נכסים. לחצי "נכס חדש" כדי להוסיף.'
                       : 'No properties yet. Click "New Property" to add one.'}

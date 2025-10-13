@@ -5,6 +5,8 @@ import { NotificationSystem } from '@/components/dashboard/NotificationSystem';
 import { KPICard } from '@/components/dashboard/KPICard';
 import { FilterBar } from '@/components/dashboard/FilterBar';
 import { DashboardNavigation } from '@/components/dashboard/DashboardNavigation';
+import { QuickStatsBar } from '@/components/dashboard/QuickStatsBar';
+import { FloatingActionButton } from '@/components/dashboard/FloatingActionButton';
 import { LeadsMarketingSection } from './components/sections/LeadsMarketingSection';
 import { ListingsInventorySection } from './components/sections/ListingsInventorySection';
 import { DealsRevenueSection } from './components/sections/DealsRevenueSection';
@@ -217,8 +219,23 @@ function RealEstateDashboardContent() {
   const [dateRange, setDateRange] = useState('30d');
   const [location, setLocation] = useState('all');
   const [agent, setAgent] = useState('all');
+  const [activeView, setActiveView] = useState<'all' | 'leads' | 'listings' | 'deals' | 'operations'>('all');
 
   const data = generateMockData();
+
+  // Determine which sections to show based on active view
+  const shouldShowSection = (sectionId: string) => {
+    if (activeView === 'all') return true;
+
+    const sectionMapping: Record<string, string[]> = {
+      leads: ['leads', 'clientExperience'],
+      listings: ['listings', 'market'],
+      deals: ['deals', 'compliance'],
+      operations: ['operations', 'automation'],
+    };
+
+    return sectionMapping[activeView]?.includes(sectionId) || false;
+  };
 
   return (
     <div
@@ -234,10 +251,49 @@ function RealEstateDashboardContent() {
         onDismiss={(id) => console.log('Dismissed notification:', id)}
       />
 
+      {/* Floating Action Button */}
+      <FloatingActionButton
+        onAddLead={() => console.log('Add Lead')}
+        onAddProperty={() => console.log('Add Property')}
+        onAddCampaign={() => console.log('Create Campaign')}
+      />
+
       {/* Main Content - Add padding-top to account for fixed header */}
-      <div className="pt-20">
-        {/* Filter Bar */}
-        <div className="px-6 mb-6">
+      <div className="pt-20 pb-20">
+        {/* Quick Stats Bar */}
+        <div className="px-6">
+          <QuickStatsBar
+            stats={[
+              {
+                label: 'Total Leads',
+                value: data.kpis.totalLeads,
+                change: 12,
+                changeLabel: 'vs last month',
+              },
+              {
+                label: 'Active Listings',
+                value: data.kpis.activeListings,
+                change: 5,
+                changeLabel: 'this week',
+              },
+              {
+                label: 'Open Deals',
+                value: data.kpis.dealsClosed,
+                change: -3,
+                changeLabel: 'pending',
+              },
+              {
+                label: 'Avg Response Time',
+                value: '2.4h',
+                change: -15,
+                changeLabel: 'improved',
+              },
+            ]}
+          />
+        </div>
+
+        {/* Sticky Filter Bar */}
+        <div className="sticky top-16 z-40 px-6 mb-6" style={{ background: 'var(--re-deep-navy)' }}>
           <FilterBar
             dateRange={dateRange}
             onDateRangeChange={setDateRange}
@@ -251,7 +307,8 @@ function RealEstateDashboardContent() {
         {/* Dashboard Navigation Tabs */}
         <div className="px-6">
           <DashboardNavigation
-            onTabChange={(tabId) => console.log('Tab changed to:', tabId)}
+            defaultTab={activeView}
+            onTabChange={(tabId) => setActiveView(tabId as typeof activeView)}
           />
         </div>
 
@@ -329,16 +386,55 @@ function RealEstateDashboardContent() {
           </div>
         </div>
 
-        {/* Main Dashboard Sections */}
+        {/* Main Dashboard Sections - Conditionally rendered based on active view */}
         <div className="px-6 space-y-8 pb-12">
-          <LeadsMarketingSection data={data.leads} />
-          <ListingsInventorySection data={data.listings} />
-          <DealsRevenueSection data={data.deals} />
-          <OperationsProductivitySection data={data.operations} />
-          <ClientExperienceSection data={data.clientExperience} />
-          <MarketIntelligenceSection data={data.market} />
-          <ComplianceRiskSection data={data.compliance} />
-          <AutomationHealthSection data={data.automation} />
+          {shouldShowSection('leads') && (
+            <div className="animate-fade-in">
+              <LeadsMarketingSection data={data.leads} />
+            </div>
+          )}
+
+          {shouldShowSection('listings') && (
+            <div className="animate-fade-in">
+              <ListingsInventorySection data={data.listings} />
+            </div>
+          )}
+
+          {shouldShowSection('deals') && (
+            <div className="animate-fade-in">
+              <DealsRevenueSection data={data.deals} />
+            </div>
+          )}
+
+          {shouldShowSection('operations') && (
+            <div className="animate-fade-in">
+              <OperationsProductivitySection data={data.operations} />
+            </div>
+          )}
+
+          {shouldShowSection('clientExperience') && (
+            <div className="animate-fade-in">
+              <ClientExperienceSection data={data.clientExperience} />
+            </div>
+          )}
+
+          {shouldShowSection('market') && (
+            <div className="animate-fade-in">
+              <MarketIntelligenceSection data={data.market} />
+            </div>
+          )}
+
+          {shouldShowSection('compliance') && (
+            <div className="animate-fade-in">
+              <ComplianceRiskSection data={data.compliance} />
+            </div>
+          )}
+
+          {shouldShowSection('automation') && (
+            <div className="animate-fade-in">
+              <AutomationHealthSection data={data.automation} />
+            </div>
+          )}
         </div>
       </div>
     </div>
