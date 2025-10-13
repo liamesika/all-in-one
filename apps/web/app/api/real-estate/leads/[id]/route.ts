@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { z } from 'zod';
 
 const prisma = new PrismaClient();
+
+// Validation schema
+const updateLeadSchema = z.object({
+  fullName: z.string().min(2).max(100).optional(),
+  phone: z.string().regex(/^[+]?[0-9]{10,15}$/).optional(),
+  email: z.string().email().optional().or(z.literal('')),
+  message: z.string().max(500).optional(),
+  source: z.string().optional(),
+});
 
 // GET /api/real-estate/leads/[id] - Get lead details
 export async function GET(
@@ -9,14 +19,27 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const lead = await prisma.realEstateLead.findUnique({
-      where: { id: params.id },
+    // Get ownerUid from header (auth will be added later)
+    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
+
+    const lead = await prisma.realEstateLead.findFirst({
+      where: {
+        id: params.id,
+        OR: [
+          { ownerUid },
+          { orgId: { not: null } }, // TODO: Check org membership
+        ]
+      },
       include: {
-        property: true,
-        RealEstateLeadEvent: {
-          orderBy: { createdAt: 'desc' },
-          take: 10,
-        }
+        property: {
+          select: {
+            id: true,
+            name: true,
+            address: true,
+            city: true,
+            neighborhood: true,
+          }
+        },
       }
     });
 
@@ -38,28 +61,55 @@ export async function GET(
   }
 }
 
-// PUT /api/real-estate/leads/[id] - Update lead
-export async function PUT(
+// PATCH /api/real-estate/leads/[id] - Update lead (partial)
+export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
     const body = await request.json();
-    const { fullName, email, phone, message, source, propertyId, qualificationStatus } = body;
 
+    // Validate input
+    const result = updateLeadSchema.safeParse(body);
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: result.error.errors },
+        { status: 400 }
+      );
+    }
+
+    // Check if lead exists and belongs to user
+    const existingLead = await prisma.realEstateLead.findFirst({
+      where: {
+        id: params.id,
+        OR: [
+          { ownerUid },
+          { orgId: { not: null } }, // TODO: Check org membership
+        ]
+      }
+    });
+
+    if (!existingLead) {
+      return NextResponse.json(
+        { error: 'Lead not found' },
+        { status: 404 }
+      );
+    }
+
+    // Update lead
     const lead = await prisma.realEstateLead.update({
       where: { id: params.id },
-      data: {
-        fullName,
-        email,
-        phone,
-        message,
-        source,
-        propertyId,
-        qualificationStatus,
-      },
+      data: result.data,
       include: {
-        property: true,
+        property: {
+          select: {
+            id: true,
+            name: true,
+            address: true,
+            city: true,
+          }
+        },
       }
     });
 
@@ -68,12 +118,21 @@ export async function PUT(
     return NextResponse.json(lead);
 
   } catch (error: any) {
-    console.error('[Leads API] PUT error:', error);
+    console.error('[Leads API] PATCH error:', error);
     return NextResponse.json(
       { error: 'Failed to update lead' },
       { status: 500 }
     );
   }
+}
+
+// PUT /api/real-estate/leads/[id] - Update lead (legacy support)
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  // Redirect to PATCH for consistency
+  return PATCH(request, { params });
 }
 
 // DELETE /api/real-estate/leads/[id] - Delete lead
@@ -82,6 +141,26 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
+
+    // Check if lead exists and belongs to user
+    const existingLead = await prisma.realEstateLead.findFirst({
+      where: {
+        id: params.id,
+        OR: [
+          { ownerUid },
+          { orgId: { not: null } }, // TODO: Check org membership
+        ]
+      }
+    });
+
+    if (!existingLead) {
+      return NextResponse.json(
+        { error: 'Lead not found' },
+        { status: 404 }
+      );
+    }
+
     await prisma.realEstateLead.delete({
       where: { id: params.id },
     });

@@ -258,10 +258,10 @@ function RealEstateDashboardContent() {
         onAddCampaign={() => console.log('Create Campaign')}
       />
 
-      {/* Main Content - Add padding-top to account for fixed header */}
+      {/* Main Content - Add padding-top to account for fixed header + extra spacing */}
       <div className="pt-20 pb-20">
-        {/* Quick Stats Bar */}
-        <div className="px-6">
+        {/* Quick Stats Bar with top margin */}
+        <div className="px-6 mt-10">
           <QuickStatsBar
             stats={[
               {

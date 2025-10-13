@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { z } from 'zod';
 
 const prisma = new PrismaClient();
+
+// Validation schema for creating leads
+const createLeadSchema = z.object({
+  fullName: z.string().min(2, 'Name must be at least 2 characters').max(100),
+  phone: z.string().regex(/^[+]?[0-9]{10,15}$/, 'Invalid phone number format'),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
+  message: z.string().max(500, 'Message too long').optional(),
+  source: z.string().min(1, 'Source is required'),
+  propertyId: z.string().optional(),
+});
 
 // GET /api/real-estate/leads - List leads with filters
 export async function GET(request: NextRequest) {
@@ -70,41 +81,30 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/real-estate/leads - Create new lead
+// POST /api/real-estate/leads - Create new lead with deduplication
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { fullName, email, phone, message, source, propertyId } = body;
 
-    // TODO: Get ownerUid from authenticated user
+    // Get ownerUid from authenticated user
     const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
 
-    // Validation
-    if (!fullName) {
+    // Validate input with Zod
+    const result = createLeadSchema.safeParse(body);
+    if (!result.success) {
       return NextResponse.json(
-        { error: 'Full name is required' },
+        { error: 'Invalid input', details: result.error.errors },
         { status: 400 }
       );
     }
 
-    if (!email && !phone) {
-      return NextResponse.json(
-        { error: 'Email or phone is required' },
-        { status: 400 }
-      );
-    }
+    const { fullName, email, phone, message, source, propertyId } = result.data;
 
-    const lead = await prisma.realEstateLead.create({
-      data: {
-        fullName,
-        email,
-        phone,
-        message,
-        source: source || 'MANUAL',
-        propertyId,
+    // Check for duplicate by phone number (primary deduplication key)
+    const existingLead = await prisma.realEstateLead.findFirst({
+      where: {
         ownerUid,
-        // Default to WARM until qualified
-        qualificationStatus: 'WARM',
+        phone,
       },
       include: {
         property: {
@@ -117,6 +117,52 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    if (existingLead) {
+      // Return 409 Conflict with existing lead data
+      return NextResponse.json(
+        {
+          error: 'Duplicate lead',
+          message: 'A lead with this phone number already exists',
+          existingLead,
+        },
+        { status: 409 }
+      );
+    }
+
+    // Create new lead
+    const lead = await prisma.realEstateLead.create({
+      data: {
+        fullName,
+        email: email || null,
+        phone,
+        message: message || null,
+        source,
+        propertyId: propertyId || null,
+        ownerUid,
+      },
+      include: {
+        property: {
+          select: {
+            id: true,
+            name: true,
+            address: true,
+          }
+        }
+      }
+    });
+
+    // Create initial event
+    await prisma.realEstateLeadEvent.create({
+      data: {
+        leadId: lead.id,
+        type: 'CREATED',
+        payload: {
+          source,
+          createdVia: 'manual',
+        },
+      },
+    });
+
     console.log('[Leads API] Created lead:', lead.id);
 
     return NextResponse.json(lead, { status: 201 });
@@ -124,7 +170,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('[Leads API] POST error:', error);
     return NextResponse.json(
-      { error: 'Failed to create lead' },
+      { error: 'Failed to create lead', details: error.message },
       { status: 500 }
     );
   }

@@ -51,24 +51,27 @@ export function FilterBar({
 
   return (
     <div
-      className="rounded-xl p-6 mb-6 shadow-xl border border-gray-800"
+      className="rounded-xl p-6 mb-6 border"
       style={{
-        background: '#1A2F4B',
+        background: '#FFFFFF',
+        border: '1px solid #E5E7EB',
+        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
       }}
     >
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Date Range Picker - Clean, no icons */}
         <div>
-          <label className="block text-xs font-medium mb-2" style={{ color: '#9EA7B3' }}>
+          <label className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
             Date Range
           </label>
           <select
             value={dateRange}
             onChange={(e) => onDateRangeChange?.(e.target.value)}
-            className="w-full px-4 py-3 rounded-lg text-white hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 cursor-pointer"
+            className="w-full px-4 py-3 rounded-lg hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 cursor-pointer"
             style={{
-              background: '#0E1A2B',
-              border: '1px solid #374151',
+              background: '#F9FAFB',
+              border: '1px solid #D1D5DB',
+              color: '#111827',
             }}
           >
             {dateRangeOptions.map((option) => (
@@ -81,16 +84,17 @@ export function FilterBar({
 
         {/* Market Type - Clean, no icons */}
         <div>
-          <label className="block text-xs font-medium mb-2" style={{ color: '#9EA7B3' }}>
+          <label className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
             Market Type
           </label>
           <select
             value={marketType}
             onChange={(e) => setMarketType(e.target.value)}
-            className="w-full px-4 py-3 rounded-lg text-white hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 cursor-pointer"
+            className="w-full px-4 py-3 rounded-lg hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 cursor-pointer"
             style={{
-              background: '#0E1A2B',
-              border: '1px solid #374151',
+              background: '#F9FAFB',
+              border: '1px solid #D1D5DB',
+              color: '#111827',
             }}
           >
             <option value="all">All Markets</option>
@@ -101,16 +105,17 @@ export function FilterBar({
 
         {/* Agent Filter - Clean, no icons */}
         <div>
-          <label className="block text-xs font-medium mb-2" style={{ color: '#9EA7B3' }}>
+          <label className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
             Agent
           </label>
           <select
             value={agent}
             onChange={(e) => onAgentChange?.(e.target.value)}
-            className="w-full px-4 py-3 rounded-lg text-white hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 cursor-pointer"
+            className="w-full px-4 py-3 rounded-lg hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 cursor-pointer"
             style={{
-              background: '#0E1A2B',
-              border: '1px solid #374151',
+              background: '#F9FAFB',
+              border: '1px solid #D1D5DB',
+              color: '#111827',
             }}
           >
             {agentOptions.map((option) => (
@@ -123,16 +128,17 @@ export function FilterBar({
 
         {/* Location Filter - Clean, no icons */}
         <div>
-          <label className="block text-xs font-medium mb-2" style={{ color: '#9EA7B3' }}>
+          <label className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
             Location
           </label>
           <select
             value={location}
             onChange={(e) => onLocationChange?.(e.target.value)}
-            className="w-full px-4 py-3 rounded-lg text-white hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 cursor-pointer"
+            className="w-full px-4 py-3 rounded-lg hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 cursor-pointer"
             style={{
-              background: '#0E1A2B',
-              border: '1px solid #374151',
+              background: '#F9FAFB',
+              border: '1px solid #D1D5DB',
+              color: '#111827',
             }}
           >
             {locationOptions.map((option) => (
@@ -145,7 +151,7 @@ export function FilterBar({
 
         {/* Search - Clean, no icons */}
         <div>
-          <label className="block text-xs font-medium mb-2" style={{ color: '#9EA7B3' }}>
+          <label className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
             Search
           </label>
           <input
@@ -153,10 +159,11 @@ export function FilterBar({
             placeholder="Properties, leads..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-3 rounded-lg text-white placeholder-gray-400 hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+            className="w-full px-4 py-3 rounded-lg placeholder-gray-400 hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
             style={{
-              background: '#0E1A2B',
-              border: '1px solid #374151',
+              background: '#F9FAFB',
+              border: '1px solid #D1D5DB',
+              color: '#111827',
             }}
           />
         </div>
