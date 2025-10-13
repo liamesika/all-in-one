@@ -1,9 +1,10 @@
 'use client';
 
 import { RealEstateHeader } from '@/components/dashboard/RealEstateHeader';
-import { AlertsBanner } from '@/components/dashboard/AlertsBanner';
+import { NotificationSystem } from '@/components/dashboard/NotificationSystem';
 import { KPICard } from '@/components/dashboard/KPICard';
 import { FilterBar } from '@/components/dashboard/FilterBar';
+import { DashboardNavigation } from '@/components/dashboard/DashboardNavigation';
 import { LeadsMarketingSection } from './components/sections/LeadsMarketingSection';
 import { ListingsInventorySection } from './components/sections/ListingsInventorySection';
 import { DealsRevenueSection } from './components/sections/DealsRevenueSection';
@@ -19,13 +20,15 @@ import { useState } from 'react';
 // Mock data generator - replace with actual API data
 function generateMockData() {
   return {
-    alerts: [
+    notifications: [
       {
         id: '1',
         type: 'warning' as const,
         message: '5 properties need price adjustments based on market trends',
         actionLabel: 'Review',
         onAction: () => console.log('Review properties'),
+        autoDismiss: true,
+        dismissTime: 8000,
       },
       {
         id: '2',
@@ -33,6 +36,15 @@ function generateMockData() {
         message: '12 new qualified leads waiting for contact',
         actionLabel: 'View Leads',
         onAction: () => console.log('View leads'),
+        autoDismiss: true,
+        dismissTime: 8000,
+      },
+      {
+        id: '3',
+        type: 'success' as const,
+        message: 'Monthly revenue target achieved! $285K closed this month.',
+        autoDismiss: true,
+        dismissTime: 6000,
       },
     ],
     kpis: {
@@ -51,13 +63,13 @@ function generateMockData() {
       cpl: 125,
       convRate: 28,
       leadsTrend: [
-        { label: 'Mon', value: 38 },
-        { label: 'Tue', value: 42 },
-        { label: 'Wed', value: 45 },
-        { label: 'Thu', value: 41 },
-        { label: 'Fri', value: 48 },
-        { label: 'Sat', value: 35 },
-        { label: 'Sun', value: 30 },
+        { label: 'Mon', value: 38, date: 'Jan 20, 2025' },
+        { label: 'Tue', value: 42, date: 'Jan 21, 2025' },
+        { label: 'Wed', value: 45, date: 'Jan 22, 2025' },
+        { label: 'Thu', value: 41, date: 'Jan 23, 2025' },
+        { label: 'Fri', value: 48, date: 'Jan 24, 2025' },
+        { label: 'Sat', value: 35, date: 'Jan 25, 2025' },
+        { label: 'Sun', value: 30, date: 'Jan 26, 2025' },
       ],
       leadsBySource: [
         { label: 'Facebook', value: 85, color: '#2979FF' },
@@ -216,11 +228,14 @@ function RealEstateDashboardContent() {
       {/* Fixed Header */}
       <RealEstateHeader />
 
+      {/* Notification System (Top Right) */}
+      <NotificationSystem
+        notifications={data.notifications}
+        onDismiss={(id) => console.log('Dismissed notification:', id)}
+      />
+
       {/* Main Content - Add padding-top to account for fixed header */}
       <div className="pt-20">
-        {/* Smart Alerts Banner */}
-        <AlertsBanner alerts={data.alerts} />
-
         {/* Filter Bar */}
         <div className="px-6 mb-6">
           <FilterBar
@@ -230,6 +245,13 @@ function RealEstateDashboardContent() {
             onLocationChange={setLocation}
             agent={agent}
             onAgentChange={setAgent}
+          />
+        </div>
+
+        {/* Dashboard Navigation Tabs */}
+        <div className="px-6">
+          <DashboardNavigation
+            onTabChange={(tabId) => console.log('Tab changed to:', tabId)}
           />
         </div>
 
