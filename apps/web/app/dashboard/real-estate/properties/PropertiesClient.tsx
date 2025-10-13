@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Sparkles, Plus, Upload } from "lucide-react";
+import { Sparkles, Plus, Upload, Share2 } from "lucide-react";
 import { PropertyAdGenerator } from "@/components/real-estate/PropertyAdGenerator";
 import { PropertyFormModal } from "@/components/real-estate/properties/PropertyFormModal";
 import { ImportPropertiesModal } from "@/components/real-estate/ImportPropertiesModal";
 import { ScoreBadge } from "@/components/real-estate/ScoreBadge";
 import { AssignAgentButton } from "@/components/real-estate/AssignAgentButton";
+import { SharePropertyModal } from "@/components/real-estate/properties/SharePropertyModal";
 import { useLanguage } from "@/lib/language-context";
 
 const brand = {
@@ -22,7 +23,9 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
   const [showAdGenerator, setShowAdGenerator] = useState(false);
   const [showPropertyForm, setShowPropertyForm] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [editingProperty, setEditingProperty] = useState<any>(null);
+  const [sharingProperty, setSharingProperty] = useState<any>(null);
   const [transactionTypeFilter, setTransactionTypeFilter] = useState<'ALL' | 'SALE' | 'RENT'>('ALL');
   const [assignedAgentFilter, setAssignedAgentFilter] = useState<string>('ALL');
   const [accountType, setAccountType] = useState<'COMPANY' | 'FREELANCER'>('COMPANY'); // TODO: Get from auth context
@@ -88,6 +91,16 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
         ? { ...p, assignedAgentId: agentId, assignedAgentName: agentName }
         : p
     ));
+  };
+
+  const handleShareProperty = (property: any) => {
+    setSharingProperty(property);
+    setShowShareModal(true);
+  };
+
+  const handleCloseShareModal = () => {
+    setShowShareModal(false);
+    setSharingProperty(null);
   };
 
   return (
@@ -187,6 +200,7 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
                 )}
                 <th className="p-3 font-medium">{language === 'he' ? 'סטטוס' : 'Status'}</th>
                 <th className="p-3 font-medium">{language === 'he' ? 'פורסם' : 'Published'}</th>
+                <th className="p-3 font-medium">{language === 'he' ? 'שיתוף' : 'Share'}</th>
                 <th className="p-3 font-medium">{language === 'he' ? 'פעולות' : 'Actions'}</th>
               </tr>
             </thead>
@@ -249,6 +263,16 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
                           ? new Date(r.publishedAt).toLocaleDateString("he-IL")
                           : "-"}
                       </td>
+                      <td className="p-3">
+                        <button
+                          onClick={() => handleShareProperty(r)}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-all"
+                          title={language === 'he' ? 'שתף נכס' : 'Share Property'}
+                        >
+                          <Share2 className="w-4 h-4" />
+                          {language === 'he' ? 'שתף' : 'Share'}
+                        </button>
+                      </td>
                     <td className="p-3">
                       <div className="flex gap-2 justify-end">
                         <button
@@ -280,7 +304,7 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
                 })
               ) : (
                 <tr>
-                  <td className="p-8 text-gray-500" colSpan={accountType === 'COMPANY' ? 9 : 8}>
+                  <td className="p-8 text-gray-500" colSpan={accountType === 'COMPANY' ? 10 : 9}>
                     {language === 'he'
                       ? 'אין עדיין נכסים. לחצי "נכס חדש" כדי להוסיף.'
                       : 'No properties yet. Click "New Property" to add one.'}
@@ -318,6 +342,15 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
         <ImportPropertiesModal
           onClose={() => setShowImportModal(false)}
           onImportComplete={handleImportComplete}
+        />
+      )}
+
+      {/* Share Property Modal */}
+      {showShareModal && sharingProperty && (
+        <SharePropertyModal
+          isOpen={showShareModal}
+          property={sharingProperty}
+          onClose={handleCloseShareModal}
         />
       )}
     </main>

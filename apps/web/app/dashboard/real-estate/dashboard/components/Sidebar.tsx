@@ -33,8 +33,14 @@ export function Sidebar({ currentPath = 'dashboard' }: SidebarProps) {
     {
       href: '/real-estate/properties',
       label: lang === 'he' ? 'נכסים' : 'Properties',
-      key: 'properties', 
+      key: 'properties',
       icon: '🏠'
+    },
+    {
+      href: '/real-estate/campaigns',
+      label: lang === 'he' ? 'קמפיינים' : 'Campaigns',
+      key: 'campaigns',
+      icon: '📢'
     },
     {
       href: '/real-estate/clients',

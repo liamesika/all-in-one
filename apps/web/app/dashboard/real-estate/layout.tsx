@@ -13,6 +13,7 @@ export default function RealEstateLayout({ children }: { children: React.ReactNo
     if (pathname.includes('/properties/new')) return 'ad-generator';
     if (pathname.includes('/properties') && pathname.match(/\/properties\/[^/]+$/)) return 'property-detail';
     if (pathname.includes('/properties')) return 'properties';
+    if (pathname.includes('/campaigns')) return 'campaigns';
     if (pathname.includes('/ai-searcher')) return 'comps';
     return 'dashboard';
   };
