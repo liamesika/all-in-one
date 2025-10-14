@@ -1,4 +1,7 @@
 {
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm --filter web build",
+  "framework": null,
   "build": {
     "env": {
       "SKIP_ENV_VALIDATION": "true"
