@@ -1,6 +1,6 @@
 // apps/web/app/layout.tsx
 import './globals';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import React from 'react';
 import { cookies, headers } from 'next/headers';
@@ -33,8 +33,29 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: '/favicon.ico',
+    apple: '/icons/apple-touch-icon.png',
   },
   manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'EFFINITY',
+  },
+  formatDetection: {
+    telephone: false,
+  },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#2979FF' },
+    { media: '(prefers-color-scheme: dark)', color: '#0E1A2B' },
+  ],
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
