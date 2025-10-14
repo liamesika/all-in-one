@@ -220,6 +220,9 @@ importers:
       '@axe-core/react':
         specifier: ^4.10.2
         version: 4.10.2
+      '@prisma/client':
+        specifier: ^6.16.1
+        version: 6.16.1(prisma@6.16.1)(typescript@5.9.2)
       '@stripe/stripe-js':
         specifier: ^5.8.0
         version: 5.10.0
