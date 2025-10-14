@@ -1,6 +1,6 @@
 {
-  "installCommand": "npm install --legacy-peer-deps",
-  "buildCommand": "npm run build --workspace=apps/web",
+  "buildCommand": "cd apps/web && npm install --legacy-peer-deps && npm run build",
+  "installCommand": "echo 'Build handles install'",
   "framework": null,
   "outputDirectory": "apps/web/.next",
   "build": {
