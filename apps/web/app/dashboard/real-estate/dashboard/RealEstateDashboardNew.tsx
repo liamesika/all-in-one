@@ -292,8 +292,8 @@ function RealEstateDashboardContent() {
           />
         </div>
 
-        {/* Sticky Filter Bar */}
-        <div className="sticky top-16 z-40 px-6 mb-6" style={{ background: 'var(--re-deep-navy)' }}>
+        {/* Filter Bar */}
+        <div className="px-6 mt-6 mb-6">
           <FilterBar
             dateRange={dateRange}
             onDateRangeChange={setDateRange}
