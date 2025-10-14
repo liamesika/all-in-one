@@ -2,11 +2,10 @@
  * Usage tracking and limit enforcement for subscriptions
  */
 
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma.server';
 import { checkPlanLimit, getPlanLimits } from '@/config/pricing';
 import type { SubscriptionPlan } from '@prisma/client';
 
-const prisma = new PrismaClient();
 
 export class UsageLimitError extends Error {
   constructor(

@@ -1,7 +1,7 @@
-import { PrismaClient, FeatureAccess, MembershipRole, SubscriptionPlan } from '@prisma/client';
+import { FeatureAccess, MembershipRole, SubscriptionPlan } from '@prisma/client';
+import { prisma } from '@/lib/prisma.server';
 import { getPlanPermissions, ROLE_PERMISSIONS } from '@/config/permissions';
 
-const prisma = new PrismaClient();
 
 export class PermissionChecker {
   /**

@@ -1,8 +1,7 @@
 import { cookies } from 'next/headers';
 import { AutomationsClient } from './AutomationsClient';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma.server';
 
-const prisma = new PrismaClient();
 
 export const metadata = {
   title: 'Automations | EFFINITY',

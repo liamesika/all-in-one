@@ -1,6 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma.server';
 
-const prisma = new PrismaClient();
 
 // Automation trigger types
 export type TriggerType =

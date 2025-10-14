@@ -1,8 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma.server';
 import { cookies } from 'next/headers';
 import IntegrationsClient from './IntegrationsClient';
 
-const prisma = new PrismaClient();
 
 async function getIntegrations(ownerUid: string) {
   try {

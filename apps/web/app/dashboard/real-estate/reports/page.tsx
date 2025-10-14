@@ -1,8 +1,7 @@
 import { Suspense } from 'react';
 import ReportsClient from './ReportsClient';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma.server';
 
-const prisma = new PrismaClient();
 
 // Loading component
 function ReportsLoading() {

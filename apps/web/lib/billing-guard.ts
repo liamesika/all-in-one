@@ -1,4 +1,5 @@
 /**
+import { prisma } from '@/lib/prisma.server';
  * Billing guard middleware
  * Helper functions for enforcing subscription limits in API routes
  */
@@ -47,8 +48,6 @@ export async function guardResourceCreation(
  * Check if organization has an active subscription
  */
 export async function requireActiveSubscription(orgId: string): Promise<NextResponse | null> {
-  const { PrismaClient } = await import('@prisma/client');
-  const prisma = new PrismaClient();
 
   try {
     const subscription = await prisma.subscription.findUnique({

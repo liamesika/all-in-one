@@ -1,4 +1,5 @@
 // apps/web/lib/apiAuth.ts
+import { prisma } from '@/lib/prisma.server';
 // Centralized authentication utilities for API routes
 import 'server-only';
 import { NextRequest, NextResponse } from 'next/server';
@@ -190,8 +191,6 @@ export class AuthenticationError extends Error {
  */
 export async function verifyOrgAccess(uid: string, orgId: string): Promise<boolean> {
   try {
-    const { PrismaClient } = await import('@prisma/client');
-    const prisma = new PrismaClient();
 
     const membership = await prisma.membership.findFirst({
       where: {
@@ -201,7 +200,6 @@ export async function verifyOrgAccess(uid: string, orgId: string): Promise<boole
       },
     });
 
-    await prisma.$disconnect();
 
     if (!membership) {
       console.log('🔒 [API Auth] Access denied: User not member of organization', { uid, orgId });
@@ -221,8 +219,6 @@ export async function verifyOrgAccess(uid: string, orgId: string): Promise<boole
  */
 export async function getUserOrgMembership(uid: string, orgId: string) {
   try {
-    const { PrismaClient } = await import('@prisma/client');
-    const prisma = new PrismaClient();
 
     const membership = await prisma.membership.findFirst({
       where: {
@@ -235,7 +231,6 @@ export async function getUserOrgMembership(uid: string, orgId: string) {
       },
     });
 
-    await prisma.$disconnect();
     return membership;
   } catch (error) {
     console.error('🔥 [API Auth] Error fetching membership:', error);
@@ -248,8 +243,6 @@ export async function getUserOrgMembership(uid: string, orgId: string) {
  */
 export async function getUserDefaultOrg(uid: string) {
   try {
-    const { PrismaClient } = await import('@prisma/client');
-    const prisma = new PrismaClient();
 
     const membership = await prisma.membership.findFirst({
       where: {
@@ -264,7 +257,6 @@ export async function getUserDefaultOrg(uid: string) {
       },
     });
 
-    await prisma.$disconnect();
     return membership;
   } catch (error) {
     console.error('🔥 [API Auth] Error fetching default org:', error);
