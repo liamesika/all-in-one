@@ -1,7 +1,8 @@
 {
-  "installCommand": "pnpm install --frozen-lockfile",
-  "buildCommand": "pnpm --filter web build",
+  "buildCommand": "cd ../.. && pnpm install --frozen-lockfile && pnpm --filter web build",
+  "installCommand": "echo 'Build command handles install'",
   "framework": null,
+  "outputDirectory": ".next",
   "build": {
     "env": {
       "SKIP_ENV_VALIDATION": "true"
