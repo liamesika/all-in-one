@@ -1,5 +1,5 @@
 {
-  "buildCommand": "pnpm run prebuild && pnpm run build",
+  "buildCommand": "prisma generate && next build",
   "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
   "framework": null,
   "outputDirectory": ".next",
