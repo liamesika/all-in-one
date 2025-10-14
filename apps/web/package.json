@@ -26,6 +26,7 @@
     "node": ">=20.0.0 <23.0.0"
   },
   "dependencies": {
+    "@prisma/client": "^6.16.1",
     "@axe-core/react": "^4.10.2",
     "@stripe/stripe-js": "^5.8.0",
     "@types/dompurify": "^3.2.0",
