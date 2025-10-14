@@ -1,3 +1,4 @@
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuth } from 'firebase-admin/auth';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
@@ -23,7 +24,7 @@ if (getApps().length === 0 && process.env.FIREBASE_PROJECT_ID) {
  * Internal endpoint to execute automations
  * Called by event triggers throughout the application
  */
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, { user }) => {
   try {
     const authHeader = request.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
@@ -60,4 +61,4 @@ export async function POST(request: NextRequest) {
     console.error('Error executing automation:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-}
+});

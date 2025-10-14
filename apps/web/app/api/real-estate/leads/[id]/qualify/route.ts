@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import OpenAI from 'openai';
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 
 const prisma = new PrismaClient();
 
@@ -21,12 +22,9 @@ const qualifyLeadSchema = z.object({
 });
 
 // POST /api/real-estate/leads/[id]/qualify - AI qualify lead and recommend properties
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const POST = withAuth(async (request, { user, params }) => {
   try {
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
+    const ownerUid = getOwnerUid(user);
     const body = await request.json();
 
     // Validate input
@@ -176,4 +174,4 @@ Please respond in the following JSON format:
       { status: 500 }
     );
   }
-}
+});

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { PrismaClient } from '@prisma/client';
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 
 const openai = process.env.OPENAI_API_KEY ? new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -8,10 +9,10 @@ const openai = process.env.OPENAI_API_KEY ? new OpenAI({
 
 const prisma = new PrismaClient();
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, { user }) => {
   try {
     const { property } = await request.json();
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
+    const ownerUid = getOwnerUid(user);
 
     if (!property) {
       return NextResponse.json(
@@ -195,7 +196,7 @@ CRITICAL: Keep languages 100% separate. No mixed HE/EN text.`;
       { status: 500 }
     );
   }
-}
+});
 
 function generatePriceRecommendation(property: any) {
   const { price, rooms, size } = property;

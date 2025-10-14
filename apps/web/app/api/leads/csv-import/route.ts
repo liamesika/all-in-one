@@ -1,6 +1,7 @@
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, { user }) => {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
@@ -81,4 +82,4 @@ export async function POST(request: NextRequest) {
       message: error.message || 'Unknown error occurred during import'
     }, { status: 500 });
   }
-}
+});

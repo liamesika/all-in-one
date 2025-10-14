@@ -1,3 +1,4 @@
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 import { NextRequest, NextResponse } from 'next/server';
 
 // Mock source health data
@@ -58,7 +59,7 @@ const mockSourceHealth = [
   }
 ];
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, { user }) => {
   try {
     const { searchParams } = new URL(request.url);
     const ownerUid = searchParams.get('ownerUid');
@@ -76,4 +77,4 @@ export async function GET(request: NextRequest) {
     console.error('Source health API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

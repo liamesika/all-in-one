@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>EFFINITY Invoice</title>
+
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: #f5f7fa;
+            font-family: Inter, system-ui, sans-serif;
+        }
+        .container {
+            max-width: 700px;
+            margin: 40px auto;
+            background: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .header {
+            padding: 32px;
+            background: linear-gradient(135deg, #0E1A2B 0%, #2979FF 100%);
+            color: #ffffff;
+        }
+        .invoice-details {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 16px;
+        }
+        .content {
+            padding: 32px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24px 0;
+        }
+        th {
+            background: #EFF6FF;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #1F2937;
+            border-bottom: 2px solid #2979FF;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #E5E7EB;
+            color: #374151;
+        }
+        .total {
+            background: #F9FAFB;
+            font-weight: 600;
+            color: #111827;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #2979FF;
+            color: #ffffff !important;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .footer {
+            padding: 24px 32px;
+            background: #f5f7fa;
+            text-align: center;
+            font-size: 14px;
+            color: #6B7280;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 style="margin: 0; font-size: 24px;">EFFINITY</h1>
+            <div class="invoice-details" style="margin-top: 16px;">
+                <div>
+                    <p style="margin: 0; opacity: 0.9;">Invoice #{{invoice_number}}</p>
+                    <p style="margin: 4px 0 0 0; opacity: 0.9;">Date: {{invoice_date}}</p>
+                </div>
+                <div style="text-align: right;">
+                    <p style="margin: 0; opacity: 0.9;">Due: {{due_date}}</p>
+                    <p style="margin: 4px 0 0 0; font-size: 18px; font-weight: 600;">{{total_amount}}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <h2 style="margin: 0 0 8px 0; color: #111827; font-size: 18px;">Bill To:</h2>
+            <p style="margin: 0; color: #374151;">
+                {{customer_name}}<br>
+                {{customer_email}}<br>
+                {{customer_address}}
+            </p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th style="text-align: right;">Quantity</th>
+                        <th style="text-align: right;">Price</th>
+                        <th style="text-align: right;">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each items}}
+                    <tr>
+                        <td>{{this.description}}</td>
+                        <td style="text-align: right;">{{this.quantity}}</td>
+                        <td style="text-align: right;">{{this.price}}</td>
+                        <td style="text-align: right;">{{this.amount}}</td>
+                    </tr>
+                    {{/each}}
+                    <tr class="total">
+                        <td colspan="3" style="text-align: right; font-weight: 600;">Subtotal:</td>
+                        <td style="text-align: right;">{{subtotal}}</td>
+                    </tr>
+                    <tr class="total">
+                        <td colspan="3" style="text-align: right; font-weight: 600;">Tax ({{tax_rate}}%):</td>
+                        <td style="text-align: right;">{{tax_amount}}</td>
+                    </tr>
+                    <tr class="total">
+                        <td colspan="3" style="text-align: right; font-weight: 700; font-size: 18px;">Total:</td>
+                        <td style="text-align: right; font-weight: 700; font-size: 18px; color: #2979FF;">{{total_amount}}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="margin: 32px 0; text-align: center;">
+                <a href="{{payment_url}}" class="button">Pay Invoice</a>
+            </div>
+
+            <p style="color: #6B7280; font-size: 14px; margin-top: 32px; padding-top: 24px; border-top: 1px solid #E5E7EB;">
+                <strong>Payment Terms:</strong> {{payment_terms}}<br>
+                Questions? Contact us at {{support_email}}
+            </p>
+        </div>
+
+        <div class="footer">
+            <p style="margin: 0;">© 2025 EFFINITY. All rights reserved.</p>
+            <p style="margin: 8px 0 0 0; font-size: 12px;">
+                Tax ID: {{tax_id}} | {{company_address}}
+            </p>
+        </div>
+    </div>
+</body>
+</html>

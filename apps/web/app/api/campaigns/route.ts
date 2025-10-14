@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 
 // Mock campaigns data for development
 const mockCampaigns = [
@@ -131,14 +132,9 @@ const mockCampaigns = [
   }
 ];
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, { user }) => {
   try {
-    const { searchParams } = new URL(request.url);
-    const ownerUid = searchParams.get('ownerUid');
-
-    if (!ownerUid) {
-      return NextResponse.json({ error: 'Owner UID is required' }, { status: 400 });
-    }
+    const ownerUid = getOwnerUid(user);
 
     // In a real app, this would filter by ownerUid
     const campaigns = mockCampaigns;
@@ -151,16 +147,12 @@ export async function GET(request: NextRequest) {
     console.error('Get campaigns API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, { user }) => {
   try {
+    const ownerUid = getOwnerUid(user);
     const body = await request.json();
-    const ownerUid = request.headers.get('x-org-id');
-
-    if (!ownerUid) {
-      return NextResponse.json({ error: 'Organization ID is required' }, { status: 400 });
-    }
 
     // Create new campaign (simplified validation)
     const newCampaign = {
@@ -197,4 +189,4 @@ export async function POST(request: NextRequest) {
       message: 'Failed to create campaign'
     }, { status: 500 });
   }
-}
+});

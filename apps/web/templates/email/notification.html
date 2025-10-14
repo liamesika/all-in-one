@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>EFFINITY Notification</title>
+
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: #f5f7fa;
+            font-family: Inter, system-ui, sans-serif;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .header {
+            padding: 24px 32px;
+            background: #2979FF;
+            color: #ffffff;
+        }
+        .header h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 32px;
+        }
+        .notification-box {
+            background: #EFF6FF;
+            border-left: 4px solid #2979FF;
+            padding: 16px;
+            margin: 24px 0;
+            border-radius: 4px;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #2979FF;
+            color: #ffffff !important;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            text-decoration: none;
+            margin-top: 16px;
+        }
+        .footer {
+            padding: 24px;
+            background: #f5f7fa;
+            text-align: center;
+            font-size: 14px;
+            color: #6B7280;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>EFFINITY Notification</h2>
+        </div>
+
+        <div class="content">
+            <p style="color: #111827; font-size: 16px; margin: 0 0 16px 0;">
+                Hello {{user_name}},
+            </p>
+
+            <div class="notification-box">
+                <p style="margin: 0; color: #1F2937; font-weight: 600;">
+                    {{notification_title}}
+                </p>
+                <p style="margin: 8px 0 0 0; color: #374151;">
+                    {{notification_message}}
+                </p>
+            </div>
+
+            <p style="color: #374151; font-size: 16px; margin: 16px 0;">
+                {{additional_details}}
+            </p>
+
+            <a href="{{action_url}}" class="button">{{action_text}}</a>
+
+            <p style="color: #6B7280; font-size: 14px; margin-top: 32px;">
+                This is an automated notification from EFFINITY. If you have questions, please contact support.
+            </p>
+        </div>
+
+        <div class="footer">
+            <p style="margin: 0;">© 2025 EFFINITY. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

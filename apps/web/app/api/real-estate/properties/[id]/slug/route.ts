@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 
 // Mock property storage - in production this would use Prisma
 // Import from parent route
@@ -24,13 +25,10 @@ function generateSlug(name: string, id: string): string {
 }
 
 // POST - Generate or regenerate slug for a property
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const POST = withAuth(async (request, { user, params }) => {
   try {
     const { id } = await params;
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
+    const ownerUid = getOwnerUid(user);
 
     // TODO: Replace with actual Prisma query
     // const property = await prisma.property.findFirst({
@@ -100,4 +98,4 @@ export async function POST(
       { status: 500 }
     );
   }
-}
+});

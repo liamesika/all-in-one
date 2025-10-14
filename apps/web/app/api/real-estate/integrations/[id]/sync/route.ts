@@ -1,16 +1,14 @@
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 // POST /api/real-estate/integrations/[id]/sync - Trigger manual sync
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const POST = withAuth(async (request, { user, params }) => {
   try {
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
-    const { id } = params;
+    const { id } = params as { id: string };
+    const ownerUid = getOwnerUid(user);
 
     // Check if integration exists and belongs to user
     const integration = await prisma.integration.findFirst({
@@ -92,4 +90,4 @@ export async function POST(
       { status: 500 }
     );
   }
-}
+});

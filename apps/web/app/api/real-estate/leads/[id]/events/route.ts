@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 
 const prisma = new PrismaClient();
 
 // GET /api/real-estate/leads/[id]/events - Get lead event timeline
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const GET = withAuth(async (request, { user, params }) => {
   try {
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
+    const ownerUid = getOwnerUid(user);
 
     // First verify the lead belongs to the user
     const lead = await prisma.realEstateLead.findFirst({
@@ -44,4 +42,4 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+});

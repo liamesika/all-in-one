@@ -1,10 +1,11 @@
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 // POST /api/real-estate/integrations/oauth/callback - Handle OAuth callback
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, { user }) => {
   try {
     const searchParams = request.nextUrl.searchParams;
     const code = searchParams.get('code');
@@ -91,4 +92,4 @@ export async function GET(request: NextRequest) {
       )
     );
   }
-}
+});

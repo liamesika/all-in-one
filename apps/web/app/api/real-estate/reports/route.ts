@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 
 const prisma = new PrismaClient();
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, { user }) => {
   try {
     const searchParams = request.nextUrl.searchParams;
 
@@ -14,8 +15,7 @@ export async function GET(request: NextRequest) {
     const transactionType = searchParams.get('transactionType');
     const source = searchParams.get('source');
 
-    // TODO: Get ownerUid from authenticated user (Firebase session)
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
+    const ownerUid = getOwnerUid(user);
 
     // Calculate date range
     const now = new Date();
@@ -221,4 +221,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

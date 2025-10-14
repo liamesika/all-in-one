@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>{{email_title}}</title>
+
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: #f5f7fa;
+            font-family: Inter, system-ui, sans-serif;
+        }
+        .container {
+            max-width: 650px;
+            margin: 40px auto;
+            background: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .hero {
+            background: linear-gradient(135deg, #0E1A2B 0%, #1A2F4B 40%, #2979FF 100%);
+            padding: 48px 32px;
+            text-align: center;
+            color: #ffffff;
+        }
+        .hero h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 600;
+        }
+        .hero p {
+            margin: 16px 0 0 0;
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 40px 32px;
+        }
+        .feature {
+            display: flex;
+            margin: 24px 0;
+            gap: 16px;
+        }
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: #EFF6FF;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .cta {
+            background: #EFF6FF;
+            padding: 32px;
+            text-align: center;
+            margin: 32px 0;
+            border-radius: 8px;
+        }
+        .button {
+            display: inline-block;
+            padding: 16px 32px;
+            background: #2979FF;
+            color: #ffffff !important;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            text-decoration: none;
+        }
+        .footer {
+            padding: 24px 32px;
+            background: #f5f7fa;
+            text-align: center;
+            font-size: 14px;
+            color: #6B7280;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="hero">
+            <h1>{{hero_title}}</h1>
+            <p>{{hero_subtitle}}</p>
+        </div>
+
+        <div class="content">
+            <p style="color: #374151; font-size: 16px; line-height: 1.6;">
+                {{intro_text}}
+            </p>
+
+            {{#each features}}
+            <div class="feature">
+                <div class="feature-icon">
+                    <span style="color: #2979FF; font-size: 24px;">{{this.icon}}</span>
+                </div>
+                <div>
+                    <h3 style="margin: 0 0 8px 0; color: #111827; font-size: 18px;">{{this.title}}</h3>
+                    <p style="margin: 0; color: #6B7280; font-size: 14px;">{{this.description}}</p>
+                </div>
+            </div>
+            {{/each}}
+
+            <div class="cta">
+                <h2 style="margin: 0 0 16px 0; color: #111827; font-size: 24px;">{{cta_title}}</h2>
+                <p style="margin: 0 0 24px 0; color: #6B7280; font-size: 16px;">{{cta_subtitle}}</p>
+                <a href="{{cta_url}}" class="button">{{cta_button_text}}</a>
+            </div>
+
+            <p style="color: #6B7280; font-size: 14px; text-align: center; margin-top: 32px;">
+                {{closing_text}}
+            </p>
+        </div>
+
+        <div class="footer">
+            <p style="margin: 0 0 8px 0;">© 2025 EFFINITY. All rights reserved.</p>
+            <p style="margin: 0; font-size: 12px; color: #9CA3AF;">
+                <a href="{{unsubscribe_url}}" style="color: #6B7280; text-decoration: none;">Unsubscribe</a> |
+                <a href="{{preferences_url}}" style="color: #6B7280; text-decoration: none;">Email Preferences</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

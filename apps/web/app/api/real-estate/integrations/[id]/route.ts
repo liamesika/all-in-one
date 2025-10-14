@@ -1,3 +1,4 @@
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
@@ -12,13 +13,10 @@ const updateIntegrationSchema = z.object({
 });
 
 // GET /api/real-estate/integrations/[id] - Get integration details
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const GET = withAuth(async (request, { user, params }) => {
   try {
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
-    const { id } = params;
+    const { id } = params as { id: string };
+    const ownerUid = getOwnerUid(user);
 
     const integration = await prisma.integration.findFirst({
       where: {
@@ -48,16 +46,13 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+});
 
 // PATCH /api/real-estate/integrations/[id] - Update integration settings
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const PATCH = withAuth(async (request, { user, params }) => {
   try {
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
-    const { id } = params;
+    const { id } = params as { id: string };
+    const ownerUid = getOwnerUid(user);
     const body = await request.json();
 
     // Validate input
@@ -103,16 +98,13 @@ export async function PATCH(
       { status: 500 }
     );
   }
-}
+});
 
 // DELETE /api/real-estate/integrations/[id] - Disconnect/delete integration
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const DELETE = withAuth(async (request, { user, params }) => {
   try {
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
-    const { id } = params;
+    const { id } = params as { id: string };
+    const ownerUid = getOwnerUid(user);
 
     // Check if integration exists and belongs to user
     const existing = await prisma.integration.findFirst({
@@ -144,4 +136,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-}
+});

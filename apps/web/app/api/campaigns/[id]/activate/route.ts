@@ -1,17 +1,11 @@
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const POST = withAuth(async (request, { user, params }) => {
   try {
-    const { id } = params;
+    const { id } = params as { id: string };
+    const ownerUid = getOwnerUid(user);
     const body = await request.json();
-    const { ownerUid } = body;
-
-    if (!ownerUid) {
-      return NextResponse.json({ error: 'Owner UID is required' }, { status: 400 });
-    }
 
     // In a real app, this would:
     // 1. Validate campaign can be activated
@@ -33,4 +27,4 @@ export async function POST(
     console.error('Campaign activation API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

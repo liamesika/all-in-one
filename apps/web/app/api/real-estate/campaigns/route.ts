@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 
 const prisma = new PrismaClient();
 
 // GET /api/real-estate/campaigns - List all campaigns
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, { user }) => {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
+    const ownerUid = getOwnerUid(user);
     const orgId = request.headers.get('x-org-id');
 
     // Build filters
@@ -68,12 +69,12 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 // POST /api/real-estate/campaigns - Create new campaign
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, { user }) => {
   try {
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
+    const ownerUid = getOwnerUid(user);
     const orgId = request.headers.get('x-org-id');
 
     const body = await request.json();
@@ -144,4 +145,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

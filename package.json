@@ -16,7 +16,7 @@
     "lint": "turbo run lint",
     "format": "prettier -w .",
     "prisma:generate": "prisma generate --schema packages/server/db/prisma/schema.prisma",
-    "postinstall": "pnpm -C packages/server prisma generate --schema db/prisma/schema.prisma",
+    "postinstall": "prisma generate --schema packages/server/db/prisma/schema.prisma",
     "vercel-install": "npm install --force --no-optional"
   },
   "devDependencies": {
@@ -33,6 +33,7 @@
     "openai": "5.16.0"
   },
   "dependencies": {
+    "@google-cloud/firestore": "^7.11.6",
     "@prisma/client": "6.16.1",
     "firebase": "^12.2.1"
   },

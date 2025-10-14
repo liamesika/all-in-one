@@ -1,3 +1,4 @@
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 import { NextRequest, NextResponse } from 'next/server';
 
 type AutoFollowupTrigger = 'NEW_LEAD' | 'HOT_LEAD' | 'FIRST_CONTACT' | 'QUALIFIED' | 'NO_RESPONSE_24H' | 'NO_RESPONSE_7D';
@@ -117,7 +118,7 @@ Best regards,
 
 let nextId = 5;
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, { user }) => {
   try {
     const { searchParams } = new URL(request.url);
     const ownerUid = searchParams.get('ownerUid');
@@ -135,16 +136,13 @@ export async function GET(request: NextRequest) {
     console.error('Get templates API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, { user }) => {
   try {
+    const ownerUid = getOwnerUid(user);
     const body = await request.json();
-    const { ownerUid, name, trigger, channel, subject, content, isActive, delayMinutes, brandName } = body;
-
-    if (!ownerUid) {
-      return NextResponse.json({ error: 'Owner UID is required' }, { status: 400 });
-    }
+    const { name, trigger, channel, subject, content, isActive, delayMinutes, brandName } = body;
 
     if (!name || !trigger || !channel || !content) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -184,4 +182,4 @@ export async function POST(request: NextRequest) {
       message: 'Failed to create template'
     }, { status: 500 });
   }
-}
+});

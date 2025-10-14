@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 
 // Mock database - same as in route.ts parent
 // In production, this would be shared Prisma instance
@@ -26,13 +27,10 @@ const getMockProperties = () => {
 };
 
 // GET - Get single property
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withAuth(async (request, { user, params }) => {
   try {
     const { id } = await params;
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
+    const ownerUid = getOwnerUid(user);
 
     // TODO: Replace with Prisma query
     // const property = await prisma.property.findFirst({
@@ -57,16 +55,13 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+});
 
 // PUT - Update property
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const PUT = withAuth(async (request, { user, params }) => {
   try {
     const { id } = await params;
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
+    const ownerUid = getOwnerUid(user);
     const body = await request.json();
 
     // TODO: Replace with Prisma update
@@ -122,16 +117,13 @@ export async function PUT(
       { status: 500 }
     );
   }
-}
+});
 
 // DELETE - Archive/Delete property
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const DELETE = withAuth(async (request, { user, params }) => {
   try {
     const { id } = await params;
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
+    const ownerUid = getOwnerUid(user);
 
     // TODO: Replace with Prisma soft delete
     // const property = await prisma.property.update({
@@ -162,4 +154,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-}
+});

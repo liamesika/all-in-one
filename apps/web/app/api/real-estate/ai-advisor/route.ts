@@ -6,13 +6,14 @@ import {
   getLanguageInstruction,
   type DetectedLanguage,
 } from '@/lib/languageDetection';
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 
 // Initialize OpenAI client (server-side only)
 const openai = process.env.OPENAI_API_KEY ? new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 }) : null;
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, { user }) => {
   try {
     const {
       message,
@@ -113,7 +114,7 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 function buildSystemPrompt(context: any, locale: DetectedLanguage): string {
   const { page, data } = context;

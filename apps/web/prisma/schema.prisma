@@ -2322,3 +2322,25 @@ model CreativeRender {
   @@index([status])
   @@index([projectId, status])
 }
+
+// Saved Views - Sprint A1: Quick win feature for saving filter/sort state
+model SavedView {
+  id        String   @id @default(cuid())
+  name      String // User-defined name, e.g., "Hot Leads" or "Pending Reviews"
+  page      String // Which page: leads, properties, campaigns, projects, reviews, templates
+  vertical  String? // Optional: real-estate, e-commerce, law
+  filters   Json // Filter state object
+  sorts     Json @default("[]") // Array of {field, direction}
+  isDefault Boolean  @default(false) // Auto-apply on page load
+  scope     String   @default("user") // 'user' or 'org'
+  userId    String // Creator
+  orgId     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, page])
+  @@index([orgId, page])
+  @@index([page, isDefault])
+  @@index([userId, page, isDefault])
+  @@index([orgId, page, scope, isDefault])
+}

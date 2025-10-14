@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient, TransactionType } from '@prisma/client';
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 
 const prisma = new PrismaClient();
 
 // GET /api/real-estate/properties/search - Search properties by name, address, or city
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, { user }) => {
   try {
     const searchParams = request.nextUrl.searchParams;
     const search = searchParams.get('search') || '';
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
 
     // Get ownerUid from authenticated user
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
+    const ownerUid = getOwnerUid(user);
 
     // Build where clause
     const where: any = {
@@ -71,4 +72,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

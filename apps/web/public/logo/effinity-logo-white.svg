@@ -1,0 +1,14 @@
+<svg width="200" height="60" viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- E Letter in white -->
+  <rect x="10" y="10" width="30" height="6" rx="2" fill="#FFFFFF"/>
+  <rect x="10" y="10" width="6" height="40" rx="2" fill="#FFFFFF"/>
+  <rect x="10" y="27" width="24" height="6" rx="2" fill="#E8EBF0"/>
+  <rect x="10" y="44" width="30" height="6" rx="2" fill="#FFFFFF"/>
+
+  <!-- Building accent -->
+  <rect x="44" y="12" width="8" height="8" fill="#CFD4DD"/>
+  <path d="M 48 10 L 44 14 L 52 14 Z" fill="#FFFFFF"/>
+
+  <!-- Text EFFINITY in white -->
+  <text x="65" y="38" font-family="Inter, system-ui, sans-serif" font-size="28" font-weight="600" fill="#FFFFFF" letter-spacing="-0.5">EFFINITY</text>
+</svg>

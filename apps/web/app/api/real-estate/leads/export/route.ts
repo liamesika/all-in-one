@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 
 // Import mock leads from import route
 // In production, this would query Prisma with filters
@@ -32,10 +33,10 @@ const getMockLeads = () => {
   ];
 };
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, { user }) => {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
+    const ownerUid = getOwnerUid(user);
 
     // Get filter parameters (same as main list)
     const statusFilter = searchParams.get('status');
@@ -107,7 +108,7 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 function escapeCsvField(field: string): string {
   if (!field) return '""';

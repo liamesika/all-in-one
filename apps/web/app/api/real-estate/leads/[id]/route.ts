@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 
 const prisma = new PrismaClient();
 
@@ -14,13 +15,9 @@ const updateLeadSchema = z.object({
 });
 
 // GET /api/real-estate/leads/[id] - Get lead details
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const GET = withAuth(async (request, { user, params }) => {
   try {
-    // Get ownerUid from header (auth will be added later)
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
+    const ownerUid = getOwnerUid(user);
 
     const lead = await prisma.realEstateLead.findFirst({
       where: {
@@ -59,15 +56,12 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+});
 
 // PATCH /api/real-estate/leads/[id] - Update lead (partial)
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const PATCH = withAuth(async (request, { user, params }) => {
   try {
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
+    const ownerUid = getOwnerUid(user);
     const body = await request.json();
 
     // Validate input
@@ -124,24 +118,18 @@ export async function PATCH(
       { status: 500 }
     );
   }
-}
+});
 
 // PUT /api/real-estate/leads/[id] - Update lead (legacy support)
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  // Redirect to PATCH for consistency
-  return PATCH(request, { params });
-}
+export const PUT = withAuth(async (request, context) => {
+  // Redirect to PATCH for consistency - need to call PATCH handler directly
+  return PATCH.call(null, request, context);
+});
 
 // DELETE /api/real-estate/leads/[id] - Delete lead
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const DELETE = withAuth(async (request, { user, params }) => {
   try {
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
+    const ownerUid = getOwnerUid(user);
 
     // Check if lead exists and belongs to user
     const existingLead = await prisma.realEstateLead.findFirst({
@@ -176,4 +164,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-}
+});

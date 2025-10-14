@@ -1,3 +1,4 @@
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 import { NextRequest, NextResponse } from 'next/server';
 
 // OAuth configuration for different platforms
@@ -47,13 +48,10 @@ const OAUTH_CONFIG: Record<
 };
 
 // GET /api/real-estate/integrations/oauth/[platform] - Initiate OAuth flow
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { platform: string } }
-) {
+export const GET = withAuth(async (request, { user, params }) => {
   try {
-    const { platform } = params;
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
+    const { platform } = params as { platform: string };
+    const ownerUid = getOwnerUid(user);
 
     const config = OAUTH_CONFIG[platform.toUpperCase()];
 
@@ -90,4 +88,4 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+});

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 
 const openai = process.env.OPENAI_API_KEY ? new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 }) : null;
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, { user }) => {
   try {
     const { leadId, leadInfo, answers } = await request.json();
 
@@ -130,4 +131,4 @@ Be specific in your recommendations and extract actual data from the answers pro
 
     return NextResponse.json(fallbackQualification);
   }
-}
+});

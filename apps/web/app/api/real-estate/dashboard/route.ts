@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, { user }) => {
   try {
+    const ownerUid = getOwnerUid(user);
     // Return mock data for now to prevent 404
     const mockData = {
       kpis: {
@@ -49,4 +51,4 @@ export async function GET(request: NextRequest) {
     console.error('Real estate dashboard API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

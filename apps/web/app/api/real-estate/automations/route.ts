@@ -1,3 +1,4 @@
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getAuth } from 'firebase-admin/auth';
@@ -24,16 +25,9 @@ const prisma = new PrismaClient();
  * GET /api/real-estate/automations
  * List all automations for the authenticated user
  */
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, { user }) => {
   try {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await getAuth().verifyIdToken(token);
-    const ownerUid = decodedToken.uid;
+    const ownerUid = getOwnerUid(user);
 
     const automations = await prisma.automation.findMany({
       where: { ownerUid },
@@ -72,23 +66,15 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching automations:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-}
+});
 
 /**
  * POST /api/real-estate/automations
  * Create a new automation
  */
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, { user }) => {
   try {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await getAuth().verifyIdToken(token);
-    const ownerUid = decodedToken.uid;
-
+    const ownerUid = getOwnerUid(user);
     const body = await request.json();
     const { name, description, trigger, actions, conditions, status } = body;
 
@@ -123,4 +109,4 @@ export async function POST(request: NextRequest) {
     console.error('Error creating automation:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-}
+});

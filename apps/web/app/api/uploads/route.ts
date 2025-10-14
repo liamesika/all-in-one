@@ -1,10 +1,11 @@
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 import { NextRequest, NextResponse } from 'next/server';
 import { getStorage } from 'firebase-admin/storage';
 import { adminAuth } from '@/lib/firebaseAdmin.server';
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, { user }) => {
   try {
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
+    const ownerUid = getOwnerUid(user);
     const { fileName, fileType } = await request.json();
 
     if (!fileName || !fileType) {
@@ -54,10 +55,10 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 // GET - Get public URL for uploaded file
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, { user }) => {
   try {
     const { searchParams } = new URL(request.url);
     const filePath = searchParams.get('filePath');
@@ -94,4 +95,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

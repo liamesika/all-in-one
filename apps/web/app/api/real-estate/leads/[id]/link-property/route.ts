@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 
 const prisma = new PrismaClient();
 
@@ -10,12 +11,9 @@ const linkPropertySchema = z.object({
 });
 
 // PATCH /api/real-estate/leads/[id]/link-property - Link/unlink property
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const PATCH = withAuth(async (request, { user, params }) => {
   try {
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
+    const ownerUid = getOwnerUid(user);
     const body = await request.json();
 
     // Validate input
@@ -111,4 +109,4 @@ export async function PATCH(
       { status: 500 }
     );
   }
-}
+});

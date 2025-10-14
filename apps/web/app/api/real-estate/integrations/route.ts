@@ -1,3 +1,4 @@
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
@@ -32,10 +33,10 @@ const createIntegrationSchema = z.object({
 });
 
 // GET /api/real-estate/integrations - List all integrations for user
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, { user }) => {
   try {
     // Get ownerUid from authenticated user
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
+    const ownerUid = getOwnerUid(user);
 
     const integrations = await prisma.integration.findMany({
       where: { ownerUid },
@@ -56,15 +57,15 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 // POST /api/real-estate/integrations - Create new integration connection
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, { user }) => {
   try {
     const body = await request.json();
 
     // Get ownerUid from authenticated user
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
+    const ownerUid = getOwnerUid(user);
     const orgId = request.headers.get('x-org-id') || null;
 
     // Validate input
@@ -118,4 +119,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

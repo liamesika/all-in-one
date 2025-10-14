@@ -1,16 +1,14 @@
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 // GET /api/real-estate/campaigns/[id] - Fetch single campaign
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withAuth(async (request, { user, params }) => {
   try {
     const { id } = await params;
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
+    const ownerUid = getOwnerUid(user);
 
     const campaign = await prisma.campaign.findFirst({
       where: {
@@ -48,16 +46,13 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+});
 
 // PATCH /api/real-estate/campaigns/[id] - Update campaign
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const PATCH = withAuth(async (request, { user, params }) => {
   try {
     const { id } = await params;
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
+    const ownerUid = getOwnerUid(user);
     const body = await request.json();
 
     // Verify ownership
@@ -127,16 +122,13 @@ export async function PATCH(
       { status: 500 }
     );
   }
-}
+});
 
 // DELETE /api/real-estate/campaigns/[id] - Delete campaign
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const DELETE = withAuth(async (request, { user, params }) => {
   try {
     const { id } = await params;
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
+    const ownerUid = getOwnerUid(user);
 
     // Verify ownership
     const existingCampaign = await prisma.campaign.findFirst({
@@ -166,4 +158,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-}
+});

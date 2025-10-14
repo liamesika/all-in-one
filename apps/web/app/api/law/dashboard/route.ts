@@ -1,6 +1,7 @@
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, { user }) => {
   try {
     // Return mock data for law dashboard to prevent 404
     const mockData = {
@@ -41,4 +42,4 @@ export async function GET(request: NextRequest) {
     console.error('Law dashboard API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

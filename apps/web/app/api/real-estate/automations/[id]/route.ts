@@ -1,22 +1,6 @@
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { getAuth } from 'firebase-admin/auth';
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
-
-// Initialize Firebase Admin if not already initialized (skip during build)
-if (getApps().length === 0 && process.env.FIREBASE_PROJECT_ID) {
-  try {
-    initializeApp({
-      credential: cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')!,
-      }),
-    });
-  } catch (error) {
-    console.warn('[Firebase Admin] Initialization failed:', error);
-  }
-}
 
 const prisma = new PrismaClient();
 
@@ -24,23 +8,14 @@ const prisma = new PrismaClient();
  * GET /api/real-estate/automations/[id]
  * Fetch a specific automation with execution history
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const GET = withAuth(async (request, { user, params }) => {
   try {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await getAuth().verifyIdToken(token);
-    const ownerUid = decodedToken.uid;
+    const { id } = params as { id: string };
+    const ownerUid = getOwnerUid(user);
 
     const automation = await prisma.automation.findFirst({
       where: {
-        id: params.id,
+        id,
         ownerUid,
       },
       include: {
@@ -60,30 +35,21 @@ export async function GET(
     console.error('Error fetching automation:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-}
+});
 
 /**
  * PATCH /api/real-estate/automations/[id]
  * Update an automation
  */
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const PATCH = withAuth(async (request, { user, params }) => {
   try {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await getAuth().verifyIdToken(token);
-    const ownerUid = decodedToken.uid;
+    const { id } = params as { id: string };
+    const ownerUid = getOwnerUid(user);
 
     // Verify ownership
     const existing = await prisma.automation.findFirst({
       where: {
-        id: params.id,
+        id,
         ownerUid,
       },
     });
@@ -104,7 +70,7 @@ export async function PATCH(
     if (status !== undefined) updateData.status = status;
 
     const automation = await prisma.automation.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
     });
 
@@ -113,30 +79,21 @@ export async function PATCH(
     console.error('Error updating automation:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-}
+});
 
 /**
  * DELETE /api/real-estate/automations/[id]
  * Delete an automation
  */
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const DELETE = withAuth(async (request, { user, params }) => {
   try {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await getAuth().verifyIdToken(token);
-    const ownerUid = decodedToken.uid;
+    const { id } = params as { id: string };
+    const ownerUid = getOwnerUid(user);
 
     // Verify ownership
     const existing = await prisma.automation.findFirst({
       where: {
-        id: params.id,
+        id,
         ownerUid,
       },
     });
@@ -146,7 +103,7 @@ export async function DELETE(
     }
 
     await prisma.automation.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ success: true });
@@ -154,4 +111,4 @@ export async function DELETE(
     console.error('Error deleting automation:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-}
+});

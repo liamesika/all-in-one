@@ -1,3 +1,4 @@
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 import { NextRequest, NextResponse } from 'next/server';
 
 type LeadStage = 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'MEETING' | 'OFFER' | 'DEAL' | 'WON' | 'LOST';
@@ -7,18 +8,12 @@ const mockLeads = [
   // This would be loaded from the same data store as the main leads route
 ];
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const PUT = withAuth(async (request, { user, params }) => {
   try {
-    const { id } = params;
+    const { id } = params as { id: string };
+    const ownerUid = getOwnerUid(user);
     const body = await request.json();
-    const { status, ownerUid } = body;
-
-    if (!ownerUid) {
-      return NextResponse.json({ error: 'Owner UID is required' }, { status: 400 });
-    }
+    const { status } = body;
 
     if (!status || !['NEW', 'CONTACTED', 'QUALIFIED', 'MEETING', 'OFFER', 'DEAL', 'WON', 'LOST'].includes(status)) {
       return NextResponse.json({ error: 'Valid status is required' }, { status: 400 });
@@ -37,4 +32,4 @@ export async function PUT(
     console.error('Update lead status API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

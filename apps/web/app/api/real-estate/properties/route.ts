@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 
 // Mock database - replace with Prisma in production
 let mockProperties: any[] = [
@@ -56,9 +57,9 @@ let mockProperties: any[] = [
 ];
 
 // GET - List all properties for user
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, { user }) => {
   try {
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
+    const ownerUid = getOwnerUid(user);
 
     // TODO: Replace with Prisma query
     // const properties = await prisma.property.findMany({
@@ -76,12 +77,12 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 // POST - Create new property
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, { user }) => {
   try {
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
+    const ownerUid = getOwnerUid(user);
     const body = await request.json();
 
     // Validate required fields
@@ -131,4 +132,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

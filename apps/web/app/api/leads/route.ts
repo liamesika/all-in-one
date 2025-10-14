@@ -1,3 +1,4 @@
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 import { NextRequest, NextResponse } from 'next/server';
 import { CreateLeadSchema, CreateLeadRequest } from '@/lib/validation/leads';
 
@@ -91,10 +92,10 @@ const mockLeads = [
 
 let nextId = 4;
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request, { user }) => {
   try {
+    const ownerUid = getOwnerUid(user);
     const { searchParams } = new URL(request.url);
-    const ownerUid = searchParams.get('ownerUid');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
     const source = searchParams.get('source');
@@ -103,10 +104,6 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search');
     const platform = searchParams.get('platform');
     const hasFirstContact = searchParams.get('hasFirstContact');
-
-    if (!ownerUid) {
-      return NextResponse.json({ error: 'Owner UID is required' }, { status: 400 });
-    }
 
     // Filter leads based on query parameters
     let filteredLeads = [...mockLeads];
@@ -162,16 +159,12 @@ export async function GET(request: NextRequest) {
     console.error('Get leads API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, { user }) => {
   try {
+    const ownerUid = getOwnerUid(user);
     const body = await request.json();
-    const ownerUid = request.headers.get('x-org-id');
-
-    if (!ownerUid) {
-      return NextResponse.json({ error: 'Organization ID is required' }, { status: 400 });
-    }
 
     // Validate request body
     const validatedData = CreateLeadSchema.parse(body);
@@ -215,4 +208,4 @@ export async function POST(request: NextRequest) {
       message: 'Failed to create lead'
     }, { status: 500 });
   }
-}
+});

@@ -1,13 +1,14 @@
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 import { NextResponse } from 'next/server';
 
-export async function GET() {
+export const GET = withAuth(async (request, { user }) => {
   return NextResponse.json([
     {
       id: 'demo-membership',
       orgId: 'demo-org',
       role: 'OWNER',
       status: 'ACTIVE',
-      userId: 'demo-user',
+      userId: user.uid,
       organization: {
         id: 'demo-org',
         name: 'Demo Production Company',
@@ -15,8 +16,8 @@ export async function GET() {
         planTier: 'pro',
         seatLimit: 10,
         usedSeats: 1,
-        ownerUserId: 'demo-user',
+        ownerUserId: user.uid,
       },
     },
   ]);
-}
+});

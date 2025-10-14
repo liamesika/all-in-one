@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 
 interface LeadImportRow {
   name: string;
@@ -45,9 +46,9 @@ let mockLeads: any[] = [
   },
 ];
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, { user }) => {
   try {
-    const ownerUid = request.headers.get('x-owner-uid') || 'demo-user';
+    const ownerUid = getOwnerUid(user);
     const body = await request.json();
     const { rows, importType = 'csv' } = body;
 
@@ -147,7 +148,7 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 // Export mock leads for use in other routes
 export { mockLeads };
