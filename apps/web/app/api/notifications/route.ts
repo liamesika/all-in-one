@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { withAuthAndOrg } from '@/lib/apiAuth';
-import prisma from '@/lib/prisma.server';
+import { prisma } from '@/lib/prisma.server';
 import { NotificationType } from '@prisma/client';
 
 const querySchema = z.object({

@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuthAndOrg } from '@/lib/apiAuth';
-import prisma from '@/lib/prisma.server';
+import { prisma } from '@/lib/prisma.server';
 
 export const POST = withAuthAndOrg(async (request: NextRequest, { user, orgId }) => {
   // Only allow in development
