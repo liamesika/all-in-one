@@ -4,12 +4,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient, SubscriptionPlan } from '@prisma/client';
+import { SubscriptionPlan } from '@prisma/client';
+import { prisma } from '@/lib/prisma.server';
 import { updateSubscription, STRIPE_PRICE_IDS } from '@/lib/stripe';
 import { getPlanLimits } from '@/config/pricing';
 import { withAuthAndOrg } from '@/lib/apiAuth';
 
-const prisma = new PrismaClient();
 
 /**
  * POST /api/billing/upgrade

@@ -7,10 +7,10 @@
 
 import { withAuthAndOrg } from '@/lib/apiAuth';
 import { NextResponse } from 'next/server';
-import { PrismaClient, CreativeTemplateKind, CreativeLocale } from '@prisma/client';
+import { CreativeTemplateKind, CreativeLocale } from '@prisma/client';
+import { prisma } from '@/lib/prisma.server';
 import { z } from 'zod';
 
-const prisma = new PrismaClient();
 
 const updateTemplateSchema = z.object({
   title: z.string().min(1).max(200).optional(),

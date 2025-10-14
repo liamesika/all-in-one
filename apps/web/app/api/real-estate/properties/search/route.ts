@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient, TransactionType } from '@prisma/client';
+import { TransactionType } from '@prisma/client';
+import { prisma } from '@/lib/prisma.server';
 import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 
-const prisma = new PrismaClient();
 
 // GET /api/real-estate/properties/search - Search properties by name, address, or city
 export const GET = withAuth(async (request, { user }) => {

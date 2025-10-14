@@ -4,11 +4,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma.server';
 import { createBillingPortalSession } from '@/lib/stripe';
 import { withAuthAndOrg } from '@/lib/apiAuth';
 
-const prisma = new PrismaClient();
 
 /**
  * POST /api/billing/portal

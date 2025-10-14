@@ -1,6 +1,6 @@
 import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma.server';
 import { getAuth } from 'firebase-admin/auth';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 
@@ -19,7 +19,6 @@ if (getApps().length === 0 && process.env.FIREBASE_PROJECT_ID) {
   }
 }
 
-const prisma = new PrismaClient();
 
 /**
  * GET /api/real-estate/automations

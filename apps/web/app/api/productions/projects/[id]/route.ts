@@ -7,10 +7,10 @@
 
 import { withAuthAndOrg } from '@/lib/apiAuth';
 import { NextResponse } from 'next/server';
-import { PrismaClient, CreativeProjectStatus } from '@prisma/client';
+import { CreativeProjectStatus } from '@prisma/client';
+import { prisma } from '@/lib/prisma.server';
 import { z } from 'zod';
 
-const prisma = new PrismaClient();
 
 // Validation schema for updating a project
 const updateProjectSchema = z.object({

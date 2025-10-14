@@ -6,10 +6,10 @@
 
 import { withAuthAndOrg } from '@/lib/apiAuth';
 import { NextResponse } from 'next/server';
-import { PrismaClient, CreativeAssetType } from '@prisma/client';
+import { CreativeAssetType } from '@prisma/client';
+import { prisma } from '@/lib/prisma.server';
 import { z } from 'zod';
 
-const prisma = new PrismaClient();
 
 // Validation schema for creating an asset
 const createAssetSchema = z.object({

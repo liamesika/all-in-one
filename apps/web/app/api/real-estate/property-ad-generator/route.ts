@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma.server';
 import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 
 const openai = process.env.OPENAI_API_KEY ? new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 }) : null;
 
-const prisma = new PrismaClient();
 
 export const POST = withAuth(async (request, { user }) => {
   try {

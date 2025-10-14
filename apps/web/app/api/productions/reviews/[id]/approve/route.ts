@@ -5,10 +5,9 @@
 
 import { withAuthAndOrg } from '@/lib/apiAuth';
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma.server';
 import { z } from 'zod';
 
-const prisma = new PrismaClient();
 
 const approveSchema = z.object({
   comments: z.string().optional(),

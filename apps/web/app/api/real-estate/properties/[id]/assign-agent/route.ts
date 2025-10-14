@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma.server';
 import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 
-const prisma = new PrismaClient();
 
 /**
  * PATCH /api/real-estate/properties/[id]/assign-agent

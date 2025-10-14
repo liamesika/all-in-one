@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma.server';
 import { z } from 'zod';
 import OpenAI from 'openai';
 import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 
-const prisma = new PrismaClient();
 
 // Initialize OpenAI only when API key is available (skip during build)
 function getOpenAIClient() {

@@ -1,9 +1,8 @@
 import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma.server';
 import { z } from 'zod';
 
-const prisma = new PrismaClient();
 
 // Validation schema for creating integrations
 const createIntegrationSchema = z.object({

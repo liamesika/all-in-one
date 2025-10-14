@@ -4,12 +4,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient, SubscriptionPlan, SubscriptionStatus } from '@prisma/client';
+import { SubscriptionPlan, SubscriptionStatus } from '@prisma/client';
+import { prisma } from '@/lib/prisma.server';
 import { verifyWebhookSignature } from '@/lib/stripe';
 import { getPlanLimits } from '@/config/pricing';
 import Stripe from 'stripe';
 
-const prisma = new PrismaClient();
 
 // Disable body parsing, we need raw body for signature verification
 export const runtime = 'nodejs';

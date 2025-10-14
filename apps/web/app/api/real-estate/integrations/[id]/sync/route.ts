@@ -1,8 +1,7 @@
 import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma.server';
 
-const prisma = new PrismaClient();
 
 // POST /api/real-estate/integrations/[id]/sync - Trigger manual sync
 export const POST = withAuth(async (request, { user, params }) => {

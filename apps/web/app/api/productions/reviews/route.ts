@@ -6,10 +6,10 @@
 
 import { withAuthAndOrg } from '@/lib/apiAuth';
 import { NextResponse } from 'next/server';
-import { PrismaClient, CreativeReviewStatus } from '@prisma/client';
+import { CreativeReviewStatus } from '@prisma/client';
+import { prisma } from '@/lib/prisma.server';
 import { z } from 'zod';
 
-const prisma = new PrismaClient();
 
 const createReviewSchema = z.object({
   projectId: z.string().cuid(),

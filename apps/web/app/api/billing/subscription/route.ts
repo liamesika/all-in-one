@@ -5,12 +5,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma.server';
 import { createCheckoutSession, STRIPE_PRICE_IDS, validateStripeConfig } from '@/lib/stripe';
 import { getUsageStats } from '@/lib/usage-tracker';
 import { withAuthAndOrg, getOwnerUid } from '@/lib/apiAuth';
 
-const prisma = new PrismaClient();
 
 /**
  * GET /api/billing/subscription

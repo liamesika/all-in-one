@@ -1,8 +1,7 @@
 import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma.server';
 
-const prisma = new PrismaClient();
 
 // GET /api/real-estate/campaigns/[id] - Fetch single campaign
 export const GET = withAuth(async (request, { user, params }) => {

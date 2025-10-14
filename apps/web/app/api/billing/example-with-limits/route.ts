@@ -11,11 +11,10 @@ import { withAuth, getOwnerUid } from '@/lib/apiAuth';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma.server';
 import { guardResourceCreation, requireActiveSubscription } from '@/lib/billing-guard';
 import { trackLeadCreation } from '@/lib/usage-tracker';
 
-const prisma = new PrismaClient();
 
 /**
  * Example: Create a new lead with limit enforcement

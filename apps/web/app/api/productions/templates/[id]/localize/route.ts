@@ -5,10 +5,10 @@
 
 import { withAuthAndOrg } from '@/lib/apiAuth';
 import { NextResponse } from 'next/server';
-import { PrismaClient, CreativeLocale } from '@prisma/client';
+import { CreativeLocale } from '@prisma/client';
+import { prisma } from '@/lib/prisma.server';
 import { z } from 'zod';
 
-const prisma = new PrismaClient();
 
 const localizeSchema = z.object({
   targetLocale: z.nativeEnum(CreativeLocale),

@@ -7,10 +7,10 @@
 
 import { withAuthAndOrg } from '@/lib/apiAuth';
 import { NextResponse } from 'next/server';
-import { PrismaClient, CreativeTaskType, CreativeTaskStatus } from '@prisma/client';
+import { CreativeTaskType, CreativeTaskStatus } from '@prisma/client';
+import { prisma } from '@/lib/prisma.server';
 import { z } from 'zod';
 
-const prisma = new PrismaClient();
 
 // Validation schema for creating a task
 const createTaskSchema = z.object({
