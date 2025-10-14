@@ -8,11 +8,5 @@
     "env": {
       "SKIP_ENV_VALIDATION": "true"
     }
-  },
-  "functions": {
-    "apps/web/app/api/**/*.ts": {
-      "memory": 1024,
-      "maxDuration": 60
-    }
   }
 }
