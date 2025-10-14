@@ -3,7 +3,7 @@
   "private": true,
   "packageManager": "pnpm@8.15.7",
   "engines": {
-    "node": ">=20.0.0 <23.0.0"
+    "node": "22.x"
   },
   "workspaces": [
     "apps/*",
