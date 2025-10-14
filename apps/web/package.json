@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "prebuild": "prisma generate --schema ../../packages/server/db/prisma/schema.prisma && node -e \"console.log('[DEBUG] @prisma/client resolved to:', require.resolve('@prisma/client'))\" && ls -la ../../node_modules/.prisma/client | head -10 || true",
+    "prebuild": "prisma generate --schema ../../packages/server/db/prisma/schema.prisma",
+    "diagnose:prisma": "node -e \"console.log('[DEBUG] @prisma/client resolved to:', require.resolve('@prisma/client'))\" && ls -la ../../node_modules/.prisma/client | head -10",
     "build": "next build",
     "build:analyze": "ANALYZE=true next build",
     "analyze": "ANALYZE=true npm run build",

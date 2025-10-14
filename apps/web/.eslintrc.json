@@ -1,0 +1,22 @@
+{
+  "extends": "next/core-web-vitals",
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "@prisma/client",
+            "message": "Do not import PrismaClient directly. Use 'import { prisma } from \"@/lib/prisma.server\"' instead. The lazy-loaded singleton prevents build-time module resolution errors."
+          }
+        ],
+        "patterns": [
+          {
+            "group": ["**/node_modules/@prisma/client"],
+            "message": "Do not import from @prisma/client directly. Use the singleton from @/lib/prisma.server"
+          }
+        ]
+      }
+    ]
+  }
+}
