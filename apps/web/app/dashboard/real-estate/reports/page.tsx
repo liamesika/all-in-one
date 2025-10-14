@@ -2,6 +2,10 @@ import { Suspense } from 'react';
 import ReportsClient from './ReportsClient';
 import { prisma } from '@/lib/prisma.server';
 
+// Force dynamic rendering - this page needs database access
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 
 // Loading component
 function ReportsLoading() {
