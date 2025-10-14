@@ -2344,3 +2344,64 @@ model SavedView {
   @@index([userId, page, isDefault])
   @@index([orgId, page, scope, isDefault])
 }
+
+// Notifications - Sprint A2: Global notification center with drawer
+model Notification {
+  id           String               @id @default(cuid())
+  orgId        String
+  userId       String? // Null = org-wide, set = user-specific
+  type         NotificationType
+  severity     NotificationSeverity @default(INFO)
+  title        String
+  body         String
+  entityType   String? // 'lead', 'review', 'export', 'automation', etc.
+  entityId     String?
+  actionUrl    String?
+  readAt       DateTime?
+  dismissedAt  DateTime?
+  snoozeUntil  DateTime?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  @@index([orgId, createdAt(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([readAt])
+  @@index([dismissedAt])
+  @@index([snoozeUntil])
+  @@index([orgId, type, createdAt(sort: Desc)])
+  @@index([userId, type, readAt])
+}
+
+enum NotificationType {
+  // Alerts
+  LEAD_SLA
+  EXPORT_FAILED
+  AUTOMATION_FAILED
+
+  // System
+  SYSTEM_RELEASE
+  SYSTEM_BILLING
+  SYSTEM_QUOTA
+
+  // Mentions
+  MENTION
+
+  // Reviews
+  REVIEW_APPROVED
+  REVIEW_CHANGES_REQUESTED
+
+  // Export Pack
+  EXPORT_READY
+  EXPORT_FAILED_PACK
+
+  // Automation
+  AUTOMATION_SUCCESS
+  AUTOMATION_FAILURE
+}
+
+enum NotificationSeverity {
+  INFO
+  WARN
+  ERROR
+  SUCCESS
+}
