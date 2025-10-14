@@ -2,7 +2,7 @@
 // Monorepo-friendly: generate client into root node_modules so all apps share it
 generator client {
   provider = "prisma-client-js"
-  output   = "../../../../node_modules/.prisma/client"
+  output   = "../node_modules/@prisma/client"
 }
 
 // Monorepo configuration:
