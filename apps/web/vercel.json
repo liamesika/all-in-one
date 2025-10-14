@@ -1,5 +1,5 @@
 {
-  "buildCommand": "pnpm build",
+  "buildCommand": "pnpm run prebuild && pnpm run build",
   "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
   "framework": null,
   "outputDirectory": ".next",
