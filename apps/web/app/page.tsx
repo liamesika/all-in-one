@@ -1,5 +1,10 @@
 'use client';
 
+// Force Node.js runtime for this page to avoid Edge bundling issues
+// TODO: Investigate and make Edge-compatible once __dirname error is resolved
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 import React, { useState } from 'react';
 import { Button } from '../components/ui';
 import EffinityHeader from '../components/effinity-header';

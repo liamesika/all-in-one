@@ -73,15 +73,13 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico, favicon.png, etc. (favicon files)
-     * - static assets (images, fonts, etc.)
-     */
-    '/((?!api|_next/static|_next/image|favicon|.*\\.ico|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.svg|.*\\.gif|.*\\.webp|.*\\.woff|.*\\.woff2|.*\\.ttf|.*\\.eot|.*\\.otf).*)',
-  ],
+  // TEMPORARY: Disable middleware matcher to isolate __dirname error
+  // If this fixes the 500, the error is in middleware or its imports
+  // If still 500, the error is in the homepage or its bundle
+  matcher: [],
+
+  // Original matcher (re-enable after fixing):
+  // matcher: [
+  //   '/((?!api|_next/static|_next/image|favicon|.*\\.ico|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.svg|.*\\.gif|.*\\.webp|.*\\.woff|.*\\.woff2|.*\\.ttf|.*\\.eot|.*\\.otf).*)',
+  // ],
 };
