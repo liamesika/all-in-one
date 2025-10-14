@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { withAuthAndOrg } from '@/lib/apiAuth';
-import prisma from '@/lib/prisma.server';
+import { prisma } from '@/lib/prisma.server';
 
 const updateSavedViewSchema = z.object({
   name: z.string().min(1).max(100).optional(),

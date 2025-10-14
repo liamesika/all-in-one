@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate --schema ../../packages/server/db/prisma/schema.prisma && next build",
+    "prebuild": "prisma generate",
+    "build": "next build",
     "build:analyze": "ANALYZE=true next build",
     "analyze": "ANALYZE=true npm run build",
     "start": "next start",
-    "postinstall": "prisma generate --schema ../../packages/server/db/prisma/schema.prisma || echo 'Prisma generate skipped'",
+    "postinstall": "prisma generate || echo 'Prisma generate skipped'",
     "lint": "echo 'lint web'",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -21,6 +22,9 @@
     "perf:test": "node scripts/performance-test.js",
     "perf:test:ci": "npm run build && npm run start & sleep 10 && npm run perf:test && kill %1",
     "logout": "node scripts/force-logout.cjs"
+  },
+  "prisma": {
+    "schema": "../../packages/server/db/prisma/schema.prisma"
   },
   "engines": {
     "node": ">=20.0.0 <23.0.0"
@@ -81,6 +85,7 @@
     "lighthouse": "^12.0.0",
     "next": "^15.5.2",
     "postcss": "^8.5.6",
+    "prisma": "^6.16.1",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.9.2",
     "webpack": "^5.101.3",
