@@ -1,0 +1,2324 @@
+// packages/server/db/prisma/schema.prisma
+// Monorepo-friendly: generate client into root node_modules so all apps share it
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../../node_modules/.prisma/client"
+}
+
+// Monorepo configuration:
+// In root package.json, add postinstall script:
+// "postinstall": "pnpm -C packages/server prisma generate --schema db/prisma/schema.prisma"
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  directUrl         = env("DIRECT_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+//// ========= Enums ========= ////
+
+enum Vertical {
+  REAL_ESTATE
+  LAW
+  E_COMMERCE
+  PRODUCTION
+}
+
+enum MembershipRole {
+  OWNER
+  ADMIN
+  MANAGER
+  MEMBER
+  VIEWER
+}
+
+enum FeatureAccess {
+  // Core features - Leads
+  LEADS_READ
+  LEADS_WRITE
+  LEADS_DELETE
+  LEADS_EXPORT
+  LEADS_BULK_ACTIONS
+  LEADS_ASSIGN
+
+  // Properties
+  PROPERTIES_READ
+  PROPERTIES_WRITE
+  PROPERTIES_DELETE
+  PROPERTIES_PUBLISH
+  PROPERTIES_ASSIGN_AGENT
+  PROPERTIES_IMPORT
+
+  // Campaigns
+  CAMPAIGNS_READ
+  CAMPAIGNS_WRITE
+  CAMPAIGNS_DELETE
+  CAMPAIGNS_ACTIVATE
+  CAMPAIGNS_VIEW_ANALYTICS
+  CAMPAIGNS_MANAGE_BUDGET
+
+  // Automations
+  AUTOMATIONS_READ
+  AUTOMATIONS_WRITE
+  AUTOMATIONS_DELETE
+  AUTOMATIONS_EXECUTE
+
+  // Integrations
+  INTEGRATIONS_READ
+  INTEGRATIONS_WRITE
+  INTEGRATIONS_DELETE
+  INTEGRATIONS_SYNC
+
+  // Reports
+  REPORTS_VIEW_BASIC
+  REPORTS_VIEW_ADVANCED
+  REPORTS_EXPORT
+  REPORTS_SCHEDULE
+  REPORTS_CUSTOM
+
+  // Organization Management
+  ORG_SETTINGS
+  ORG_BILLING
+  ORG_MEMBERS_READ
+  ORG_MEMBERS_WRITE
+  ORG_MEMBERS_DELETE
+  ORG_INVITE_MEMBERS
+
+  // Advanced features (plan-gated)
+  API_ACCESS
+  WHITE_LABEL
+  CUSTOM_INTEGRATIONS
+  DEDICATED_SUPPORT
+  BULK_OPERATIONS
+  ADVANCED_ANALYTICS
+}
+
+enum MembershipStatus {
+  INVITED
+  ACTIVE
+  SUSPENDED
+}
+
+enum InviteStatus {
+  SENT
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+enum OrganizationTier {
+  PERSONAL
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum PropertyStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum TransactionType {
+  SALE
+  RENT
+}
+
+enum PropertyType {
+  APARTMENT
+  HOUSE
+  VILLA
+  PENTHOUSE
+  DUPLEX
+  COTTAGE
+  OFFICE
+  STORE
+  LOT
+  COMMERCIAL
+  OTHER
+}
+
+enum PropertyProvider {
+  MANUAL
+  AIRBNB
+  BOOKING
+  GUESTY
+  ZILLOW
+  YAD2
+  MADLAN
+  OTHER
+}
+
+enum SyncStatus {
+  IDLE
+  SYNCING
+  PENDING
+  SUCCESS
+  ERROR
+}
+
+enum LeadStage {
+  NEW
+  CONTACTED
+  QUALIFIED
+  MEETING
+  OFFER
+  DEAL
+  WON
+  LOST
+}
+
+enum LeadScore {
+  HOT
+  WARM
+  COLD
+}
+
+enum LeadSource {
+  FACEBOOK
+  INSTAGRAM
+  WHATSAPP
+  CSV_UPLOAD
+  GOOGLE_SHEETS
+  MANUAL
+  OTHER
+}
+
+enum FieldValidationStatus {
+  VALID
+  INVALID
+  PENDING
+}
+
+enum CampaignStatus {
+  DRAFT
+  READY
+  SCHEDULED
+  ACTIVE
+  PAUSED
+  ARCHIVED
+  FAILED
+}
+
+enum CampaignPlatform {
+  META
+  GOOGLE
+  TIKTOK
+  LINKEDIN
+}
+
+enum CampaignGoal {
+  TRAFFIC
+  CONVERSIONS
+  LEADS
+  BRAND_AWARENESS
+  REACH
+  ENGAGEMENT
+}
+
+enum AutoFollowupChannel {
+  EMAIL
+  WHATSAPP
+  SMS
+}
+
+enum AutoFollowupTrigger {
+  NEW_LEAD
+  HOT_LEAD
+  FIRST_CONTACT
+  QUALIFIED
+  NO_RESPONSE_24H
+  NO_RESPONSE_7D
+}
+
+enum ConnectionStatus {
+  CONNECTED
+  EXPIRED
+  ERROR
+  DISCONNECTED
+}
+
+enum ConnectionProvider {
+  META
+  GOOGLE_ADS
+  TIKTOK_ADS
+  LINKEDIN_ADS
+}
+
+enum IntegrationType {
+  HUBSPOT
+  ZOHO
+  MONDAY
+  SALESFORCE
+  GOOGLE_CALENDAR
+  OUTLOOK_CALENDAR
+  APPLE_CALENDAR
+  FACEBOOK_LEADS
+  INSTAGRAM_LEADS
+  LINKEDIN_LEADS
+  TIKTOK_LEADS
+  GUESTY
+  AIRBNB
+  YAD2
+  MADLAN
+  ZILLOW
+  ZAPIER
+  MAKE
+  CUSTOM_WEBHOOK
+}
+
+enum IntegrationStatus {
+  CONNECTED
+  DISCONNECTED
+  ERROR
+  SYNCING
+}
+
+enum AutomationStatus {
+  ACTIVE
+  PAUSED
+  DRAFT
+}
+
+enum AutomationExecutionStatus {
+  SUCCESS
+  FAILED
+  PARTIAL
+}
+
+// Creative Productions Module Enums (Video/Ad Production)
+enum CreativeProjectStatus {
+  DRAFT
+  IN_PROGRESS
+  REVIEW
+  APPROVED
+  DELIVERED
+}
+
+enum CreativeTaskType {
+  SCRIPT
+  DESIGN
+  EDIT
+  VOICEOVER
+  SHOOT
+  CUTDOWN
+  LOCALIZATION
+}
+
+enum CreativeTaskStatus {
+  TODO
+  DOING
+  REVIEW
+  DONE
+}
+
+enum CreativeAssetType {
+  IMAGE
+  VIDEO
+  AUDIO
+  PDF
+  COPY
+  AD_PACK
+}
+
+enum CreativeTemplateKind {
+  BRIEF
+  SCRIPT
+  SHOTLIST
+  AD_COPY
+}
+
+enum CreativeReviewStatus {
+  PENDING
+  CHANGES_REQUESTED
+  APPROVED
+}
+
+enum CreativeRenderFormat {
+  SQUARE
+  STORY
+  FEED
+  YOUTUBE
+  PRINT
+}
+
+enum CreativeRenderStatus {
+  QUEUED
+  RENDERING
+  READY
+  FAILED
+}
+
+enum CreativeLocale {
+  EN
+  HE
+}
+
+enum JobType {
+  SYNC_ACCOUNTS
+  FETCH_INSIGHTS
+  CREATE_CAMPAIGN
+  PAUSE_CAMPAIGN
+  RESUME_CAMPAIGN
+  TOKEN_REFRESH
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+  RETRYING
+}
+
+enum SearchJobStatus {
+  QUEUED
+  RUNNING
+  ENRICHING
+  DONE
+  FAILED
+}
+
+enum SearchProvider {
+  SERPAPI
+  BING_SEARCH
+  YAD2
+  MADLAN
+  FACEBOOK_MARKETPLACE
+}
+
+enum ListingType {
+  FOR_SALE
+  FOR_RENT
+  COMMERCIAL
+  LAND
+  NEW_PROJECT
+  OTHER
+}
+
+enum RealEstateLeadStatus {
+  NEW
+  CONTACTED
+  IN_PROGRESS
+  MEETING
+  OFFER
+  DEAL
+  CONVERTED
+  DISQUALIFIED
+}
+
+enum EcommerceLeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  CONVERTED
+  CLOSED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum MessageStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  FAILED
+  READ
+}
+
+enum MessageChannel {
+  EMAIL
+  SMS
+  WHATSAPP
+}
+
+// Production vertical enums
+enum SubscriptionPlan {
+  BASIC // $29/month - Single user, 100 leads, basic features
+  PRO // $99/month - 5 users, 1000 leads, automations, integrations
+  AGENCY // $299/month - Unlimited users, unlimited leads, white-label, API access
+  ENTERPRISE // Custom pricing - Custom everything
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  TRIALING
+  INCOMPLETE
+}
+
+enum AccountType {
+  FREELANCER
+  COMPANY
+}
+
+enum ProjectType {
+  CONFERENCE
+  SHOW
+  FILMING
+  OTHER
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  DONE
+  ON_HOLD
+}
+
+enum TaskDomain {
+  LOGISTICS
+  CONTENT
+  MARKETING
+  SUPPLIERS
+}
+
+enum ProductionTaskStatus {
+  OPEN
+  IN_PROGRESS
+  DONE
+  BLOCKED
+}
+
+enum BudgetCategory {
+  STAGE
+  LIGHTING
+  CATERING
+  MARKETING
+  OTHER
+}
+
+enum SupplierCategory {
+  STAGE
+  LIGHTING
+  AUDIO
+  CATERING
+  VENUE
+  OTHER
+}
+
+enum FileFolder {
+  PERMITS
+  SAFETY
+  DESIGNS
+  CONTRACTS
+  OTHER
+}
+
+//// ========= Models ========= ////
+
+model User {
+  id                 String   @id @default(cuid())
+  fullName           String
+  email              String   @unique
+  passwordHash       String
+  lang               String   @default("en")
+  mustChangePassword Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  // Relations
+  memberships        Membership[]
+  userProfile        UserProfile?
+  ownedOrgs          Organization[]
+  emailVerifications EmailVerification[]
+  tasks              Task[]
+  messages           Message[]
+
+  // Production vertical relations
+  productionTasks ProductionTask[]
+  productionFiles ProductionFileAsset[]
+
+  @@index([email])
+}
+
+model Organization {
+  id              String           @id @default(cuid())
+  ownerUid        String           @unique // Backward compatibility
+  name            String
+  slug            String           @unique
+  seatLimit       Int              @default(5)
+  usedSeats       Int              @default(1)
+  planTier        OrganizationTier @default(STARTER)
+  ownerUserId     String
+  domainAllowlist String[]         @default([])
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  // Relations
+  owner        User          @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  memberships  Membership[]
+  invites      Invite[]
+  domainClaims DomainClaim[]
+
+  // Business data relations (org-scoped)
+  properties        Property[]
+  realEstateLeads   RealEstateLead[]
+  ecommerceLeads    EcommerceLead[]
+  campaigns         Campaign[]
+  followupTemplates AutoFollowupTemplate[]
+
+  // Production vertical relations
+  productionProjects  ProductionProject[]
+  productionSuppliers ProductionSupplier[]
+
+  // Billing relation
+  subscription     Subscription?
+  CreativeProject  CreativeProject[]
+  CreativeAsset    CreativeAsset[]
+  CreativeTemplate CreativeTemplate[]
+
+  @@index([ownerUid])
+  @@index([ownerUserId])
+  @@index([slug])
+}
+
+model Membership {
+  id       String           @id @default(cuid())
+  userId   String
+  orgId    String // New organization reference
+  ownerUid String // Backward compatibility
+  role     MembershipRole   @default(MEMBER)
+  status   MembershipStatus @default(ACTIVE)
+
+  // Custom permissions (overrides)
+  customPermissions Json? // Array of FeatureAccess for special cases
+
+  // Invitation metadata
+  invitedBy  String?
+  invitedAt  DateTime?
+  acceptedAt DateTime?
+  joinedAt   DateTime  @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, orgId])
+  @@unique([userId, ownerUid]) // Backward compatibility
+  @@index([userId])
+  @@index([orgId])
+  @@index([ownerUid])
+  @@index([role])
+  @@index([status])
+}
+
+model UserProfile {
+  userId          String       @id
+  defaultVertical Vertical
+  accountType     AccountType?
+  termsConsentAt  DateTime
+  termsVersion    String
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model EmailVerification {
+  id        String    @id @default(cuid())
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+model Invite {
+  id        String         @id @default(cuid())
+  orgId     String
+  email     String
+  role      MembershipRole @default(MEMBER)
+  token     String         @unique
+  status    InviteStatus   @default(SENT)
+  expiresAt DateTime
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, email])
+  @@index([orgId])
+  @@index([email])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+model DomainClaim {
+  id                String   @id @default(cuid())
+  orgId             String
+  domain            String
+  verificationToken String   @unique
+  verified          Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, domain])
+  @@index([orgId])
+  @@index([domain])
+  @@index([verified])
+}
+
+model RealEstateLeadEvent {
+  id        String         @id @default(cuid())
+  leadId    String
+  lead      RealEstateLead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  type      String
+  payload   Json?
+  createdAt DateTime       @default(now())
+
+  @@index([leadId])
+}
+
+model Property {
+  id           String  @id @default(cuid())
+  ownerUid     String // Backward compatibility
+  orgId        String? // Organization scope (nullable during migration)
+  name         String
+  address      String?
+  city         String?
+  neighborhood String?
+  description  String?
+
+  // Transaction and status
+  status          PropertyStatus  @default(DRAFT)
+  transactionType TransactionType @default(SALE)
+
+  type         PropertyType? // אם יש לך כבר Enum כזה – השאירי; אם אין, זה יכול להיות גם String? לשלב ה-MVP
+  photos       PropertyPhoto[]  @relation("PropertyToPhotos")
+  leads        RealEstateLead[] @relation("PropertyToLeads")
+  landingPages LandingPage[]
+  organization Organization?    @relation(fields: [orgId], references: [id])
+  rooms        Int?
+  size         Int?
+
+  // Pricing fields (type-specific)
+  price            Int? // For SALE transactions
+  rentPriceMonthly Int? // For RENT transactions
+  rentTerms        String? // Lease terms, deposit info, etc.
+
+  currency        String? @default("ILS")
+  slug            String? @unique
+  agentName       String?
+  agentPhone      String?
+  photosJson      Json?
+  assignedAgentId String? // For Company accounts: assign property to specific agent
+
+  // Import and sync tracking
+  provider      PropertyProvider @default(MANUAL)
+  externalId    String? // Original listing ID from Yad2/Madlan
+  externalUrl   String? // Original listing URL
+  syncStatus    SyncStatus       @default(IDLE)
+  lastSyncAt    DateTime?
+  lastSyncError String?
+  syncData      Json? // Store original scraped data
+  needsReview   Boolean          @default(false)
+
+  // AI scoring fields
+  aiScore    Float? // 0-100 AI-generated property score
+  aiCategory String? // 'excellent', 'good', 'fair', 'poor'
+  aiInsights Json? // JSON with reasons, marketInsights, recommendations
+  aiScoredAt DateTime? // When AI scoring was performed
+
+  // SEO fields
+  seoTitle       String?
+  seoDescription String?
+  amenities      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([ownerUid, provider, externalId])
+  // Performance-critical indexes
+  @@index([ownerUid, status])
+  @@index([ownerUid, provider])
+  @@index([ownerUid, createdAt])
+  @@index([ownerUid, updatedAt])
+  // Organization-scoped indexes
+  @@index([orgId, status])
+  @@index([orgId, provider])
+  @@index([orgId, createdAt])
+  @@index([orgId])
+  @@index([provider, externalId])
+  @@index([city, status])
+  @@index([price, status])
+  @@index([rooms, price])
+  @@index([status, createdAt])
+  @@index([slug])
+}
+
+model PropertyPhoto {
+  id         String @id @default(cuid())
+  url        String
+  propertyId String
+  sortIndex  Int?   @default(0)
+
+  // 🔽 ודא שם-יחס עקבי + opposite relation קיים ב-Property
+  property Property @relation(name: "PropertyToPhotos", fields: [propertyId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([propertyId])
+}
+
+model LandingPage {
+  id         String   @id @default(cuid())
+  propertyId String
+  ownerUid   String
+  url        String
+  html       String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([ownerUid])
+  @@index([propertyId])
+}
+
+model RealEstateLead {
+  id        String   @id @default(cuid())
+  ownerUid  String // Backward compatibility
+  orgId     String? // Organization scope (nullable during migration)
+  fullName  String?
+  phone     String?
+  email     String?
+  message   String?
+  source    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  propertyId          String? // יכול להיות אופציונלי אם יש לידים כלליים
+  // 🔽 ודא שם-יחס עקבי + opposite relation קיים ב-Property
+  property            Property?             @relation(name: "PropertyToLeads", fields: [propertyId], references: [id])
+  organization        Organization?         @relation(fields: [orgId], references: [id])
+  RealEstateLeadEvent RealEstateLeadEvent[]
+
+  // Performance-critical indexes
+  @@index([ownerUid])
+  @@index([ownerUid, createdAt])
+  @@index([ownerUid, updatedAt])
+  // Organization-scoped indexes
+  @@index([orgId])
+  @@index([orgId, createdAt])
+  @@index([orgId, updatedAt])
+  @@index([propertyId])
+  @@index([phone])
+  @@index([email])
+  @@index([source])
+  @@index([createdAt])
+}
+
+// Property import batch tracking
+model PropertyImportBatch {
+  id       String @id @default(cuid())
+  ownerUid String
+
+  // Import source and type
+  source     PropertyProvider // YAD2, MADLAN, MANUAL
+  importType String // 'single_url', 'bulk_urls', 'csv'
+  filename   String? // For CSV uploads
+
+  // URLs being imported (for single/bulk URL imports)
+  urls Json? // Array of URLs for bulk imports
+
+  // Import statistics
+  totalItems     Int @default(0)
+  importedItems  Int @default(0)
+  updatedItems   Int @default(0)
+  duplicateItems Int @default(0)
+  errorItems     Int @default(0)
+
+  // Status and error tracking
+  status  String @default("pending") // pending, processing, completed, failed
+  errors  Json? // Array of error messages with details
+  summary Json? // Detailed import results
+
+  // Progress tracking
+  progress    Int     @default(0) // 0-100 percentage
+  currentItem String? // Currently processing item
+
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  @@index([ownerUid])
+  @@index([status])
+  @@index([source])
+  @@index([createdAt])
+}
+
+model Client {
+  id            String    @id @default(cuid())
+  ownerUid      String
+  fullName      String
+  phone         String?
+  email         String?
+  budgetMin     Decimal?  @db.Decimal(12, 2)
+  budgetMax     Decimal?  @db.Decimal(12, 2)
+  preferredCity String?
+  stage         LeadStage @default(NEW)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([ownerUid, stage])
+}
+
+// E-commerce Lead Management System
+model EcommerceLead {
+  id         String  @id @default(cuid())
+  ownerUid   String // Backward compatibility
+  orgId      String? // Organization scope (nullable during migration)
+  externalId String? // For deduplication across sources
+
+  // Contact Information
+  fullName  String?
+  firstName String?
+  lastName  String?
+  phone     String?
+  email     String?
+  city      String?
+  address   String?
+
+  // Lead Management
+  status     LeadStage  @default(NEW)
+  score      LeadScore  @default(COLD)
+  source     LeadSource @default(MANUAL)
+  sourceName String? // Campaign/Ad name or specific source identifier
+  assigneeId String? // User ID of assigned salesperson
+
+  // Business Context
+  budget    Decimal? @db.Decimal(12, 2)
+  interests Json? // Array of interests or product categories
+  notes     String?
+
+  // UTM and Tracking
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  utmTerm     String?
+  utmContent  String?
+
+  // Validation and Quality
+  phoneValid FieldValidationStatus @default(PENDING)
+  emailValid FieldValidationStatus @default(PENDING)
+
+  // Timing
+  firstContactAt DateTime? // When first outbound/inbound touch happened
+  lastContactAt  DateTime?
+
+  // Deduplication
+  duplicateOfId String?
+  duplicateOf   EcommerceLead?  @relation("LeadDuplicates", fields: [duplicateOfId], references: [id])
+  duplicates    EcommerceLead[] @relation("LeadDuplicates")
+  isDuplicate   Boolean         @default(false)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Campaign Attribution
+  campaignId      String?
+  platformAdSetId String? // Platform-specific adset ID
+
+  // Order/Conversion Tracking
+  orderValue     Decimal?  @db.Decimal(12, 2) // Revenue from conversion
+  conversionDate DateTime? // When lead converted to customer
+  orderNumber    String? // Shopify order number or ID
+
+  // Relations
+  events       LeadEvent[]
+  activities   LeadActivity[]
+  campaign     Campaign?               @relation("CampaignLeads", fields: [campaignId], references: [id])
+  organization Organization?           @relation(fields: [orgId], references: [id])
+  followups    AutoFollowupExecution[]
+  sales        Sale[]
+
+  @@unique([ownerUid, externalId, source]) // Prevent exact duplicates
+  // Performance-critical indexes for dashboard queries
+  @@index([ownerUid, status])
+  @@index([ownerUid, score])
+  @@index([ownerUid, source])
+  @@index([ownerUid, createdAt])
+  @@index([ownerUid, updatedAt])
+  @@index([ownerUid, status, createdAt])
+  @@index([ownerUid, score, createdAt])
+  // Organization-scoped indexes
+  @@index([orgId, status])
+  @@index([orgId, score])
+  @@index([orgId, source])
+  @@index([orgId, createdAt])
+  @@index([orgId, updatedAt])
+  @@index([orgId, status, createdAt])
+  @@index([orgId])
+  @@index([phone])
+  @@index([email])
+  @@index([externalId])
+  @@index([campaignId])
+  @@index([assigneeId])
+  @@index([status, createdAt])
+  @@index([score, createdAt])
+}
+
+// Lead Event tracking (for timeline and analytics)
+model LeadEvent {
+  id     String        @id @default(cuid())
+  leadId String
+  lead   EcommerceLead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  type      String // 'created', 'scored', 'contacted', 'status_changed', 'assigned', etc.
+  data      Json? // Event-specific data
+  userId    String? // User who triggered the event
+  createdAt DateTime @default(now())
+
+  @@index([leadId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// Lead Activities (calls, emails, meetings)
+model LeadActivity {
+  id     String        @id @default(cuid())
+  leadId String
+  lead   EcommerceLead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  type      String // 'call', 'email', 'meeting', 'whatsapp', etc.
+  subject   String?
+  content   String?
+  direction String? // 'inbound' or 'outbound'
+  userId    String? // User who performed the activity
+
+  scheduledAt DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([leadId])
+  @@index([type])
+  @@index([scheduledAt])
+  @@index([createdAt])
+}
+
+// Import batches for tracking CSV/Sheets imports
+model LeadImportBatch {
+  id       String  @id @default(cuid())
+  ownerUid String
+  source   String // 'csv', 'google_sheets', etc.
+  filename String?
+
+  totalRows     Int @default(0)
+  validRows     Int @default(0)
+  invalidRows   Int @default(0)
+  duplicateRows Int @default(0)
+  importedRows  Int @default(0)
+
+  status  String @default("pending") // pending, processing, completed, failed
+  errors  Json? // Array of error messages
+  summary Json? // Detailed import results
+
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  @@index([ownerUid])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// Lead source health tracking
+model LeadSourceHealth {
+  id       String     @id @default(cuid())
+  ownerUid String
+  source   LeadSource
+
+  lastEventAt DateTime?
+  lastErrorAt DateTime?
+  lastError   String?
+  isHealthy   Boolean   @default(true)
+
+  // Counters
+  totalLeads Int @default(0)
+  todayLeads Int @default(0)
+  weekLeads  Int @default(0)
+  monthLeads Int @default(0)
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([ownerUid, source])
+  @@index([ownerUid])
+  @@index([source])
+}
+
+// Assignment rules for auto-assigning leads
+model LeadAssignmentRule {
+  id       String @id @default(cuid())
+  ownerUid String
+
+  name     String
+  isActive Boolean @default(true)
+  priority Int     @default(0)
+
+  // Conditions (JSON with criteria)
+  conditions Json // e.g., {"source": "FACEBOOK", "score": "HOT"}
+
+  // Assignment logic
+  assigneeId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerUid, isActive])
+  @@index([priority])
+}
+
+// ========= CAMPAIGNS & AUTO-FOLLOWUPS ========= //
+
+// OAuth connections for external platforms
+model OAuthConnection {
+  id       String @id @default(cuid())
+  ownerUid String
+
+  platform CampaignPlatform
+  status   ConnectionStatus @default(DISCONNECTED)
+
+  // OAuth data
+  accessToken  String?
+  refreshToken String?
+  expiresAt    DateTime?
+  lastChecked  DateTime?
+
+  // Platform-specific IDs
+  accountId   String?
+  accountName String?
+
+  // Error tracking
+  lastError   String?
+  lastErrorAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  campaigns Campaign[]
+
+  @@unique([ownerUid, platform])
+  @@index([ownerUid])
+}
+
+// Campaign management
+model Campaign {
+  id       String  @id @default(cuid())
+  ownerUid String // Backward compatibility
+  orgId    String? // Organization scope (nullable during migration)
+
+  name     String
+  platform CampaignPlatform
+  status   CampaignStatus   @default(DRAFT)
+  goal     CampaignGoal
+
+  // Campaign configuration
+  budget      Float?
+  dailyBudget Float?
+  audience    Json? // Platform-specific audience config
+  creative    Json? // Ads creative data
+
+  // Platform-specific IDs
+  platformCampaignId String?
+  platformAdSetId    String?
+
+  // Attribution data
+  spend       Float @default(0)
+  clicks      Int   @default(0)
+  impressions Int   @default(0)
+  conversions Int   @default(0)
+
+  // Scheduling
+  startDate DateTime?
+  endDate   DateTime?
+
+  // Pre-flight checks
+  preflightChecks Json? // Status of various checks
+  lastCheckAt     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  connection   OAuthConnection @relation(fields: [connectionId], references: [id])
+  connectionId String
+  organization Organization?   @relation(fields: [orgId], references: [id])
+  leads        EcommerceLead[] @relation("CampaignLeads")
+  sales        Sale[]
+
+  @@index([ownerUid])
+  // Organization-scoped indexes
+  @@index([orgId])
+  @@index([orgId, status])
+  @@index([orgId, platform])
+  @@index([status])
+  @@index([platform])
+}
+
+// Auto-followup templates
+model AutoFollowupTemplate {
+  id       String  @id @default(cuid())
+  ownerUid String // Backward compatibility
+  orgId    String? // Organization scope (nullable during migration)
+
+  name    String
+  trigger AutoFollowupTrigger
+  channel AutoFollowupChannel
+
+  // Template content
+  subject   String? // Email subject
+  content   String // Message content with variables
+  variables Json? // Available template variables
+
+  // Configuration
+  isActive     Boolean @default(true)
+  delayMinutes Int     @default(0)
+
+  // Brand customization
+  brandName   String?
+  brandLogo   String?
+  brandColors Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organization Organization?           @relation(fields: [orgId], references: [id])
+  followups    AutoFollowupExecution[]
+
+  @@index([ownerUid, trigger])
+  // Organization-scoped indexes
+  @@index([orgId])
+  @@index([orgId, trigger])
+  @@index([isActive])
+}
+
+// Auto-followup execution tracking
+model AutoFollowupExecution {
+  id         String @id @default(cuid())
+  leadId     String
+  templateId String
+
+  channel AutoFollowupChannel
+  status  String              @default("PENDING") // PENDING, SENT, FAILED, SKIPPED
+
+  // Content sent
+  subject String?
+  content String
+
+  // Delivery tracking
+  sentAt      DateTime?
+  deliveredAt DateTime?
+  readAt      DateTime?
+  clickedAt   DateTime?
+
+  // Error tracking
+  error      String?
+  retryCount Int     @default(0)
+  maxRetries Int     @default(3)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  lead     EcommerceLead        @relation(fields: [leadId], references: [id])
+  template AutoFollowupTemplate @relation(fields: [templateId], references: [id])
+
+  @@index([leadId])
+  @@index([status])
+  @@index([sentAt])
+}
+
+// Sales tracking (manual/CSV input initially)
+model Sale {
+  id       String  @id @default(cuid())
+  ownerUid String
+  leadId   String?
+
+  // Sale data
+  amount      Float
+  currency    String  @default("USD")
+  description String?
+
+  // Attribution
+  campaignId  String?
+  source      LeadSource?
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+
+  // Timing
+  saleDate DateTime @default(now())
+
+  // Manual entry tracking
+  enteredBy     String? // User ID who entered
+  importBatchId String? // CSV import batch
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  lead     EcommerceLead? @relation(fields: [leadId], references: [id])
+  campaign Campaign?      @relation(fields: [campaignId], references: [id])
+
+  @@index([ownerUid])
+  @@index([leadId])
+  @@index([campaignId])
+  @@index([saleDate])
+}
+
+// ========= AI SEARCHER MODELS ========= //
+
+// Search jobs for tracking AI-assisted property searches
+model SearchJob {
+  id       String @id @default(cuid())
+  ownerUid String
+
+  // Search parameters
+  location    String? // City/neighborhood
+  minRooms    Int?
+  maxRooms    Int?
+  minSize     Int? // sqm
+  maxSize     Int? // sqm
+  minPrice    Int? // ILS
+  maxPrice    Int? // ILS
+  keywords    String? // Free text search terms
+  listingType ListingType? @default(FOR_SALE)
+
+  // Job status and progress
+  status      SearchJobStatus @default(QUEUED)
+  progress    Int             @default(0) // 0-100
+  currentStep String? // Current processing step
+
+  // Results tracking
+  totalListings     Int @default(0)
+  processedListings Int @default(0)
+  validListings     Int @default(0)
+  duplicateListings Int @default(0)
+  errorListings     Int @default(0)
+
+  // Provider breakdown
+  providersUsed   Json? // Array of providers queried
+  providerResults Json? // Results count per provider
+
+  // AI usage tracking
+  openaiTokensUsed Int   @default(0)
+  openaiCost       Float @default(0)
+
+  // Error tracking
+  errors      Json? // Array of error messages
+  lastError   String?
+  lastErrorAt DateTime?
+
+  // Performance metrics
+  searchDuration     Int? // milliseconds
+  enrichmentDuration Int? // milliseconds
+
+  createdAt   DateTime  @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  listings    Listing[]
+  savedSearch SavedSearch?
+
+  // Performance indexes for dashboard and status queries
+  @@index([ownerUid, status])
+  @@index([ownerUid, createdAt])
+  @@index([ownerUid, status, createdAt])
+  @@index([status])
+  @@index([status, createdAt])
+  @@index([createdAt])
+  @@index([location, status])
+  @@index([listingType, status])
+}
+
+// Individual property listings found by search
+model Listing {
+  id          String @id @default(cuid())
+  searchJobId String
+  ownerUid    String // For direct queries
+
+  // Basic property info
+  title        String
+  description  String?
+  location     String?
+  city         String?
+  neighborhood String?
+
+  // Property details  
+  rooms       Int?
+  size        Int? // sqm
+  price       Int? // ILS
+  pricePerSqm Int? // Calculated price per sqm
+  currency    String      @default("ILS")
+  listingType ListingType @default(FOR_SALE)
+
+  // Source info
+  provider  SearchProvider
+  sourceUrl String
+  sourceId  String? // External listing ID
+
+  // AI extracted/enhanced data
+  aiScore   Float? // AI relevance score 0-1
+  aiSummary String? // AI-generated summary
+  aiTags    Json? // AI-extracted tags/features
+
+  // Contact info (if available)
+  agentName  String?
+  agentPhone String?
+  agentEmail String?
+
+  // Media
+  images       Json? // Array of image URLs
+  primaryImage String?
+
+  // Metadata
+  postedAt  DateTime? // When originally posted
+  scrapedAt DateTime  @default(now())
+
+  // Deduplication
+  dedupeHash  String // Stable hash for deduplication
+  isDuplicate Boolean @default(false)
+  duplicateOf String? // ID of original listing
+
+  // Raw data
+  rawData Json? // Original scraped data
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  searchJob SearchJob @relation(fields: [searchJobId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, sourceId]) // Prevent exact duplicates from same source
+  @@unique([dedupeHash]) // Global deduplication
+  @@index([searchJobId])
+  @@index([ownerUid])
+  @@index([provider, sourceId])
+  @@index([dedupeHash])
+  @@index([city, rooms])
+  @@index([price, rooms])
+  @@index([aiScore])
+}
+
+// Saved searches for recurring AI searches
+model SavedSearch {
+  id          String @id @default(cuid())
+  ownerUid    String
+  searchJobId String @unique
+
+  // Search configuration
+  name        String
+  description String?
+
+  // Search parameters (duplicated from SearchJob for quick access)
+  location    String?
+  minRooms    Int?
+  maxRooms    Int?
+  minSize     Int?
+  maxSize     Int?
+  minPrice    Int?
+  maxPrice    Int?
+  keywords    String?
+  listingType ListingType? @default(FOR_SALE)
+
+  // Automation settings
+  isActive  Boolean   @default(true)
+  frequency String? // 'daily', 'weekly', 'monthly'
+  lastRunAt DateTime?
+  nextRunAt DateTime?
+
+  // Notification settings
+  emailAlerts Boolean @default(false)
+  alertEmail  String?
+  minScore    Float? // Minimum AI score for alerts
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  originalJob SearchJob @relation(fields: [searchJobId], references: [id])
+
+  @@index([ownerUid, isActive])
+  @@index([ownerUid, nextRunAt])
+  @@index([isActive, nextRunAt])
+}
+
+// ========= PLATFORM INTEGRATIONS ========= //
+
+// Platform OAuth connections (replaces existing OAuthConnection)
+model Connection {
+  id             String  @id @default(cuid())
+  ownerUid       String
+  organizationId String? // For org-level connections
+
+  provider ConnectionProvider
+  status   ConnectionStatus   @default(DISCONNECTED)
+
+  // Display info
+  displayName  String? // User-friendly connection name
+  accountEmail String? // Connected account email
+
+  // Health tracking
+  lastSyncAt   DateTime?
+  lastErrorAt  DateTime?
+  lastError    String?
+  accountCount Int       @default(0)
+
+  // Metadata
+  metadata Json? // Provider-specific metadata
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  oauthTokens OAuthToken[]
+  adAccounts  AdAccount[]
+  campaigns   ExternalCampaign[]
+  jobs        Job[]
+  insights    Insight[]
+  auditLogs   ApiAuditLog[]
+
+  @@unique([ownerUid, provider])
+  @@index([ownerUid])
+  @@index([provider])
+  @@index([status])
+}
+
+// Encrypted OAuth tokens
+model OAuthToken {
+  id           String @id @default(cuid())
+  connectionId String
+
+  // Encrypted token data
+  accessToken  String // AES-GCM encrypted
+  refreshToken String? // AES-GCM encrypted
+  tokenType    String  @default("Bearer")
+
+  // Token lifecycle
+  expiresAt DateTime?
+  scope     String? // OAuth scopes granted
+
+  // Refresh tracking
+  lastRefreshAt DateTime?
+  refreshCount  Int       @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  connection Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@unique([connectionId]) // One token per connection
+  @@index([connectionId])
+  @@index([expiresAt])
+}
+
+// Ad accounts discovered from platforms
+model AdAccount {
+  id           String @id @default(cuid())
+  connectionId String
+  ownerUid     String
+
+  // Platform account info
+  externalId String // Platform's account ID
+  name       String // Account display name
+  currency   String? // Account currency
+  timezone   String? // Account timezone
+
+  // Account status and permissions
+  status      String @default("ACTIVE") // ACTIVE, DISABLED, PENDING
+  permissions Json? // Available permissions
+  spendCap    Float? // Account spend limit
+
+  // Sync tracking
+  lastSyncAt DateTime?
+  isActive   Boolean   @default(true)
+
+  // Metadata
+  metadata Json? // Provider-specific data
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  connection Connection         @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  campaigns  ExternalCampaign[]
+  insights   Insight[]
+
+  @@unique([connectionId, externalId])
+  @@index([ownerUid])
+  @@index([connectionId])
+  @@index([externalId])
+  @@index([status])
+}
+
+// External campaigns created through platforms
+model ExternalCampaign {
+  id           String @id @default(cuid())
+  connectionId String
+  adAccountId  String
+  ownerUid     String
+
+  // Campaign identification
+  externalId String // Platform's campaign ID
+  name       String
+
+  // Campaign configuration
+  objective   String // Platform-specific objective
+  status      String @default("PAUSED") // ACTIVE, PAUSED, ARCHIVED
+  dailyBudget Float?
+  totalBudget Float?
+
+  // Scheduling
+  startDate DateTime?
+  endDate   DateTime?
+
+  // Creative and targeting (minimal for MVP)
+  creativeData  Json? // Ad creative configuration
+  targetingData Json? // Audience targeting
+
+  // Performance tracking
+  spend       Float  @default(0)
+  impressions Int    @default(0)
+  clicks      Int    @default(0)
+  cpc         Float? // Cost per click
+  ctr         Float? // Click-through rate
+  conversions Int    @default(0)
+
+  // Sync tracking
+  lastSyncAt    DateTime?
+  lastSyncError String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  connection Connection @relation(fields: [connectionId], references: [id])
+  adAccount  AdAccount  @relation(fields: [adAccountId], references: [id])
+  insights   Insight[]
+
+  @@unique([connectionId, externalId])
+  @@index([ownerUid])
+  @@index([connectionId])
+  @@index([adAccountId])
+  @@index([externalId])
+  @@index([status])
+}
+
+// Daily insights from platforms (normalized structure)
+model Insight {
+  id           String  @id @default(cuid())
+  connectionId String
+  adAccountId  String? // Account-level insights
+  campaignId   String? // Campaign-level insights
+  ownerUid     String
+
+  // Time dimension
+  date DateTime // Insight date (UTC)
+
+  // Core metrics (normalized across platforms)
+  spend           Float  @default(0)
+  impressions     Int    @default(0)
+  clicks          Int    @default(0)
+  cpc             Float? // Cost per click
+  ctr             Float? // Click-through rate (%)
+  conversions     Int    @default(0)
+  conversionValue Float? // Total conversion value
+
+  // Platform-specific metrics
+  platformMetrics Json? // Additional platform-specific data
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  connection Connection        @relation(fields: [connectionId], references: [id])
+  adAccount  AdAccount?        @relation(fields: [adAccountId], references: [id])
+  campaign   ExternalCampaign? @relation(fields: [campaignId], references: [id])
+
+  @@unique([connectionId, adAccountId, campaignId, date])
+  @@index([ownerUid, date])
+  @@index([connectionId, date])
+  @@index([adAccountId, date])
+  @@index([campaignId, date])
+  @@index([date])
+}
+
+// Background job system
+model Job {
+  id           String  @id @default(cuid())
+  connectionId String? // Associated connection (if applicable)
+  ownerUid     String
+
+  // Job definition
+  type   JobType
+  status JobStatus @default(PENDING)
+
+  // Job data
+  inputData  Json? // Job input parameters
+  outputData Json? // Job results
+  errorData  Json? // Error details
+
+  // Execution tracking
+  startedAt   DateTime?
+  completedAt DateTime?
+  retryCount  Int       @default(0)
+  maxRetries  Int       @default(3)
+
+  // Scheduling
+  scheduledFor DateTime? // For scheduled jobs
+  priority     Int       @default(0) // Higher = more priority
+
+  // Progress tracking
+  progress      Int     @default(0) // 0-100 percentage
+  statusMessage String? // Current status description
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  connection Connection? @relation(fields: [connectionId], references: [id])
+
+  @@index([ownerUid])
+  @@index([type, status])
+  @@index([status, scheduledFor])
+  @@index([connectionId])
+  @@index([createdAt])
+}
+
+// Audit log for external API calls
+model ApiAuditLog {
+  id           String  @id @default(cuid())
+  connectionId String?
+  ownerUid     String?
+
+  // Request details
+  provider ConnectionProvider
+  method   String // GET, POST, PUT, DELETE
+  path     String // API endpoint path
+
+  // Response details
+  statusCode   Int
+  responseTime Int // milliseconds
+
+  // Error tracking
+  errorCode    String? // Platform-specific error code
+  errorMessage String? // Error description
+
+  // Cost tracking (if available)
+  cost      Float? // API call cost
+  quotaUsed Int? // Quota consumption
+
+  // Request metadata
+  jobId     String? // Associated job ID
+  userAgent String?
+  ipAddress String?
+
+  createdAt DateTime @default(now())
+
+  // Relations
+  connection Connection? @relation(fields: [connectionId], references: [id])
+
+  @@index([provider, createdAt])
+  @@index([connectionId, createdAt])
+  @@index([ownerUid, createdAt])
+  @@index([statusCode])
+  @@index([createdAt])
+}
+
+// Task management for users
+model Task {
+  id            String     @id @default(cuid())
+  title         String
+  description   String?
+  priority      Priority   @default(MEDIUM)
+  status        TaskStatus @default(PENDING)
+  dueDate       DateTime?
+  completedDate DateTime?
+  category      String?
+  tags          String[]   @default([])
+
+  // Multi-tenant fields
+  ownerUid       String
+  organizationId String?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [ownerUid], references: [id], onDelete: Cascade)
+
+  @@index([ownerUid])
+  @@index([status])
+  @@index([priority])
+  @@index([dueDate])
+  @@index([createdAt])
+}
+
+// Message queue for outbound communications
+model Message {
+  id            String         @id @default(cuid())
+  recipientType String // LEAD, CONTACT, USER
+  recipientId   String
+  message       String // Message content
+  channel       MessageChannel @default(EMAIL)
+  status        MessageStatus  @default(QUEUED)
+  sentAt        DateTime?
+  deliveredAt   DateTime?
+  readAt        DateTime?
+  errorMessage  String?
+  metadata      Json? // Additional message data (template vars, etc.)
+
+  // Multi-tenant fields
+  ownerUid       String
+  organizationId String?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [ownerUid], references: [id], onDelete: Cascade)
+
+  @@index([ownerUid])
+  @@index([status])
+  @@index([recipientType, recipientId])
+  @@index([createdAt])
+}
+
+// Production Vertical Models
+
+model ProductionProject {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  type        ProjectType   @default(OTHER)
+  status      ProjectStatus @default(PLANNING)
+  startDate   DateTime?
+  endDate     DateTime?
+
+  // Multi-tenant fields
+  ownerUid       String
+  organizationId String
+
+  // Relations
+  organization Organization                @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  tasks        ProductionTask[]
+  budgetItems  ProductionBudgetItem[]
+  files        ProductionFileAsset[]
+  suppliers    ProductionProjectSupplier[]
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerUid])
+  @@index([organizationId])
+  @@index([status])
+}
+
+model ProductionTask {
+  id            String               @id @default(cuid())
+  title         String
+  description   String?
+  domain        TaskDomain           @default(LOGISTICS)
+  status        ProductionTaskStatus @default(OPEN)
+  dueDate       DateTime?
+  predecessorId String? // Simple one-to-one dependency
+
+  // Assignment
+  assigneeId String?
+  assignee   User?   @relation(fields: [assigneeId], references: [id])
+
+  // Project relation
+  projectId String
+  project   ProductionProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Multi-tenant fields
+  ownerUid       String
+  organizationId String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerUid])
+  @@index([organizationId])
+  @@index([projectId])
+  @@index([status])
+  @@index([assigneeId])
+}
+
+model ProductionBudgetItem {
+  id         String         @id @default(cuid())
+  category   BudgetCategory @default(OTHER)
+  planned    Decimal        @default(0) @db.Decimal(12, 2)
+  actual     Decimal        @default(0) @db.Decimal(12, 2)
+  invoiceUrl String?
+  quoteUrl   String?
+  notes      String?
+
+  // Relations
+  projectId  String
+  project    ProductionProject   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  supplierId String?
+  supplier   ProductionSupplier? @relation(fields: [supplierId], references: [id])
+
+  // Multi-tenant fields
+  ownerUid       String
+  organizationId String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerUid])
+  @@index([organizationId])
+  @@index([projectId])
+  @@index([category])
+}
+
+model ProductionSupplier {
+  id          String           @id @default(cuid())
+  name        String
+  category    SupplierCategory @default(OTHER)
+  rating      Int? // 1-5 scale
+  notes       String?
+  priceNotes  String?
+  contactInfo Json? // { email, phone, address, etc. }
+
+  // Multi-tenant fields
+  ownerUid       String
+  organizationId String
+
+  // Relations
+  organization Organization                @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projects     ProductionProjectSupplier[]
+  budgetItems  ProductionBudgetItem[]
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerUid])
+  @@index([organizationId])
+  @@index([category])
+  @@index([name])
+}
+
+model ProductionProjectSupplier {
+  id   String  @id @default(cuid())
+  role String? // e.g. "Stage provider", "Catering lead"
+
+  // Relations
+  projectId  String
+  project    ProductionProject  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  supplierId String
+  supplier   ProductionSupplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  // Multi-tenant fields
+  ownerUid       String
+  organizationId String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([projectId, supplierId])
+  @@index([ownerUid])
+  @@index([organizationId])
+}
+
+model ProductionFileAsset {
+  id       String     @id @default(cuid())
+  name     String
+  folder   FileFolder @default(OTHER)
+  url      String
+  version  Int        @default(1)
+  notes    String?
+  mimeType String?
+  size     Int? // File size in bytes
+
+  // Relations
+  projectId String
+  project   ProductionProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Multi-tenant fields
+  ownerUid       String
+  organizationId String
+  createdBy      String
+
+  // Relations
+  creator User @relation(fields: [createdBy], references: [id])
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerUid])
+  @@index([organizationId])
+  @@index([projectId])
+  @@index([folder])
+}
+
+// ========= INTEGRATIONS HUB ========= //
+
+// External platform integrations for EFFINITY
+model Integration {
+  id           String            @id @default(cuid())
+  ownerUid     String
+  orgId        String?
+  platform     IntegrationType
+  status       IntegrationStatus @default(DISCONNECTED)
+  credentials  Json? // Encrypted credentials
+  settings     Json? // Platform-specific settings
+  lastSyncAt   DateTime?
+  syncCount    Int               @default(0)
+  errorMessage String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  syncLogs IntegrationSyncLog[]
+
+  @@index([ownerUid])
+  @@index([orgId])
+  @@index([platform])
+  @@index([status])
+  @@index([ownerUid, platform])
+  @@index([ownerUid, status])
+}
+
+// Sync logs for integration operations
+model IntegrationSyncLog {
+  id            String      @id @default(cuid())
+  integrationId String
+  integration   Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  syncType      String // LEADS, PROPERTIES, CONTACTS, EVENTS
+  itemsSynced   Int         @default(0)
+  itemsFailed   Int         @default(0)
+  status        String // SUCCESS, PARTIAL, FAILED
+  errorDetails  Json?
+  startedAt     DateTime    @default(now())
+  completedAt   DateTime?
+
+  @@index([integrationId])
+  @@index([startedAt])
+  @@index([status])
+}
+
+// ========= AUTOMATION ENGINE ========= //
+
+// Workflow automation rules
+model Automation {
+  id          String           @id @default(cuid())
+  ownerUid    String
+  orgId       String?
+  name        String
+  description String?
+  status      AutomationStatus @default(PAUSED)
+  trigger     Json // { type, config }
+  actions     Json // [{ type, config, order }]
+  conditions  Json? // Optional filters
+  stats       Json? // { totalRuns, successCount, failCount, lastRunAt }
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  executions AutomationExecution[]
+
+  @@index([ownerUid])
+  @@index([orgId])
+  @@index([status])
+  @@index([ownerUid, status])
+  @@index([orgId, status])
+}
+
+// Automation execution logs
+model AutomationExecution {
+  id           String                    @id @default(cuid())
+  automationId String
+  automation   Automation                @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  status       AutomationExecutionStatus @default(SUCCESS)
+  triggeredBy  Json // { entityType, entityId, event }
+  actionsLog   Json // [{ action, status, result, error }]
+  startedAt    DateTime                  @default(now())
+  completedAt  DateTime?
+  errorMessage String?
+
+  @@index([automationId])
+  @@index([startedAt])
+  @@index([status])
+}
+
+// ========= BILLING & SUBSCRIPTIONS ========= //
+
+// Organization subscription management
+model Subscription {
+  id           String       @id @default(cuid())
+  orgId        String       @unique
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  plan   SubscriptionPlan   @default(BASIC)
+  status SubscriptionStatus @default(TRIALING)
+
+  // Stripe integration
+  stripeCustomerId       String?   @unique
+  stripeSubscriptionId   String?   @unique
+  stripePriceId          String?
+  stripeCurrentPeriodEnd DateTime?
+
+  // Usage limits
+  userSeats     Int @default(1)
+  usedSeats     Int @default(0)
+  leadLimit     Int @default(100)
+  leadCount     Int @default(0)
+  propertyLimit Int @default(50)
+  propertyCount Int @default(0)
+
+  // Billing
+  trialEndsAt     DateTime?
+  billingEmail    String?
+  nextBillingDate DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  invoices     Invoice[]
+  usageRecords UsageRecord[]
+
+  @@index([orgId])
+  @@index([stripeCustomerId])
+  @@index([status])
+  @@index([plan])
+}
+
+// Plan-based permission configuration
+model PlanPermissions {
+  id          String           @id @default(cuid())
+  plan        SubscriptionPlan @unique
+  permissions Json // Array of FeatureAccess
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([plan])
+}
+
+// Invoice tracking
+model Invoice {
+  id             String       @id @default(cuid())
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  stripeInvoiceId String? @unique
+  amount          Int // Amount in cents
+  currency        String  @default("usd")
+  status          String // paid, open, void, uncollectible
+
+  pdfUrl           String?
+  hostedInvoiceUrl String?
+
+  periodStart DateTime
+  periodEnd   DateTime
+  paidAt      DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([subscriptionId])
+  @@index([status])
+}
+
+// Usage record tracking for analytics
+model UsageRecord {
+  id             String       @id @default(cuid())
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  resourceType String // leads, properties, automations, integrations
+  action       String // created, deleted, updated
+  quantity     Int    @default(1)
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([subscriptionId])
+  @@index([resourceType])
+  @@index([createdAt])
+}
+
+// ========= CREATIVE PRODUCTIONS MODULE ========= //
+// (Video/Ad Production - distinct from construction Production vertical)
+
+// Creative Project - Video/Ad production project
+model CreativeProject {
+  id             String                @id @default(cuid())
+  orgId          String
+  organization   Organization          @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  name           String
+  objective      String? // Project goal/description
+  targetAudience String? // Who this is for
+  channels       String[] // e.g., ["META_FEED", "INSTAGRAM_STORY", "YOUTUBE"]
+  status         CreativeProjectStatus @default(DRAFT)
+  dueDate        DateTime?
+  ownerUid       String // Creator/owner
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  tasks   CreativeTask[]
+  assets  CreativeAsset[]
+  reviews CreativeReview[]
+  renders CreativeRender[]
+
+  @@index([orgId])
+  @@index([ownerUid])
+  @@index([status])
+  @@index([orgId, status])
+  @@index([ownerUid, status])
+  @@index([dueDate])
+}
+
+// Creative Task - Workflow tasks within a creative project
+model CreativeTask {
+  id          String             @id @default(cuid())
+  projectId   String
+  project     CreativeProject    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  type        CreativeTaskType
+  title       String
+  status      CreativeTaskStatus @default(TODO)
+  assigneeUid String? // Who is responsible
+  priority    Int                @default(0) // 0=low, 1=medium, 2=high
+  startAt     DateTime?
+  dueAt       DateTime?
+  checklist   Json? // [{ id, text, done }]
+  notes       String? // Rich text notes
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@index([projectId])
+  @@index([assigneeUid])
+  @@index([status])
+  @@index([projectId, status])
+  @@index([dueAt])
+}
+
+// Creative Asset - Media and creative assets
+model CreativeAsset {
+  id           String            @id @default(cuid())
+  orgId        String
+  organization Organization      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  projectId    String?
+  project      CreativeProject?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  title        String
+  type         CreativeAssetType
+  storageUrl   String // URL to S3/Firebase Storage
+  size         Int? // bytes
+  width        Int? // pixels (for images/video)
+  height       Int? // pixels (for images/video)
+  duration     Int? // seconds (for video/audio)
+  tags         String[] // searchable tags
+  version      Int               @default(1)
+  createdByUid String
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  reviews CreativeReview[]
+
+  @@index([orgId])
+  @@index([projectId])
+  @@index([createdByUid])
+  @@index([type])
+  @@index([orgId, type])
+  @@index([createdAt])
+}
+
+// Creative Template - Reusable templates for briefs, scripts, etc.
+model CreativeTemplate {
+  id           String               @id @default(cuid())
+  orgId        String
+  organization Organization         @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  title        String
+  kind         CreativeTemplateKind
+  content      Json // Template content (markdown/structured)
+  locale       CreativeLocale       @default(EN)
+  locked       Boolean              @default(false) // Prevent editing built-in templates
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  @@index([orgId])
+  @@index([kind])
+  @@index([orgId, kind])
+}
+
+// Creative Review - Approval workflow for creative assets
+model CreativeReview {
+  id          String               @id @default(cuid())
+  projectId   String
+  project     CreativeProject      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assetId     String?
+  asset       CreativeAsset?       @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  reviewerUid String // Who is reviewing
+  status      CreativeReviewStatus @default(PENDING)
+  comments    String? // Rich text feedback
+  requestedAt DateTime             @default(now())
+  decidedAt   DateTime?
+
+  @@index([projectId])
+  @@index([assetId])
+  @@index([reviewerUid])
+  @@index([status])
+  @@index([projectId, status])
+}
+
+// Creative Render - Output renders for different channels
+model CreativeRender {
+  id        String               @id @default(cuid())
+  projectId String
+  project   CreativeProject      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  format    CreativeRenderFormat
+  spec      Json // { width, height, bitrate, fps, format }
+  status    CreativeRenderStatus @default(QUEUED)
+  outputUrl String? // URL to rendered output
+  logs      String? // Render logs/errors
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+
+  @@index([projectId])
+  @@index([status])
+  @@index([projectId, status])
+}

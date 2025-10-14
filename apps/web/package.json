@@ -5,11 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npx prisma generate && next build",
     "build:analyze": "ANALYZE=true next build",
     "analyze": "ANALYZE=true npm run build",
     "start": "next start",
-    "postinstall": "echo 'Skipping Prisma generate in postinstall'",
+    "postinstall": "npx prisma generate || echo 'Prisma generate skipped'",
     "lint": "echo 'lint web'",
     "test": "jest",
     "test:watch": "jest --watch",
