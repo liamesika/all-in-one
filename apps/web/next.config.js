@@ -1,4 +1,5 @@
-import path from 'path';
+// Remove path import - use string literal for aliases
+// import path from 'path';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -105,9 +106,10 @@ const nextConfig = {
     };
 
     // Resolve aliases for better tree shaking
+    // Don't use path.resolve - it can cause issues in Edge runtime
+    // Next.js automatically resolves @ to the app root
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@': path.resolve(process.cwd()),
       'lodash': 'lodash-es', // Use ES modules version of lodash
     };
 
