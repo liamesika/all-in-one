@@ -1,8 +1,8 @@
 {
-  "buildCommand": "cd apps/web && npm install --legacy-peer-deps && npm run build",
+  "buildCommand": "npm install --legacy-peer-deps && npm run build",
   "installCommand": "echo 'Build handles install'",
   "framework": null,
-  "outputDirectory": "apps/web/.next",
+  "outputDirectory": ".next",
   "build": {
     "env": {
       "SKIP_ENV_VALIDATION": "true"
