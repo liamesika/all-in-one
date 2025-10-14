@@ -1,6 +1,6 @@
 {
-  "installCommand": "npm ci --legacy-peer-deps",
-  "buildCommand": "npm run build",
+  "installCommand": "npm install --legacy-peer-deps",
+  "buildCommand": "npm run build --workspace=apps/web",
   "framework": null,
   "outputDirectory": "apps/web/.next",
   "build": {
