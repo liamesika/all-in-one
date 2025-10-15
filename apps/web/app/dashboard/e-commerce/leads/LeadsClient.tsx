@@ -25,6 +25,7 @@ import {
   UniversalTableCell,
   StatusBadge,
   TableEmptyState,
+  Drawer,
 } from '@/components/shared';
 import { Filter, Download, Plus } from 'lucide-react';
 
@@ -135,6 +136,8 @@ function LeadsClient({ ownerUid, isAuthLoading = false, user }: LeadsClientProps
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+  const [showFilterDrawer, setShowFilterDrawer] = useState(false);
+  const [tempFilters, setTempFilters] = useState<LeadFilters>({});
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [showNewLeadModal, setShowNewLeadModal] = useState(false);
   // Enhanced loading states for different operations
@@ -357,6 +360,26 @@ function LeadsClient({ ownerUid, isAuthLoading = false, user }: LeadsClientProps
     fetchLeads(currentPage);
   };
 
+  // Filter drawer handlers
+  const handleOpenFilterDrawer = () => {
+    setTempFilters(filters);
+    setShowFilterDrawer(true);
+  };
+
+  const handleResetFilters = () => {
+    setTempFilters({});
+  };
+
+  const handleApplyFilters = () => {
+    setFilters(tempFilters);
+    setShowFilterDrawer(false);
+    setCurrentPage(1); // Reset to first page when filters change
+  };
+
+  const getActiveFilterCount = () => {
+    return Object.keys(filters).filter(key => filters[key as keyof LeadFilters] !== undefined && filters[key as keyof LeadFilters] !== '').length;
+  };
+
   const filteredAndSortedLeads = useMemo(() => {
     return [...leads].sort((a, b) => {
       // Sort by score (HOT first), then by date
@@ -450,17 +473,35 @@ function LeadsClient({ ownerUid, isAuthLoading = false, user }: LeadsClientProps
                 </button>
               </div>
 
-              {/* Filter Toggle with indicator */}
+              {/* Filter Toggle - Desktop (inline panel) */}
               <UniversalButton
                 variant="outline"
                 size="md"
                 leftIcon={<Filter className="w-4 h-4" />}
                 onClick={() => setShowFilters(!showFilters)}
-                className="relative"
+                className="hidden sm:flex relative !min-h-[44px]"
               >
                 {language === 'he' ? 'סינון' : 'Filters'}
-                {Object.keys(filters).some(key => filters[key as keyof LeadFilters] !== undefined && filters[key as keyof LeadFilters] !== '') && (
-                  <span className="absolute -top-1 -right-1 h-3 w-3 bg-blue-600 rounded-full animate-pulse" />
+                {getActiveFilterCount() > 0 && (
+                  <span className="ml-2 px-2 py-0.5 bg-[#2979FF] text-white rounded-full text-xs font-semibold">
+                    {getActiveFilterCount()}
+                  </span>
+                )}
+              </UniversalButton>
+
+              {/* Filter Toggle - Mobile (drawer) */}
+              <UniversalButton
+                variant="outline"
+                size="sm"
+                leftIcon={<Filter className="w-4 h-4" />}
+                onClick={handleOpenFilterDrawer}
+                className="sm:hidden !min-h-[44px]"
+              >
+                {language === 'he' ? 'סינון' : 'Filters'}
+                {getActiveFilterCount() > 0 && (
+                  <span className="ml-2 px-2 py-0.5 bg-[#2979FF] text-white rounded-full text-xs font-semibold">
+                    {getActiveFilterCount()}
+                  </span>
                 )}
               </UniversalButton>
 
@@ -1033,6 +1074,120 @@ function LeadsClient({ ownerUid, isAuthLoading = false, user }: LeadsClientProps
       </div>
 
       {/* Enhanced New Lead Modal */}
+      {/* Mobile Filter Drawer */}
+      <Drawer
+        isOpen={showFilterDrawer}
+        onClose={() => setShowFilterDrawer(false)}
+        onReset={handleResetFilters}
+        onApply={handleApplyFilters}
+        title={language === 'he' ? 'סינון לידים' : 'Filter Leads'}
+        resetLabel={language === 'he' ? 'איפוס' : 'Reset'}
+        applyLabel={language === 'he' ? 'החל סינון' : 'Apply'}
+        width="md"
+      >
+        <div className="space-y-6">
+          {/* Source Filter */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              {language === 'he' ? 'מקור' : 'Source'}
+            </label>
+            <select
+              value={tempFilters.source || ''}
+              onChange={(e) => setTempFilters({ ...tempFilters, source: e.target.value as LeadSource || undefined })}
+              className="w-full px-4 py-2.5 min-h-[44px] rounded-lg border border-gray-300 dark:border-[#2979FF]/20 bg-white dark:bg-[#1A2F4B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all"
+            >
+              <option value="">{language === 'he' ? 'כל המקורות' : 'All Sources'}</option>
+              {Object.entries(SOURCE_LABELS).map(([key, label]) => (
+                <option key={key} value={key}>{label}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Score Filter */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              {language === 'he' ? 'ציון' : 'Score'}
+            </label>
+            <select
+              value={tempFilters.score || ''}
+              onChange={(e) => setTempFilters({ ...tempFilters, score: e.target.value as LeadScore || undefined })}
+              className="w-full px-4 py-2.5 min-h-[44px] rounded-lg border border-gray-300 dark:border-[#2979FF]/20 bg-white dark:bg-[#1A2F4B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all"
+            >
+              <option value="">{language === 'he' ? 'כל הציונים' : 'All Scores'}</option>
+              <option value="HOT">{language === 'he' ? 'חם' : 'Hot'}</option>
+              <option value="WARM">{language === 'he' ? 'פושר' : 'Warm'}</option>
+              <option value="COLD">{language === 'he' ? 'קר' : 'Cold'}</option>
+            </select>
+          </div>
+
+          {/* Status Filter */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              {language === 'he' ? 'סטטוס' : 'Status'}
+            </label>
+            <select
+              value={tempFilters.status || ''}
+              onChange={(e) => setTempFilters({ ...tempFilters, status: e.target.value as LeadStage || undefined })}
+              className="w-full px-4 py-2.5 min-h-[44px] rounded-lg border border-gray-300 dark:border-[#2979FF]/20 bg-white dark:bg-[#1A2F4B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all"
+            >
+              <option value="">{language === 'he' ? 'כל הסטטוסים' : 'All Statuses'}</option>
+              <option value="NEW">{language === 'he' ? 'חדש' : 'New'}</option>
+              <option value="CONTACTED">{language === 'he' ? 'צור קשר' : 'Contacted'}</option>
+              <option value="QUALIFIED">{language === 'he' ? 'מוסמך' : 'Qualified'}</option>
+              <option value="MEETING">{language === 'he' ? 'פגישה' : 'Meeting'}</option>
+              <option value="OFFER">{language === 'he' ? 'הצעה' : 'Offer'}</option>
+              <option value="WON">{language === 'he' ? 'נמכר' : 'Won'}</option>
+              <option value="LOST">{language === 'he' ? 'אבד' : 'Lost'}</option>
+            </select>
+          </div>
+
+          {/* Search */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              {language === 'he' ? 'חיפוש' : 'Search'}
+            </label>
+            <input
+              type="text"
+              placeholder={language === 'he' ? 'שם, טלפון, אימייל...' : 'Name, phone, email...'}
+              value={tempFilters.search || ''}
+              onChange={(e) => setTempFilters({ ...tempFilters, search: e.target.value || undefined })}
+              className="w-full px-4 py-2.5 min-h-[44px] rounded-lg border border-gray-300 dark:border-[#2979FF]/20 bg-white dark:bg-[#1A2F4B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all"
+            />
+          </div>
+
+          {/* Active Filters Display */}
+          {(tempFilters.source || tempFilters.score || tempFilters.status || tempFilters.search) && (
+            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                {language === 'he' ? 'סינונים פעילים:' : 'Active Filters:'}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {tempFilters.source && (
+                  <span className="px-3 py-1 bg-[#2979FF]/10 text-[#2979FF] rounded-full text-sm font-medium">
+                    {language === 'he' ? 'מקור: ' : 'Source: '}{SOURCE_LABELS[tempFilters.source] || tempFilters.source}
+                  </span>
+                )}
+                {tempFilters.score && (
+                  <span className="px-3 py-1 bg-[#2979FF]/10 text-[#2979FF] rounded-full text-sm font-medium">
+                    {language === 'he' ? 'ציון: ' : 'Score: '}{tempFilters.score}
+                  </span>
+                )}
+                {tempFilters.status && (
+                  <span className="px-3 py-1 bg-[#2979FF]/10 text-[#2979FF] rounded-full text-sm font-medium">
+                    {language === 'he' ? 'סטטוס: ' : 'Status: '}{tempFilters.status}
+                  </span>
+                )}
+                {tempFilters.search && (
+                  <span className="px-3 py-1 bg-[#2979FF]/10 text-[#2979FF] rounded-full text-sm font-medium">
+                    {language === 'he' ? 'חיפוש: ' : 'Search: '}{tempFilters.search}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </Drawer>
+
       {showNewLeadModal && (
         <div className="fixed inset-0 z-40 bg-black bg-opacity-40 animate-fade-in">
           <div className="min-h-screen p-4 overflow-y-auto flex items-center justify-center">
