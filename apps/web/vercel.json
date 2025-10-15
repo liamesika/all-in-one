@@ -1,7 +1,7 @@
 {
-  "buildCommand": "cd ../.. && pnpm --filter web run prebuild && pnpm --filter web run build",
+  "buildCommand": "pnpm run build",
   "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
-  "framework": null,
+  "framework": "nextjs",
   "outputDirectory": ".next",
   "build": {
     "env": {
