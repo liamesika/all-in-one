@@ -79,3 +79,11 @@ export {
   DesktopDrawer,
   type DrawerProps,
 } from './Drawer';
+
+// Layout Grids
+export {
+  KPIGrid,
+  CompactKPIGrid,
+  StatsGrid,
+  type KPIGridProps,
+} from './KPIGrid';
