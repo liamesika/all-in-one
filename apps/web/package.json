@@ -31,7 +31,7 @@
     "node": ">=20.0.0 <23.0.0"
   },
   "dependencies": {
-    "@prisma/client": "^6.16.1",
+    "@prisma/client": "6.16.1",
     "@axe-core/react": "^4.10.2",
     "@stripe/stripe-js": "^5.8.0",
     "@types/dompurify": "^3.2.0",
@@ -50,8 +50,8 @@
     "lucide-react": "^0.543.0",
     "openai": "^5.20.2",
     "qrcode.react": "^4.2.0",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
     "react-hot-toast": "^2.6.0",
     "react-is": "^19.1.1",
     "recharts": "^2.12.0",
