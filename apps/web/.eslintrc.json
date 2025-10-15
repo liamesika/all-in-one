@@ -7,15 +7,30 @@
         "paths": [
           {
             "name": "@prisma/client",
-            "message": "Do not import PrismaClient directly. Use 'import { prisma } from \"@/lib/prisma.server\"' instead. The lazy-loaded singleton prevents build-time module resolution errors."
+            "message": "Do not import PrismaClient directly. Use 'import { prisma } from \"@/lib/prisma.server\"' instead."
           }
         ],
         "patterns": [
           {
             "group": ["**/node_modules/@prisma/client"],
             "message": "Do not import from @prisma/client directly. Use the singleton from @/lib/prisma.server"
+          },
+          {
+            "group": ["./(*)/page", "./(*)/ page.tsx", "../(*)/page", "../(*)/page.tsx"],
+            "message": "Do not import page.tsx from route groups - causes Next.js clientReferenceManifest errors. Import components directly instead."
           }
         ]
+      }
+    ],
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "ExportNamedDeclaration[source.value=/\\(.*\\)\\/page/]",
+        "message": "Do not re-export from route group pages - causes Next.js RSC manifest issues."
+      },
+      {
+        "selector": "ExportAllDeclaration[source.value=/\\(.*\\)\\/page/]",
+        "message": "Do not barrel export from route group pages - causes Next.js RSC manifest issues."
       }
     ]
   }
