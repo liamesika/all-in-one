@@ -87,3 +87,12 @@ export {
   StatsGrid,
   type KPIGridProps,
 } from './KPIGrid';
+
+// Bottom Sheets & Bulk Actions
+export {
+  BottomSheet,
+  BulkActionsMenu,
+  type BottomSheetProps,
+  type BulkActionsMenuProps,
+  type BulkAction,
+} from './BottomSheet';
