@@ -1,7 +1,19 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { LanguageProvider, useLanguage } from '@/lib/language-context';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui';
+import {
+  UniversalCard,
+  CardHeader,
+  CardBody,
+  UniversalButton,
+  UniversalTable,
+  UniversalTableHeader,
+  UniversalTableBody,
+  UniversalTableRow,
+  UniversalTableHead,
+  UniversalTableCell,
+  StatusBadge,
+} from '@/components/shared';
 import { useAuth } from '@/lib/auth-context';
 import { AiCoachProvider } from '@/lib/ai-coach-context';
 import AiCoachIntegration from '@/components/ai-coach/AiCoachIntegration';
@@ -113,7 +125,7 @@ function EcomDashboardContent() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-blue-50/30 to-gray-50 animate-fade-in">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B] animate-fade-in">
       
       {/* Enhanced Professional Hero Section */}
       <section className="section relative overflow-hidden">
@@ -188,19 +200,19 @@ function EcomDashboardContent() {
             <aside className="hidden lg:block col-span-3">
               <div className="sticky top-8 stack-lg">
                 {/* Enhanced Navigation Card */}
-                <Card className="card-floating bg-white/98 backdrop-blur-md border border-gray-200/60 hover:border-blue-200/60 transition-all duration-500">
+                <UniversalCard variant="default" className="card-floating bg-white/98 backdrop-blur-md border border-gray-200/60 hover:border-blue-200/60 transition-all duration-500 dark:bg-[#1A2942] dark:border-[#2979FF]/20">
                   <CardHeader className="p-6 pb-4">
                     <div className="flex items-center gap-4">
                       <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white grid place-items-center font-bold text-xl shadow-xl hover:shadow-2xl hover:scale-110 transition-all duration-300">
                         E
                       </div>
                       <div className="stack-sm">
-                        <CardTitle className="text-heading-4 text-gray-900">EFFINITY</CardTitle>
-                        <p className="text-caption text-gray-500">All-in-One Platform</p>
+                        <h3 className="text-heading-4 text-gray-900 dark:text-white">EFFINITY</h3>
+                        <p className="text-caption text-gray-500 dark:text-gray-400">All-in-One Platform</p>
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="px-6 pb-6">
+                  <CardBody className="px-6 pb-6">
                     <nav className="stack-sm">
                       <a className="group flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:scale-105 transition-all duration-300" href="/dashboard/e-commerce/dashboard">
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -227,12 +239,12 @@ function EcomDashboardContent() {
                         {language === 'he' ? 'קמפיינים' : 'Campaigns'}
                       </a>
                     </nav>
-                  </CardContent>
-                </Card>
-            
+                  </CardBody>
+                </UniversalCard>
+
                 {/* Enhanced AI Tip Card */}
-                <Card className="card-elevated bg-gradient-to-br from-blue-50 via-blue-50 to-blue-100 border border-blue-200/80 hover:border-blue-300/80 hover:shadow-xl transition-all duration-500 group">
-                  <CardContent className="p-6">
+                <UniversalCard variant="default" className="card-elevated bg-gradient-to-br from-blue-50 via-blue-50 to-blue-100 border border-blue-200/80 hover:border-blue-300/80 hover:shadow-xl transition-all duration-500 group dark:from-blue-900/20 dark:via-blue-900/20 dark:to-blue-900/30 dark:border-[#2979FF]/30">
+                  <CardBody className="p-6">
                     <div className="flex items-start gap-4">
                       <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 text-white flex items-center justify-center flex-shrink-0 shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
                         <svg className="w-5 h-5 group-hover:animate-pulse" fill="currentColor" viewBox="0 0 20 20">
@@ -240,10 +252,10 @@ function EcomDashboardContent() {
                         </svg>
                       </div>
                       <div className="stack-sm">
-                        <div className="text-heading-6 text-blue-800 group-hover:text-blue-900 transition-colors">
+                        <div className="text-heading-6 text-blue-800 group-hover:text-blue-900 transition-colors dark:text-blue-300 dark:group-hover:text-blue-200">
                           {language === 'he' ? 'טיפ AI' : 'AI Tip'}
                         </div>
-                        <div className="text-body-small text-blue-700 group-hover:text-blue-800 leading-relaxed transition-colors">
+                        <div className="text-body-small text-blue-700 group-hover:text-blue-800 leading-relaxed transition-colors dark:text-blue-400 dark:group-hover:text-blue-300">
                           {language === 'he'
                             ? 'העלה ZIP ויצרנו כותרות ותיאורים אוטומטית באמצעות AI'
                             : 'Upload a ZIP and auto-generate titles & descriptions with AI'
@@ -251,8 +263,8 @@ function EcomDashboardContent() {
                         </div>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </CardBody>
+                </UniversalCard>
               </div>
             </aside>
 
@@ -304,24 +316,28 @@ function EcomDashboardContent() {
           {/* Enhanced KPIs */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {kpis.map((k, index) => (
-              <div
+              <UniversalCard
                 key={k.label}
-                className="group rounded-2xl bg-white border border-gray-200 shadow-sm p-6 hover:shadow-xl hover:border-blue-200 transition-all duration-500 transform hover:-translate-y-2 hover:scale-105 cursor-pointer card-hover animate-fade-in"
+                variant="default"
+                hoverable
+                className="group shadow-sm hover:shadow-xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-105 cursor-pointer card-hover animate-fade-in"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="text-xs font-medium text-gray-500 group-hover:text-blue-600 transition-colors">{k.label}</div>
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-                <div className="text-2xl font-bold mt-1 text-gray-900 group-hover:text-blue-700 transition-colors">{k.value}</div>
-                <div className="mt-3 text-blue-600 group-hover:text-blue-700 transition-colors">
-                  <div className="transform group-hover:scale-110 transition-transform duration-300">
-                    <Sparkline points={k.trend} />
+                <CardBody className="p-6 relative">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-xs font-medium text-gray-500 group-hover:text-blue-600 transition-colors dark:text-gray-400">{k.label}</div>
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
-                </div>
-                {/* Animated background gradient */}
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-white opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-300 -z-10" />
-              </div>
+                  <div className="text-2xl font-bold mt-1 text-gray-900 group-hover:text-blue-700 transition-colors dark:text-white dark:group-hover:text-blue-400">{k.value}</div>
+                  <div className="mt-3 text-blue-600 group-hover:text-blue-700 transition-colors">
+                    <div className="transform group-hover:scale-110 transition-transform duration-300">
+                      <Sparkline points={k.trend} />
+                    </div>
+                  </div>
+                  {/* Animated background gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-white opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-300 -z-10 dark:from-blue-900/20 dark:to-transparent" />
+                </CardBody>
+              </UniversalCard>
             ))}
           </div>
 
@@ -378,88 +394,91 @@ function EcomDashboardContent() {
           </div>
 
           {/* progress / jobs table */}
-          <div className="rounded-2xl bg-white border shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
-              <div className="font-semibold text-gray-900">{language === 'he' ? 'עבודות אחרונות' : 'Recent Jobs'}</div>
-              <a href="/dashboard/e-commerce/jobs" className="text-sm text-gray-600 hover:text-gray-900">{language === 'he' ? 'הצג הכל' : 'View all'}</a>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-xs opacity-60">
-                    <th className="px-4 py-2">ID</th>
-                    <th className="px-4 py-2">Type</th>
-                    <th className="px-4 py-2">Status</th>
-                    <th className="px-4 py-2">Created</th>
-                    <th className="px-4 py-2">Images</th>
-                    <th className="px-4 py-2">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Array.isArray(jobs) ? jobs.map((r) => (
-                    <tr key={r.id} className="border-t hover:bg-gray-50">
-                      <td className="px-4 py-2 font-mono text-[11px] text-gray-500">{r.id}</td>
-                      <td className="px-4 py-2 text-gray-900">{r.type ?? '-'}</td>
-                      <td className="px-4 py-2">
-                        <span className={
-                          `text-xs px-2 py-1 rounded-full border font-medium ${
-                            r.status === 'SUCCESS' || r.status === 'COMPLETED' ? 'bg-green-50 text-green-700 border-green-200' :
-                            r.status === 'FAILED'  ? 'bg-red-50 text-red-700 border-red-200' :
-                            r.status === 'RUNNING' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                            r.status === 'PENDING' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                                     'bg-gray-50 text-gray-700 border-gray-200'
-                          }`
-                        }>{r.status}</span>
-                      </td>
-                      <td className="px-4 py-2 text-gray-600">{r.createdAt ? new Date(r.createdAt).toLocaleString() : ''}</td>
-                      <td className="px-4 py-2 text-gray-600">{r.metrics?.images ?? ''}</td>
-                      <td className="px-4 py-2">
-                        {(r.status === 'SUCCESS' || r.status === 'COMPLETED') && r.type === 'shopify_csv'
-                          ? <a className="text-blue-600 hover:text-blue-700 hover:underline" href={`/api/jobs/${r.id}/output`}>{language === 'he' ? 'הורד CSV' : 'Download CSV'}</a>
-                          : <span className="text-gray-400">—</span>}
-                      </td>
-                    </tr>
-                  )) : []}
-                  {!Array.isArray(jobs) || jobs.length === 0 ? (
-                    <tr><td className="px-4 py-6 text-center text-gray-500" colSpan={6}>
-                      {language === 'he' ? 'אין עדיין עבודות — העלה ZIP כדי להתחיל' : 'No jobs yet — upload a ZIP to get started'}
-                    </td></tr>
-                  ) : null}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <UniversalCard variant="default">
+            <CardHeader className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-[#2979FF]/20">
+              <div className="font-semibold text-gray-900 dark:text-white">{language === 'he' ? 'עבודות אחרונות' : 'Recent Jobs'}</div>
+              <a href="/dashboard/e-commerce/jobs" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">{language === 'he' ? 'הצג הכל' : 'View all'}</a>
+            </CardHeader>
+            <CardBody className="overflow-hidden">
+              <div className="overflow-x-auto">
+                <UniversalTable>
+                  <UniversalTableHeader>
+                    <UniversalTableRow>
+                      <UniversalTableHead>ID</UniversalTableHead>
+                      <UniversalTableHead>Type</UniversalTableHead>
+                      <UniversalTableHead>Status</UniversalTableHead>
+                      <UniversalTableHead>Created</UniversalTableHead>
+                      <UniversalTableHead>Images</UniversalTableHead>
+                      <UniversalTableHead>Action</UniversalTableHead>
+                    </UniversalTableRow>
+                  </UniversalTableHeader>
+                  <UniversalTableBody>
+                    {Array.isArray(jobs) ? jobs.map((r) => (
+                      <UniversalTableRow key={r.id} className="hover:bg-gray-50 dark:hover:bg-[#1A2942]/50">
+                        <UniversalTableCell className="font-mono text-[11px] text-gray-500 dark:text-gray-400">{r.id}</UniversalTableCell>
+                        <UniversalTableCell className="text-gray-900 dark:text-gray-100">{r.type ?? '-'}</UniversalTableCell>
+                        <UniversalTableCell>
+                          <StatusBadge
+                            status={
+                              r.status === 'SUCCESS' || r.status === 'COMPLETED' ? 'completed' :
+                              r.status === 'FAILED' ? 'failed' :
+                              r.status === 'RUNNING' ? 'active' :
+                              r.status === 'PENDING' ? 'pending' : 'pending'
+                            }
+                          />
+                        </UniversalTableCell>
+                        <UniversalTableCell className="text-gray-600 dark:text-gray-400">{r.createdAt ? new Date(r.createdAt).toLocaleString() : ''}</UniversalTableCell>
+                        <UniversalTableCell className="text-gray-600 dark:text-gray-400">{r.metrics?.images ?? ''}</UniversalTableCell>
+                        <UniversalTableCell>
+                          {(r.status === 'SUCCESS' || r.status === 'COMPLETED') && r.type === 'shopify_csv'
+                            ? <a className="text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-400 dark:hover:text-blue-300" href={`/api/jobs/${r.id}/output`}>{language === 'he' ? 'הורד CSV' : 'Download CSV'}</a>
+                            : <span className="text-gray-400">—</span>}
+                        </UniversalTableCell>
+                      </UniversalTableRow>
+                    )) : []}
+                    {!Array.isArray(jobs) || jobs.length === 0 ? (
+                      <UniversalTableRow>
+                        <UniversalTableCell className="px-4 py-6 text-center text-gray-500 dark:text-gray-400" colSpan={6}>
+                          {language === 'he' ? 'אין עדיין עבודות — העלה ZIP כדי להתחיל' : 'No jobs yet — upload a ZIP to get started'}
+                        </UniversalTableCell>
+                      </UniversalTableRow>
+                    ) : null}
+                  </UniversalTableBody>
+                </UniversalTable>
+              </div>
+            </CardBody>
+          </UniversalCard>
 
           {/* Leads Overview Widget */}
           {leadsStats && (
-            <div className="mt-6 rounded-2xl bg-white border shadow-sm overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
-                <div className="font-semibold text-gray-900">{language === 'he' ? 'סקירת לידים' : 'Leads Overview'}</div>
-                <a href="/dashboard/e-commerce/leads" className="text-sm text-gray-600 hover:text-gray-900">{language === 'he' ? 'הצג הכל' : 'View all'}</a>
-              </div>
-              
-              <div className="p-4">
+            <UniversalCard variant="default" className="mt-6">
+              <CardHeader className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-[#2979FF]/20">
+                <div className="font-semibold text-gray-900 dark:text-white">{language === 'he' ? 'סקירת לידים' : 'Leads Overview'}</div>
+                <a href="/dashboard/e-commerce/leads" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">{language === 'he' ? 'הצג הכל' : 'View all'}</a>
+              </CardHeader>
+
+              <CardBody className="p-4">
                 {/* Score Distribution */}
                 <div className="mb-6">
-                  <h4 className="text-sm font-medium text-gray-900 mb-3">{language === 'he' ? 'חלוקה לפי ציון' : 'Score Distribution'}</h4>
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">{language === 'he' ? 'חלוקה לפי ציון' : 'Score Distribution'}</h4>
                   <div className="grid grid-cols-3 gap-4">
                     <div className="text-center">
                       <div className="w-12 h-12 mx-auto rounded-full bg-red-100 flex items-center justify-center mb-2">
                         <span className="text-red-600 font-semibold">{leadsStats.stats?.byScore?.HOT || 0}</span>
                       </div>
-                      <div className="text-xs text-gray-600">{language === 'he' ? 'חמים' : 'Hot'}</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">{language === 'he' ? 'חמים' : 'Hot'}</div>
                     </div>
                     <div className="text-center">
                       <div className="w-12 h-12 mx-auto rounded-full bg-orange-100 flex items-center justify-center mb-2">
                         <span className="text-orange-600 font-semibold">{leadsStats.stats?.byScore?.WARM || 0}</span>
                       </div>
-                      <div className="text-xs text-gray-600">{language === 'he' ? 'פושרים' : 'Warm'}</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">{language === 'he' ? 'פושרים' : 'Warm'}</div>
                     </div>
                     <div className="text-center">
                       <div className="w-12 h-12 mx-auto rounded-full bg-blue-100 flex items-center justify-center mb-2">
                         <span className="text-blue-600 font-semibold">{leadsStats.stats?.byScore?.COLD || 0}</span>
                       </div>
-                      <div className="text-xs text-gray-600">{language === 'he' ? 'קרים' : 'Cold'}</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">{language === 'he' ? 'קרים' : 'Cold'}</div>
                     </div>
                   </div>
                 </div>
@@ -467,11 +486,11 @@ function EcomDashboardContent() {
                 {/* Source Breakdown */}
                 {leadsStats.stats?.bySource && Object.keys(leadsStats.stats.bySource).length > 0 && (
                   <div className="mb-6">
-                    <h4 className="text-sm font-medium text-gray-900 mb-3">{language === 'he' ? 'מקורות לידים' : 'Lead Sources'}</h4>
+                    <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">{language === 'he' ? 'מקורות לידים' : 'Lead Sources'}</h4>
                     <div className="space-y-2">
                       {Object.entries(leadsStats.stats.bySource).map(([source, count]) => (
                         <div key={source} className="flex items-center justify-between">
-                          <span className="text-sm text-gray-700">
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
                             {source === 'FACEBOOK' && 'Facebook'}
                             {source === 'INSTAGRAM' && 'Instagram'}
                             {source === 'WHATSAPP' && 'WhatsApp'}
@@ -480,7 +499,7 @@ function EcomDashboardContent() {
                             {source === 'MANUAL' && (language === 'he' ? 'ידני' : 'Manual')}
                             {source === 'OTHER' && (language === 'he' ? 'אחר' : 'Other')}
                           </span>
-                          <span className="text-sm font-medium text-gray-900">{count as number}</span>
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">{count as number}</span>
                         </div>
                       ))}
                     </div>
@@ -489,93 +508,103 @@ function EcomDashboardContent() {
 
                 {/* Quick Actions */}
                 <div className="flex gap-2">
-                  <a 
-                    href="/dashboard/e-commerce/leads" 
-                    className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 text-center"
+                  <UniversalButton
+                    variant="primary"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => window.location.href = '/dashboard/e-commerce/leads'}
                   >
                     {language === 'he' ? 'נהל לידים' : 'Manage Leads'}
-                  </a>
-                  <a 
-                    href="/dashboard/e-commerce/leads/intake" 
-                    className="flex-1 px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 text-center"
+                  </UniversalButton>
+                  <UniversalButton
+                    variant="primary"
+                    size="sm"
+                    className="flex-1 bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700"
+                    onClick={() => window.location.href = '/dashboard/e-commerce/leads/intake'}
                   >
                     {language === 'he' ? 'ייבא לידים' : 'Import Leads'}
-                  </a>
+                  </UniversalButton>
                 </div>
-              </div>
-            </div>
+              </CardBody>
+            </UniversalCard>
               )}
             </main>
 
             {/* ===== right rail ===== */}
             <aside className="col-span-12 md:col-span-3">
               <div className="sticky top-6 space-y-4">
-                <div className="rounded-2xl bg-white border shadow-sm p-4">
+                <UniversalCard variant="default">
+                  <CardBody className="p-4">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-blue-600 text-white grid place-items-center font-semibold">
                   {userName.charAt(0).toUpperCase()}
                 </div>
-                <div>
-                  <div className="font-semibold text-gray-900">{userName}</div>
-                  <div className="text-xs text-gray-500">{language === 'he' ? 'בעל חנות' : 'Store owner'}</div>
-                </div>
-              </div>
-              <div className="mt-4 grid grid-cols-2 gap-2 text-center">
-                <div className="rounded-xl bg-red-50 p-3">
-                  <div className="text-xs text-gray-600">{language === 'he' ? 'חמים' : 'Hot'}</div>
-                  <div className="font-semibold text-red-600">{leadsStats?.stats?.byScore?.HOT || 0}</div>
-                </div>
-                <div className="rounded-xl bg-orange-50 p-3">
-                  <div className="text-xs text-gray-600">{language === 'he' ? 'פושרים' : 'Warm'}</div>
-                  <div className="font-semibold text-orange-600">{leadsStats?.stats?.byScore?.WARM || 0}</div>
-                </div>
-                <div className="rounded-xl bg-blue-50 p-3">
-                  <div className="text-xs text-gray-600">{language === 'he' ? 'קרים' : 'Cold'}</div>
-                  <div className="font-semibold text-blue-600">{leadsStats?.stats?.byScore?.COLD || 0}</div>
-                </div>
-                <div className="rounded-xl bg-green-50 p-3">
-                  <div className="text-xs text-gray-600">{language === 'he' ? 'מוכשרים' : 'Qualified'}</div>
-                  <div className="font-semibold text-green-600">{leadsStats?.stats?.byStatus?.QUALIFIED || 0}</div>
-                </div>
-              </div>
-            </div>
+                    <div>
+                      <div className="font-semibold text-gray-900 dark:text-white">{userName}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">{language === 'he' ? 'בעל חנות' : 'Store owner'}</div>
+                    </div>
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-2 text-center">
+                    <div className="rounded-xl bg-red-50 p-3 dark:bg-red-900/20">
+                      <div className="text-xs text-gray-600 dark:text-gray-400">{language === 'he' ? 'חמים' : 'Hot'}</div>
+                      <div className="font-semibold text-red-600 dark:text-red-400">{leadsStats?.stats?.byScore?.HOT || 0}</div>
+                    </div>
+                    <div className="rounded-xl bg-orange-50 p-3 dark:bg-orange-900/20">
+                      <div className="text-xs text-gray-600 dark:text-gray-400">{language === 'he' ? 'פושרים' : 'Warm'}</div>
+                      <div className="font-semibold text-orange-600 dark:text-orange-400">{leadsStats?.stats?.byScore?.WARM || 0}</div>
+                    </div>
+                    <div className="rounded-xl bg-blue-50 p-3 dark:bg-blue-900/20">
+                      <div className="text-xs text-gray-600 dark:text-gray-400">{language === 'he' ? 'קרים' : 'Cold'}</div>
+                      <div className="font-semibold text-blue-600 dark:text-blue-400">{leadsStats?.stats?.byScore?.COLD || 0}</div>
+                    </div>
+                    <div className="rounded-xl bg-green-50 p-3 dark:bg-green-900/20">
+                      <div className="text-xs text-gray-600 dark:text-gray-400">{language === 'he' ? 'מוכשרים' : 'Qualified'}</div>
+                      <div className="font-semibold text-green-600 dark:text-green-400">{leadsStats?.stats?.byStatus?.QUALIFIED || 0}</div>
+                    </div>
+                  </div>
+                  </CardBody>
+                </UniversalCard>
 
-            <div className="rounded-2xl bg-white border shadow-sm p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="font-semibold text-gray-900">{language === 'he' ? 'יעילות' : 'Efficiency'}</div>
-              </div>
-              <Donut value={68} label={language === 'he' ? 'מגמת שוליים (הערכה)' : 'Contribution margin trend (est.)'} />
-            </div>
+                <UniversalCard variant="default">
+                  <CardBody className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="font-semibold text-gray-900 dark:text-white">{language === 'he' ? 'יעילות' : 'Efficiency'}</div>
+                    </div>
+                    <Donut value={68} label={language === 'he' ? 'מגמת שוליים (הערכה)' : 'Contribution margin trend (est.)'} />
+                  </CardBody>
+                </UniversalCard>
 
-            <div className="rounded-2xl bg-white border shadow-sm p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="font-semibold text-gray-900">{language === 'he' ? 'פעילות אחרונה' : 'Recent activities'}</div>
-              </div>
-              <ul className="text-sm space-y-2">
-                {leadsStats?.stats?.byStatus?.NEW > 0 && (
-                  <li className="flex items-center justify-between text-gray-700">
-                    <span>{language === 'he' ? `${leadsStats.stats.byStatus.NEW} לידים חדשים` : `${leadsStats.stats.byStatus.NEW} new leads`}</span>
-                    <span className="text-gray-500">{language === 'he' ? 'היום' : 'Today'}</span>
-                  </li>
-                )}
-                {leadsStats?.stats?.byScore?.HOT > 0 && (
-                  <li className="flex items-center justify-between text-gray-700">
-                    <span>{language === 'he' ? `${leadsStats.stats.byScore.HOT} לידים חמים זמינים` : `${leadsStats.stats.byScore.HOT} hot leads available`}</span>
-                    <span className="text-gray-500">{language === 'he' ? 'לפעולה' : 'Action needed'}</span>
-                  </li>
-                )}
-                {leadsStats?.stats?.summary?.conversionRate && parseFloat(leadsStats.stats.summary.conversionRate) > 0 && (
-                  <li className="flex items-center justify-between text-gray-700">
-                    <span>{language === 'he' ? `${leadsStats.stats.summary.conversionRate}% שיעור המרה` : `${leadsStats.stats.summary.conversionRate}% conversion rate`}</span>
-                    <span className="text-gray-500">{language === 'he' ? 'כללי' : 'Overall'}</span>
-                  </li>
-                )}
-                <li className="flex items-center justify-between text-gray-700">
-                  <span>{language === 'he' ? 'ייצוא CSV הושלם' : 'CSV export completed'}</span>
-                  <span className="text-gray-500">{language === 'he' ? 'לפני 3 דקות' : '3m ago'}</span>
-                </li>
-              </ul>
-            </div>
+                <UniversalCard variant="default">
+                  <CardBody className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="font-semibold text-gray-900 dark:text-white">{language === 'he' ? 'פעילות אחרונה' : 'Recent activities'}</div>
+                    </div>
+                    <ul className="text-sm space-y-2">
+                      {leadsStats?.stats?.byStatus?.NEW > 0 && (
+                        <li className="flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>{language === 'he' ? `${leadsStats.stats.byStatus.NEW} לידים חדשים` : `${leadsStats.stats.byStatus.NEW} new leads`}</span>
+                          <span className="text-gray-500 dark:text-gray-400">{language === 'he' ? 'היום' : 'Today'}</span>
+                        </li>
+                      )}
+                      {leadsStats?.stats?.byScore?.HOT > 0 && (
+                        <li className="flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>{language === 'he' ? `${leadsStats.stats.byScore.HOT} לידים חמים זמינים` : `${leadsStats.stats.byScore.HOT} hot leads available`}</span>
+                          <span className="text-gray-500 dark:text-gray-400">{language === 'he' ? 'לפעולה' : 'Action needed'}</span>
+                        </li>
+                      )}
+                      {leadsStats?.stats?.summary?.conversionRate && parseFloat(leadsStats.stats.summary.conversionRate) > 0 && (
+                        <li className="flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>{language === 'he' ? `${leadsStats.stats.summary.conversionRate}% שיעור המרה` : `${leadsStats.stats.summary.conversionRate}% conversion rate`}</span>
+                          <span className="text-gray-500 dark:text-gray-400">{language === 'he' ? 'כללי' : 'Overall'}</span>
+                        </li>
+                      )}
+                      <li className="flex items-center justify-between text-gray-700 dark:text-gray-300">
+                        <span>{language === 'he' ? 'ייצוא CSV הושלם' : 'CSV export completed'}</span>
+                        <span className="text-gray-500 dark:text-gray-400">{language === 'he' ? 'לפני 3 דקות' : '3m ago'}</span>
+                      </li>
+                    </ul>
+                  </CardBody>
+                </UniversalCard>
           </div>
         </aside>
       </div>

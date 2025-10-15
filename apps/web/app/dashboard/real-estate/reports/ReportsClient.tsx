@@ -1,8 +1,13 @@
 'use client';
 
+/**
+ * Reports Client Component (Redesigned with Design System 2.0)
+ * Analytics dashboard with KPIs and charts
+ */
+
 import { useState, useEffect } from 'react';
 import { useLanguage } from '@/lib/language-context';
-import { TrendingUp, TrendingDown, Clock, DollarSign, Users, Target } from 'lucide-react';
+import { TrendingUp, TrendingDown, Clock, DollarSign, Users, Target, BarChart3, Download } from 'lucide-react';
 import { ExportPDFButton } from '@/components/real-estate/reports/ExportPDFButton';
 import { LeadsOverTimeChart } from '@/components/real-estate/reports/charts/LeadsOverTimeChart';
 import { LeadsBySourceChart } from '@/components/real-estate/reports/charts/LeadsBySourceChart';
@@ -10,6 +15,13 @@ import { LeadStatusChart } from '@/components/real-estate/reports/charts/LeadSta
 import { PropertiesPerformanceChart } from '@/components/real-estate/reports/charts/PropertiesPerformanceChart';
 import { ResponseTimeTrendChart } from '@/components/real-estate/reports/charts/ResponseTimeTrendChart';
 import { RevenueByTypeChart } from '@/components/real-estate/reports/charts/RevenueByTypeChart';
+
+// Import unified components
+import {
+  UniversalCard,
+  CardHeader,
+  CardBody,
+} from '@/components/shared';
 
 interface ReportData {
   kpis: {
@@ -122,18 +134,22 @@ export default function ReportsClient({ initialData }: ReportsClientProps) {
     icon: any;
     formatter?: (v: any) => string;
   }) => (
-    <div className="bg-[#1A2F4B] rounded-lg p-6 border border-gray-700">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-medium text-gray-400">{title}</h3>
-        <Icon className="w-5 h-5 text-blue-400" />
-      </div>
-      <div className="flex items-end justify-between">
-        <div>
-          <p className="text-2xl font-bold text-white">{formatter(value)}</p>
-          <div className="mt-1">{renderTrendText(trend)}</div>
+    <UniversalCard variant="default" hoverable>
+      <CardBody className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-body-sm font-medium text-gray-600 dark:text-gray-400">{title}</h3>
+          <div className="flex items-center justify-center w-10 h-10 bg-[#2979FF]/10 rounded-lg">
+            <Icon className="w-5 h-5 text-[#2979FF]" />
+          </div>
         </div>
-      </div>
-    </div>
+        <div className="flex items-end justify-between">
+          <div>
+            <p className="text-heading-2 font-bold text-gray-900 dark:text-white">{formatter(value)}</p>
+            <div className="mt-1">{renderTrendText(trend)}</div>
+          </div>
+        </div>
+      </CardBody>
+    </UniversalCard>
   );
 
   const formatCurrency = (value: number) => {
@@ -145,91 +161,101 @@ export default function ReportsClient({ initialData }: ReportsClientProps) {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-white">{t.title}</h1>
-        <ExportPDFButton
-          reportData={reportData}
-          dateRange={dateRange}
-          language={language}
-        />
-      </div>
-
-      {/* Date Range and Filters */}
-      <div className="bg-[#1A2F4B] rounded-lg p-4 border border-gray-700">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          {/* Date Range */}
+    <main className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B] p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-2">
-              {t.dateRange}
-            </label>
-            <select
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value)}
-              className="w-full bg-[#0E1A2B] border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="last7">{t.last7Days}</option>
-              <option value="last30">{t.last30Days}</option>
-              <option value="last90">{t.last90Days}</option>
-            </select>
+            <h1 className="text-heading-1 text-gray-900 dark:text-white mb-2">
+              {t.title}
+            </h1>
+            <p className="text-body-sm text-gray-600 dark:text-gray-400">
+              {language === 'he' ? 'נתח את הביצועים שלך עם דוחות מקיפים' : 'Analyze your performance with comprehensive reports'}
+            </p>
           </div>
-
-          {/* Property Type Filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-2">
-              {t.propertyType}
-            </label>
-            <select
-              value={filters.propertyType}
-              onChange={(e) => setFilters({ ...filters, propertyType: e.target.value })}
-              className="w-full bg-[#0E1A2B] border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">{t.all}</option>
-              <option value="APARTMENT">Apartment</option>
-              <option value="HOUSE">House</option>
-              <option value="COMMERCIAL">Commercial</option>
-              <option value="LOT">Land</option>
-            </select>
-          </div>
-
-          {/* Transaction Type Filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-2">
-              {t.transactionType}
-            </label>
-            <select
-              value={filters.transactionType}
-              onChange={(e) => setFilters({ ...filters, transactionType: e.target.value })}
-              className="w-full bg-[#0E1A2B] border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">{t.all}</option>
-              <option value="SALE">Sale</option>
-              <option value="RENT">Rent</option>
-            </select>
-          </div>
-
-          {/* Source Filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-2">
-              {t.source}
-            </label>
-            <select
-              value={filters.source}
-              onChange={(e) => setFilters({ ...filters, source: e.target.value })}
-              className="w-full bg-[#0E1A2B] border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">{t.all}</option>
-              <option value="Website">Website</option>
-              <option value="Facebook">Facebook</option>
-              <option value="Instagram">Instagram</option>
-              <option value="Google">Google</option>
-              <option value="Referral">Referral</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
+          <ExportPDFButton
+            reportData={reportData}
+            dateRange={dateRange}
+            language={language}
+          />
         </div>
-      </div>
+
+        {/* Date Range and Filters */}
+        <UniversalCard variant="default">
+          <CardBody className="p-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Date Range */}
+              <div className="space-y-2">
+                <label className="block text-body-sm font-medium text-gray-900 dark:text-white">
+                  {t.dateRange}
+                </label>
+                <select
+                  value={dateRange}
+                  onChange={(e) => setDateRange(e.target.value)}
+                  className="w-full px-4 py-2 bg-white dark:bg-[#1A2F4B] border border-gray-300 dark:border-[#2979FF]/30 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF]/50"
+                >
+                  <option value="last7">{t.last7Days}</option>
+                  <option value="last30">{t.last30Days}</option>
+                  <option value="last90">{t.last90Days}</option>
+                </select>
+              </div>
+
+              {/* Property Type Filter */}
+              <div className="space-y-2">
+                <label className="block text-body-sm font-medium text-gray-900 dark:text-white">
+                  {t.propertyType}
+                </label>
+                <select
+                  value={filters.propertyType}
+                  onChange={(e) => setFilters({ ...filters, propertyType: e.target.value })}
+                  className="w-full px-4 py-2 bg-white dark:bg-[#1A2F4B] border border-gray-300 dark:border-[#2979FF]/30 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF]/50"
+                >
+                  <option value="">{t.all}</option>
+                  <option value="APARTMENT">Apartment</option>
+                  <option value="HOUSE">House</option>
+                  <option value="COMMERCIAL">Commercial</option>
+                  <option value="LOT">Land</option>
+                </select>
+              </div>
+
+              {/* Transaction Type Filter */}
+              <div className="space-y-2">
+                <label className="block text-body-sm font-medium text-gray-900 dark:text-white">
+                  {t.transactionType}
+                </label>
+                <select
+                  value={filters.transactionType}
+                  onChange={(e) => setFilters({ ...filters, transactionType: e.target.value })}
+                  className="w-full px-4 py-2 bg-white dark:bg-[#1A2F4B] border border-gray-300 dark:border-[#2979FF]/30 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF]/50"
+                >
+                  <option value="">{t.all}</option>
+                  <option value="SALE">Sale</option>
+                  <option value="RENT">Rent</option>
+                </select>
+              </div>
+
+              {/* Source Filter */}
+              <div className="space-y-2">
+                <label className="block text-body-sm font-medium text-gray-900 dark:text-white">
+                  {t.source}
+                </label>
+                <select
+                  value={filters.source}
+                  onChange={(e) => setFilters({ ...filters, source: e.target.value })}
+                  className="w-full px-4 py-2 bg-white dark:bg-[#1A2F4B] border border-gray-300 dark:border-[#2979FF]/30 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF]/50"
+                >
+                  <option value="">{t.all}</option>
+                  <option value="Website">Website</option>
+                  <option value="Facebook">Facebook</option>
+                  <option value="Instagram">Instagram</option>
+                  <option value="Google">Google</option>
+                  <option value="Referral">Referral</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+          </CardBody>
+        </UniversalCard>
 
       {/* Reports Container for PDF Export */}
       <div id="reports-container" className="space-y-6">
@@ -263,49 +289,66 @@ export default function ReportsClient({ initialData }: ReportsClientProps) {
           />
         </div>
 
-        {/* Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Leads Over Time */}
-          <div className="bg-[#1A2F4B] rounded-lg p-6 border border-gray-700">
-            <LeadsOverTimeChart data={reportData.leadsOverTime} language={language} />
-          </div>
+          {/* Charts Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Leads Over Time */}
+            <UniversalCard variant="default">
+              <CardBody className="p-6">
+                <LeadsOverTimeChart data={reportData.leadsOverTime} language={language} />
+              </CardBody>
+            </UniversalCard>
 
-          {/* Leads by Source */}
-          <div className="bg-[#1A2F4B] rounded-lg p-6 border border-gray-700">
-            <LeadsBySourceChart data={reportData.leadsBySource} language={language} />
-          </div>
+            {/* Leads by Source */}
+            <UniversalCard variant="default">
+              <CardBody className="p-6">
+                <LeadsBySourceChart data={reportData.leadsBySource} language={language} />
+              </CardBody>
+            </UniversalCard>
 
-          {/* Lead Status Distribution */}
-          <div className="bg-[#1A2F4B] rounded-lg p-6 border border-gray-700">
-            <LeadStatusChart data={reportData.leadsByStatus} language={language} />
-          </div>
+            {/* Lead Status Distribution */}
+            <UniversalCard variant="default">
+              <CardBody className="p-6">
+                <LeadStatusChart data={reportData.leadsByStatus} language={language} />
+              </CardBody>
+            </UniversalCard>
 
-          {/* Properties Performance */}
-          <div className="bg-[#1A2F4B] rounded-lg p-6 border border-gray-700">
-            <PropertiesPerformanceChart data={reportData.topProperties} language={language} />
-          </div>
+            {/* Properties Performance */}
+            <UniversalCard variant="default">
+              <CardBody className="p-6">
+                <PropertiesPerformanceChart data={reportData.topProperties} language={language} />
+              </CardBody>
+            </UniversalCard>
 
-          {/* Response Time Trend */}
-          <div className="bg-[#1A2F4B] rounded-lg p-6 border border-gray-700">
-            <ResponseTimeTrendChart data={reportData.responseTimeTrend} language={language} />
-          </div>
+            {/* Response Time Trend */}
+            <UniversalCard variant="default">
+              <CardBody className="p-6">
+                <ResponseTimeTrendChart data={reportData.responseTimeTrend} language={language} />
+              </CardBody>
+            </UniversalCard>
 
-          {/* Revenue by Type */}
-          <div className="bg-[#1A2F4B] rounded-lg p-6 border border-gray-700">
-            <RevenueByTypeChart data={reportData.revenueByType} language={language} />
+            {/* Revenue by Type */}
+            <UniversalCard variant="default">
+              <CardBody className="p-6">
+                <RevenueByTypeChart data={reportData.revenueByType} language={language} />
+              </CardBody>
+            </UniversalCard>
           </div>
         </div>
+
+        {/* Loading Overlay */}
+        {loading && (
+          <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50">
+            <UniversalCard variant="default">
+              <CardBody className="p-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2979FF] mx-auto"></div>
+                <p className="text-gray-900 dark:text-white mt-4 text-center">
+                  {language === 'he' ? 'טוען דוחות...' : 'Loading reports...'}
+                </p>
+              </CardBody>
+            </UniversalCard>
+          </div>
+        )}
       </div>
-
-      {/* Loading Overlay */}
-      {loading && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-[#1A2F4B] rounded-lg p-8 border border-gray-700">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-            <p className="text-white mt-4">Loading reports...</p>
-          </div>
-        </div>
-      )}
-    </div>
+    </main>
   );
 }

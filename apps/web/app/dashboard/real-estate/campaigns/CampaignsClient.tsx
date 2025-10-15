@@ -1,11 +1,24 @@
 'use client';
 
+/**
+ * Campaigns Client Component (Redesigned with Design System 2.0)
+ * Manage marketing campaigns across multiple platforms
+ */
+
 import { useState, useMemo } from 'react';
-import { Plus, Filter, Calendar, TrendingUp, Search } from 'lucide-react';
+import { Plus, Filter, TrendingUp, Search, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/lib/language-context';
 import { CampaignCard } from '@/components/real-estate/campaigns/CampaignCard';
 import { CreateCampaignModal } from '@/components/real-estate/campaigns/CreateCampaignModal';
 import { EditCampaignModal } from '@/components/real-estate/campaigns/EditCampaignModal';
+
+// Import unified components
+import {
+  UniversalCard,
+  CardHeader,
+  CardBody,
+  UniversalButton,
+} from '@/components/shared';
 
 interface Campaign {
   id: string;
@@ -158,138 +171,122 @@ export default function CampaignsClient({ initialData, initialFilters = {} }: Ca
   };
 
   return (
-    <div
-      className="min-h-screen"
-      style={{ background: '#0E1A2B' }}
+    <main
+      className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B] p-6 lg:p-8"
       dir={language === 'he' ? 'rtl' : 'ltr'}
     >
-      <div className="px-6 py-8 max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold" style={{ color: '#FFFFFF' }}>
-            {t.title}
-          </h1>
-          <button
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-heading-1 text-gray-900 dark:text-white mb-2">
+              {t.title}
+            </h1>
+            <p className="text-body-sm text-gray-600 dark:text-gray-400">
+              {language === 'he' ? 'נהל את הקמפיינים שלך בכל הפלטפורמות' : 'Manage your campaigns across all platforms'}
+            </p>
+          </div>
+          <UniversalButton
+            variant="primary"
+            size="lg"
+            leftIcon={<Plus className="w-5 h-5" />}
             onClick={() => setIsCreateModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all"
-            style={{ background: '#2979FF', color: '#FFFFFF' }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = '#1d4ed8')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = '#2979FF')}
           >
-            <Plus className="w-5 h-5" />
             {t.createCampaign}
-          </button>
+          </UniversalButton>
         </div>
 
         {/* Filters Bar */}
-        <div
-          className="rounded-xl p-4 mb-6"
-          style={{ background: '#1A2F4B', border: '1px solid #374151' }}
-        >
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Search */}
-            <div className="relative">
-              <Search
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5"
-                style={{ color: '#9CA3AF' }}
-              />
-              <input
-                type="text"
-                placeholder={t.search}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 rounded-lg border focus:outline-none focus:ring-2 transition-all"
-                style={{
-                  background: '#0E1A2B',
-                  borderColor: '#374151',
-                  color: '#FFFFFF',
-                }}
-              />
+        <UniversalCard variant="default">
+          <CardBody className="p-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
+                <input
+                  type="text"
+                  placeholder={t.search}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-white dark:bg-[#1A2F4B] border border-gray-300 dark:border-[#2979FF]/30 rounded-lg text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2979FF]/50"
+                />
+              </div>
+
+              {/* Status Filter */}
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-4 py-2 bg-white dark:bg-[#1A2F4B] border border-gray-300 dark:border-[#2979FF]/30 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF]/50"
+              >
+                {statuses.map((status) => (
+                  <option key={status.value} value={status.value}>
+                    {status.label}
+                  </option>
+                ))}
+              </select>
+
+              {/* Platform Filter */}
+              <select
+                value={platformFilter}
+                onChange={(e) => setPlatformFilter(e.target.value)}
+                className="px-4 py-2 bg-white dark:bg-[#1A2F4B] border border-gray-300 dark:border-[#2979FF]/30 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF]/50"
+              >
+                {platforms.map((platform) => (
+                  <option key={platform.value} value={platform.value}>
+                    {platform.label}
+                  </option>
+                ))}
+              </select>
+
+              {/* Results Count */}
+              <div className="flex items-center justify-center">
+                <span className="text-body-sm text-gray-600 dark:text-gray-400 font-medium">
+                  {filteredCampaigns.length} {language === 'he' ? 'קמפיינים' : 'campaigns'}
+                </span>
+              </div>
             </div>
-
-            {/* Status Filter */}
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 transition-all"
-              style={{
-                background: '#0E1A2B',
-                borderColor: '#374151',
-                color: '#FFFFFF',
-              }}
-            >
-              {statuses.map((status) => (
-                <option key={status.value} value={status.value}>
-                  {status.label}
-                </option>
-              ))}
-            </select>
-
-            {/* Platform Filter */}
-            <select
-              value={platformFilter}
-              onChange={(e) => setPlatformFilter(e.target.value)}
-              className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 transition-all"
-              style={{
-                background: '#0E1A2B',
-                borderColor: '#374151',
-                color: '#FFFFFF',
-              }}
-            >
-              {platforms.map((platform) => (
-                <option key={platform.value} value={platform.value}>
-                  {platform.label}
-                </option>
-              ))}
-            </select>
-
-            {/* Results Count */}
-            <div className="flex items-center justify-center">
-              <span style={{ color: '#9CA3AF' }}>
-                {filteredCampaigns.length} {language === 'he' ? 'קמפיינים' : 'campaigns'}
-              </span>
-            </div>
-          </div>
-        </div>
+          </CardBody>
+        </UniversalCard>
 
         {/* Campaigns Grid */}
         {filteredCampaigns.length === 0 ? (
-          <div
-            className="rounded-xl p-12 text-center"
-            style={{ background: '#1A2F4B', border: '1px solid #374151' }}
-          >
-            {campaigns.length === 0 ? (
-              <>
-                <TrendingUp className="w-16 h-16 mx-auto mb-4" style={{ color: '#6B7280' }} />
-                <h3 className="text-xl font-semibold mb-2" style={{ color: '#FFFFFF' }}>
-                  {t.noCampaigns}
-                </h3>
-                <p className="mb-6" style={{ color: '#9CA3AF' }}>
-                  {t.noCampaignsDesc}
-                </p>
-                <button
-                  onClick={() => setIsCreateModalOpen(true)}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all"
-                  style={{ background: '#2979FF', color: '#FFFFFF' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = '#1d4ed8')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = '#2979FF')}
-                >
-                  <Plus className="w-5 h-5" />
-                  {t.createFirst}
-                </button>
-              </>
-            ) : (
-              <>
-                <Filter className="w-16 h-16 mx-auto mb-4" style={{ color: '#6B7280' }} />
-                <h3 className="text-xl font-semibold mb-2" style={{ color: '#FFFFFF' }}>
-                  {t.noResults}
-                </h3>
-                <p style={{ color: '#9CA3AF' }}>
-                  {t.noResultsDesc}
-                </p>
-              </>
-            )}
-          </div>
+          <UniversalCard variant="outlined">
+            <CardBody className="p-12 text-center">
+              {campaigns.length === 0 ? (
+                <>
+                  <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-[#2979FF]/10 to-purple-500/10 rounded-full">
+                    <TrendingUp className="w-8 h-8 text-[#2979FF]" />
+                  </div>
+                  <h3 className="text-heading-3 text-gray-900 dark:text-white mb-2">
+                    {t.noCampaigns}
+                  </h3>
+                  <p className="text-body-base text-gray-600 dark:text-gray-400 mb-6">
+                    {t.noCampaignsDesc}
+                  </p>
+                  <UniversalButton
+                    variant="primary"
+                    size="lg"
+                    leftIcon={<Plus className="w-5 h-5" />}
+                    onClick={() => setIsCreateModalOpen(true)}
+                  >
+                    {t.createFirst}
+                  </UniversalButton>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-[#1A2F4B] rounded-full">
+                    <Filter className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+                  </div>
+                  <h3 className="text-heading-3 text-gray-900 dark:text-white mb-2">
+                    {t.noResults}
+                  </h3>
+                  <p className="text-body-base text-gray-600 dark:text-gray-400">
+                    {t.noResultsDesc}
+                  </p>
+                </>
+              )}
+            </CardBody>
+          </UniversalCard>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCampaigns.map((campaign) => (
@@ -303,23 +300,23 @@ export default function CampaignsClient({ initialData, initialFilters = {} }: Ca
             ))}
           </div>
         )}
-      </div>
 
-      {/* Modals */}
-      <CreateCampaignModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={handleCampaignCreated}
-      />
-
-      {editingCampaign && (
-        <EditCampaignModal
-          isOpen={true}
-          campaign={editingCampaign}
-          onClose={() => setEditingCampaign(null)}
-          onSuccess={handleCampaignUpdated}
+        {/* Modals */}
+        <CreateCampaignModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onSuccess={handleCampaignCreated}
         />
-      )}
-    </div>
+
+        {editingCampaign && (
+          <EditCampaignModal
+            isOpen={true}
+            campaign={editingCampaign}
+            onClose={() => setEditingCampaign(null)}
+            onSuccess={handleCampaignUpdated}
+          />
+        )}
+      </div>
+    </main>
   );
 }

@@ -63,31 +63,30 @@ export default async function CampaignsPage({
 
 function CampaignsSkeleton() {
   return (
-    <div
-      className="min-h-screen animate-pulse"
-      style={{ background: '#0E1A2B' }}
-    >
-      {/* Header Skeleton */}
-      <div className="px-6 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div className="h-8 w-48 rounded" style={{ background: '#1A2F4B' }}></div>
-          <div className="h-10 w-40 rounded-lg" style={{ background: '#1A2F4B' }}></div>
+    <main className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B] p-6 lg:p-8 animate-pulse">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header Skeleton */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <div className="h-10 w-48 bg-gray-200 dark:bg-[#1A2F4B] rounded"></div>
+            <div className="h-4 w-64 bg-gray-200 dark:bg-[#1A2F4B] rounded"></div>
+          </div>
+          <div className="h-12 w-40 bg-gray-200 dark:bg-[#1A2F4B] rounded-lg"></div>
         </div>
 
         {/* Filters Skeleton */}
-        <div className="rounded-xl h-16 mb-6" style={{ background: '#1A2F4B' }}></div>
+        <div className="h-20 bg-white dark:bg-[#1A2F4B] rounded-xl border border-gray-200 dark:border-[#2979FF]/20"></div>
 
         {/* Cards Grid Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(6)].map((_, i) => (
             <div
               key={i}
-              className="rounded-xl h-64"
-              style={{ background: '#1A2F4B' }}
+              className="h-64 bg-white dark:bg-[#1A2F4B] rounded-xl border border-gray-200 dark:border-[#2979FF]/20"
             ></div>
           ))}
         </div>
       </div>
-    </div>
+    </main>
   );
 }

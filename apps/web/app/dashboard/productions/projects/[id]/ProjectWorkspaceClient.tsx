@@ -1,12 +1,46 @@
 'use client';
 
 /**
- * Creative Productions - Project Workspace Client
- * Tabbed interface: Brief, Tasks, Assets, Reviews, Renders
+ * Creative Productions - Project Workspace Client (Redesigned with Design System 2.0)
+ * Tabbed interface with modern cards, tables, and forms
  */
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import {
+  ArrowLeft,
+  Plus,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  FileText,
+  Film,
+  AlertCircle,
+  Eye,
+  Palette,
+  Users,
+  Edit,
+  Download,
+} from 'lucide-react';
+
+// Import unified components
+import {
+  UniversalCard,
+  CardHeader,
+  CardBody,
+  UniversalButton,
+  UniversalBadge,
+  StatusBadge,
+  FormModal,
+  UniversalTable,
+  UniversalTableHeader,
+  UniversalTableBody,
+  UniversalTableRow,
+  UniversalTableHead,
+  UniversalTableCell,
+  TableEmptyState,
+  CountBadge,
+} from '@/components/shared';
 
 type TabType = 'brief' | 'tasks' | 'assets' | 'reviews' | 'renders';
 
@@ -74,7 +108,6 @@ export default function ProjectWorkspaceClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('brief');
-  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     if (projectId) {
@@ -116,136 +149,175 @@ export default function ProjectWorkspaceClient() {
     }
   };
 
+  const getStatusType = (status: string): 'active' | 'pending' | 'completed' | 'cancelled' => {
+    switch (status) {
+      case 'DRAFT':
+        return 'pending';
+      case 'IN_PROGRESS':
+        return 'active';
+      case 'REVIEW':
+        return 'pending';
+      case 'APPROVED':
+      case 'DELIVERED':
+        return 'completed';
+      default:
+        return 'pending';
+    }
+  };
+
+  // Loading State
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0E1A2B] p-4">
-        <div className="max-w-7xl mx-auto animate-pulse">
-          <div className="h-10 bg-[#1A2F4B] rounded w-48 mb-8"></div>
-          <div className="h-96 bg-[#1A2F4B] rounded-xl"></div>
+      <div className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B] p-6">
+        <div className="max-w-7xl mx-auto animate-pulse space-y-6">
+          <div className="h-12 bg-gray-200 dark:bg-[#1A2F4B] rounded-lg w-64"></div>
+          <div className="h-96 bg-gray-200 dark:bg-[#1A2F4B] rounded-xl"></div>
         </div>
       </div>
     );
   }
 
+  // Error State
   if (error || !project) {
     return (
-      <div className="min-h-screen bg-[#0E1A2B] p-4 flex items-center justify-center">
-        <div className="bg-red-900/20 border border-red-500/50 rounded-xl p-6 max-w-md">
-          <h2 className="text-xl font-semibold text-red-400 mb-2">Error</h2>
-          <p className="text-gray-300 mb-4">{error || 'Project not found'}</p>
-          <button
+      <div className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B] p-6 flex items-center justify-center">
+        <UniversalCard variant="outlined" className="max-w-md p-8 text-center">
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+            {error ? 'Error Loading Project' : 'Project Not Found'}
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            {error || 'The project you are looking for does not exist.'}
+          </p>
+          <UniversalButton
+            variant="primary"
             onClick={() => router.push('/dashboard/productions/projects')}
-            className="px-4 py-2 bg-[#2979FF] hover:bg-[#1E5FCC] text-white rounded-lg transition-colors"
           >
             Back to Projects
-          </button>
-        </div>
+          </UniversalButton>
+        </UniversalCard>
       </div>
     );
   }
 
-  const tabs: { id: TabType; label: string; count?: number; icon: string }[] = [
-    { id: 'brief', label: 'Brief', icon: '📋' },
-    { id: 'tasks', label: 'Tasks', count: project.tasks.length, icon: '✓' },
-    { id: 'assets', label: 'Assets', count: project.assets.length, icon: '🎬' },
-    { id: 'reviews', label: 'Reviews', count: project.reviews.length, icon: '👁️' },
-    { id: 'renders', label: 'Renders', count: project.renders.length, icon: '🎨' },
+  const tabs: { id: TabType; label: string; count?: number; icon: React.ReactNode }[] = [
+    { id: 'brief', label: 'Brief', icon: <FileText className="w-4 h-4" /> },
+    { id: 'tasks', label: 'Tasks', count: project.tasks.length, icon: <CheckCircle2 className="w-4 h-4" /> },
+    { id: 'assets', label: 'Assets', count: project.assets.length, icon: <Film className="w-4 h-4" /> },
+    { id: 'reviews', label: 'Reviews', count: project.reviews.length, icon: <Eye className="w-4 h-4" /> },
+    { id: 'renders', label: 'Renders', count: project.renders.length, icon: <Palette className="w-4 h-4" /> },
   ];
 
   return (
-    <div className="min-h-screen bg-[#0E1A2B]">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B] p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="bg-[#1A2F4B] border-b border-white/10 px-4 md:px-8 py-6">
-          <button
+        <div>
+          <UniversalButton
+            variant="ghost"
+            size="sm"
+            leftIcon={<ArrowLeft className="w-4 h-4" />}
             onClick={() => router.push('/dashboard/productions/projects')}
-            className="text-gray-400 hover:text-white mb-4 transition-colors inline-flex items-center gap-2 text-sm"
+            className="mb-4"
           >
-            ← Back to Projects
-          </button>
+            Back to Projects
+          </UniversalButton>
 
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 truncate">
-                {project.name}
-              </h1>
-              {project.objective && (
-                <p className="text-gray-400 text-sm md:text-base">{project.objective}</p>
-              )}
-            </div>
+          <UniversalCard variant="elevated">
+            <div className="p-6">
+              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+                {/* Left: Project Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start gap-3 mb-3">
+                    <h1 className="text-heading-1 text-gray-900 dark:text-white">
+                      {project.name}
+                    </h1>
+                  </div>
 
-            {/* Right Rail - Status & Actions */}
-            <div className="flex flex-col gap-3 min-w-[200px]">
-              <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">Status</label>
-                <select
-                  value={project.status}
-                  onChange={(e) => handleStatusChange(e.target.value)}
-                  className="w-full px-3 py-2 bg-[#0E1A2B] border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#2979FF]"
-                >
-                  <option value="DRAFT">Draft</option>
-                  <option value="IN_PROGRESS">In Progress</option>
-                  <option value="REVIEW">Review</option>
-                  <option value="APPROVED">Approved</option>
-                  <option value="DELIVERED">Delivered</option>
-                </select>
+                  {project.objective && (
+                    <p className="text-body-base text-gray-600 dark:text-gray-400 mb-4">
+                      {project.objective}
+                    </p>
+                  )}
+
+                  <div className="flex flex-wrap gap-2">
+                    <StatusBadge status={getStatusType(project.status)} />
+                    {project.dueDate && (
+                      <UniversalBadge variant="outline" icon={<Calendar className="w-3 h-3" />}>
+                        Due {new Date(project.dueDate).toLocaleDateString()}
+                      </UniversalBadge>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right: Status & Actions */}
+                <div className="flex flex-col gap-3 min-w-[240px]">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Project Status
+                    </label>
+                    <select
+                      value={project.status}
+                      onChange={(e) => handleStatusChange(e.target.value)}
+                      className="w-full px-4 py-2 bg-white dark:bg-[#0E1A2B] border border-gray-300 dark:border-[#2979FF]/20 rounded-lg text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#2979FF] focus:border-transparent"
+                    >
+                      <option value="DRAFT">Draft</option>
+                      <option value="IN_PROGRESS">In Progress</option>
+                      <option value="REVIEW">Review</option>
+                      <option value="APPROVED">Approved</option>
+                      <option value="DELIVERED">Delivered</option>
+                    </select>
+                  </div>
+
+                  {project.channels.length > 0 && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Target Channels
+                      </label>
+                      <div className="flex flex-wrap gap-1">
+                        {project.channels.map((channel, idx) => (
+                          <UniversalBadge key={idx} variant="primary" size="sm">
+                            {channel.replace('_', ' ')}
+                          </UniversalBadge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <UniversalButton variant="outline" size="sm" leftIcon={<Edit className="w-4 h-4" />}>
+                    Edit Project
+                  </UniversalButton>
+                </div>
               </div>
-
-              {project.dueDate && (
-                <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">Due Date</label>
-                  <div className="text-sm text-white">
-                    {new Date(project.dueDate).toLocaleDateString()}
-                  </div>
-                </div>
-              )}
-
-              {project.channels.length > 0 && (
-                <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">Channels</label>
-                  <div className="flex flex-wrap gap-1">
-                    {project.channels.map((channel, idx) => (
-                      <span
-                        key={idx}
-                        className="text-xs bg-[#2979FF]/20 text-[#2979FF] px-2 py-1 rounded"
-                      >
-                        {channel}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
-          </div>
-        </div>
 
-        {/* Tabs */}
-        <div className="bg-[#1A2F4B] border-b border-white/10 px-4 md:px-8">
-          <div className="flex gap-1 overflow-x-auto scrollbar-hide">
-            {tabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-3 font-medium text-sm whitespace-nowrap transition-all border-b-2 ${
-                  activeTab === tab.id
-                    ? 'text-[#2979FF] border-[#2979FF]'
-                    : 'text-gray-400 border-transparent hover:text-white hover:border-white/20'
-                }`}
-              >
-                <span>{tab.icon}</span>
-                <span>{tab.label}</span>
-                {tab.count !== undefined && (
-                  <span className="bg-[#0E1A2B] px-2 py-0.5 rounded text-xs">
-                    {tab.count}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
+            {/* Tabs */}
+            <div className="border-t border-gray-200 dark:border-[#2979FF]/20 px-6">
+              <div className="flex gap-1 overflow-x-auto scrollbar-hide -mb-px">
+                {tabs.map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-2 px-4 py-3 font-medium text-sm whitespace-nowrap transition-all border-b-2 ${
+                      activeTab === tab.id
+                        ? 'text-[#2979FF] border-[#2979FF]'
+                        : 'text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900 dark:hover:text-white hover:border-gray-300 dark:hover:border-[#2979FF]/40'
+                    }`}
+                  >
+                    {tab.icon}
+                    <span>{tab.label}</span>
+                    {tab.count !== undefined && tab.count > 0 && (
+                      <CountBadge count={tab.count} variant="primary" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </UniversalCard>
         </div>
 
         {/* Tab Content */}
-        <div className="p-4 md:p-8">
+        <div>
           {activeTab === 'brief' && <BriefTab project={project} />}
           {activeTab === 'tasks' && <TasksTab projectId={project.id} tasks={project.tasks} onRefresh={fetchProject} />}
           {activeTab === 'assets' && <AssetsTab projectId={project.id} assets={project.assets} />}
@@ -260,48 +332,79 @@ export default function ProjectWorkspaceClient() {
 // Brief Tab Component
 function BriefTab({ project }: { project: Project }) {
   return (
-    <div className="max-w-4xl">
-      <div className="bg-[#1A2F4B] rounded-xl p-6 space-y-6">
-        <div>
-          <h3 className="text-sm font-medium text-gray-400 mb-2">Project Name</h3>
-          <p className="text-lg text-white">{project.name}</p>
-        </div>
-
-        {project.objective && (
-          <div>
-            <h3 className="text-sm font-medium text-gray-400 mb-2">Objective</h3>
-            <p className="text-white whitespace-pre-wrap">{project.objective}</p>
+    <div className="max-w-4xl space-y-6">
+      <UniversalCard>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <FileText className="w-5 h-5 text-[#2979FF]" />
+            <h2 className="text-heading-3 text-gray-900 dark:text-white">Project Brief</h2>
           </div>
-        )}
+        </CardHeader>
+        <CardBody>
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                Project Name
+              </h3>
+              <p className="text-body-lg text-gray-900 dark:text-white">{project.name}</p>
+            </div>
 
-        {project.targetAudience && (
-          <div>
-            <h3 className="text-sm font-medium text-gray-400 mb-2">Target Audience</h3>
-            <p className="text-white">{project.targetAudience}</p>
-          </div>
-        )}
+            {project.objective && (
+              <div>
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                  Objective
+                </h3>
+                <p className="text-body-base text-gray-900 dark:text-white whitespace-pre-wrap">
+                  {project.objective}
+                </p>
+              </div>
+            )}
 
-        {project.channels.length > 0 && (
-          <div>
-            <h3 className="text-sm font-medium text-gray-400 mb-2">Target Channels</h3>
-            <div className="flex flex-wrap gap-2">
-              {project.channels.map((channel, idx) => (
-                <span
-                  key={idx}
-                  className="px-3 py-1.5 bg-[#2979FF]/20 text-[#2979FF] rounded-lg text-sm font-medium"
-                >
-                  {channel.replace('_', ' ')}
-                </span>
-              ))}
+            {project.targetAudience && (
+              <div>
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                  Target Audience
+                </h3>
+                <p className="text-body-base text-gray-900 dark:text-white">
+                  {project.targetAudience}
+                </p>
+              </div>
+            )}
+
+            {project.channels.length > 0 && (
+              <div>
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                  Target Channels
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {project.channels.map((channel, idx) => (
+                    <UniversalBadge key={idx} variant="primary" size="md">
+                      {channel.replace('_', ' ')}
+                    </UniversalBadge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="pt-4 border-t border-gray-200 dark:border-[#2979FF]/20">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-600 dark:text-gray-400">Created</span>
+                  <p className="text-gray-900 dark:text-white mt-1">
+                    {new Date(project.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-gray-600 dark:text-gray-400">Last Updated</span>
+                  <p className="text-gray-900 dark:text-white mt-1">
+                    {new Date(project.updatedAt).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-        )}
-
-        <div className="pt-4 border-t border-white/10 text-sm text-gray-400">
-          <p>Created {new Date(project.createdAt).toLocaleDateString()}</p>
-          <p>Last updated {new Date(project.updatedAt).toLocaleDateString()}</p>
-        </div>
-      </div>
+        </CardBody>
+      </UniversalCard>
     </div>
   );
 }
@@ -326,50 +429,68 @@ function TasksTab({ projectId, tasks, onRefresh }: TasksTabProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-white">Tasks</h2>
-        <button
+        <h2 className="text-heading-3 text-gray-900 dark:text-white">Tasks Board</h2>
+        <UniversalButton
+          variant="primary"
+          leftIcon={<Plus className="w-4 h-4" />}
           onClick={() => setShowNewTask(true)}
-          className="px-4 py-2 bg-[#2979FF] hover:bg-[#1E5FCC] text-white text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#2979FF]"
         >
-          + Add Task
-        </button>
+          Add Task
+        </UniversalButton>
       </div>
 
       {tasks.length === 0 ? (
-        <div className="bg-[#1A2F4B] rounded-xl p-12 text-center">
-          <p className="text-gray-400 mb-4">No tasks yet</p>
-          <button
-            onClick={() => setShowNewTask(true)}
-            className="text-[#2979FF] hover:text-[#1E5FCC] font-medium"
-          >
-            Create your first task →
-          </button>
-        </div>
+        <UniversalCard>
+          <CardBody>
+            <TableEmptyState
+              icon={<CheckCircle2 className="w-12 h-12" />}
+              title="No tasks yet"
+              description="Create your first task to start tracking project progress"
+              action={
+                <UniversalButton
+                  variant="primary"
+                  onClick={() => setShowNewTask(true)}
+                >
+                  Create First Task
+                </UniversalButton>
+              }
+            />
+          </CardBody>
+        </UniversalCard>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {(['TODO', 'DOING', 'REVIEW', 'DONE'] as const).map(status => (
-            <div key={status} className="bg-[#1A2F4B] rounded-xl p-4">
-              <h3 className="font-medium text-white mb-3 flex items-center justify-between">
-                <span>{status.replace('_', ' ')}</span>
-                <span className="text-sm text-gray-400">{tasksByStatus[status].length}</span>
-              </h3>
-              <div className="space-y-2">
-                {tasksByStatus[status].map(task => (
-                  <div
-                    key={task.id}
-                    className="bg-[#0E1A2B] rounded-lg p-3 text-sm"
-                  >
-                    <p className="text-white font-medium mb-1">{task.title}</p>
-                    <p className="text-xs text-gray-400">{task.type}</p>
-                    {task.dueAt && (
-                      <p className="text-xs text-yellow-400 mt-1">
-                        Due {new Date(task.dueAt).toLocaleDateString()}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
+            <UniversalCard key={status} variant="default">
+              <CardHeader className="border-b border-gray-200 dark:border-[#2979FF]/20">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-gray-900 dark:text-white">
+                    {status.replace('_', ' ')}
+                  </h3>
+                  <CountBadge count={tasksByStatus[status].length} />
+                </div>
+              </CardHeader>
+              <CardBody>
+                <div className="space-y-2">
+                  {tasksByStatus[status].map(task => (
+                    <UniversalCard key={task.id} variant="flat" hoverable className="p-3">
+                      <h4 className="font-medium text-sm text-gray-900 dark:text-white mb-1">
+                        {task.title}
+                      </h4>
+                      <div className="flex items-center gap-2">
+                        <UniversalBadge variant="outline" size="sm">
+                          {task.type}
+                        </UniversalBadge>
+                        {task.dueAt && (
+                          <span className="text-xs text-yellow-600 dark:text-yellow-400">
+                            Due {new Date(task.dueAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </span>
+                        )}
+                      </div>
+                    </UniversalCard>
+                  ))}
+                </div>
+              </CardBody>
+            </UniversalCard>
           ))}
         </div>
       )}
@@ -390,29 +511,62 @@ function TasksTab({ projectId, tasks, onRefresh }: TasksTabProps) {
 
 // Assets Tab Component
 function AssetsTab({ projectId, assets }: { projectId: string; assets: Asset[] }) {
+  const getAssetIcon = (type: string) => {
+    switch (type) {
+      case 'VIDEO':
+        return <Film className="w-8 h-8" />;
+      case 'IMAGE':
+        return <FileText className="w-8 h-8" />;
+      default:
+        return <FileText className="w-8 h-8" />;
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-white">Assets</h2>
-        <button className="px-4 py-2 bg-[#2979FF] hover:bg-[#1E5FCC] text-white text-sm font-medium rounded-lg transition-colors">
-          + Upload Asset
-        </button>
+        <h2 className="text-heading-3 text-gray-900 dark:text-white">Assets Library</h2>
+        <UniversalButton variant="primary" leftIcon={<Plus className="w-4 h-4" />}>
+          Upload Asset
+        </UniversalButton>
       </div>
 
       {assets.length === 0 ? (
-        <div className="bg-[#1A2F4B] rounded-xl p-12 text-center">
-          <p className="text-gray-400">No assets uploaded yet</p>
-        </div>
+        <UniversalCard>
+          <CardBody>
+            <TableEmptyState
+              icon={<Film className="w-12 h-12" />}
+              title="No assets uploaded"
+              description="Upload videos, images, or documents to this project"
+              action={
+                <UniversalButton variant="primary">
+                  Upload First Asset
+                </UniversalButton>
+              }
+            />
+          </CardBody>
+        </UniversalCard>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {assets.map(asset => (
-            <div key={asset.id} className="bg-[#1A2F4B] rounded-xl p-4 hover:bg-[#234060] transition-colors">
-              <div className="aspect-square bg-[#0E1A2B] rounded-lg mb-3 flex items-center justify-center text-4xl">
-                {asset.type === 'VIDEO' ? '🎬' : asset.type === 'IMAGE' ? '🖼️' : '📄'}
-              </div>
-              <p className="text-white font-medium text-sm truncate">{asset.title}</p>
-              <p className="text-xs text-gray-400 mt-1">{asset.type}</p>
-            </div>
+            <UniversalCard key={asset.id} hoverable>
+              <CardBody>
+                <div className="aspect-square bg-gray-100 dark:bg-[#0E1A2B] rounded-lg mb-3 flex items-center justify-center text-[#2979FF]">
+                  {getAssetIcon(asset.type)}
+                </div>
+                <h4 className="font-medium text-sm text-gray-900 dark:text-white truncate mb-1">
+                  {asset.title}
+                </h4>
+                <div className="flex items-center justify-between">
+                  <UniversalBadge variant="outline" size="sm">{asset.type}</UniversalBadge>
+                  {asset.size && (
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {(asset.size / 1024 / 1024).toFixed(1)} MB
+                    </span>
+                  )}
+                </div>
+              </CardBody>
+            </UniversalCard>
           ))}
         </div>
       )}
@@ -422,36 +576,58 @@ function AssetsTab({ projectId, assets }: { projectId: string; assets: Asset[] }
 
 // Reviews Tab Component
 function ReviewsTab({ reviews }: { reviews: Review[] }) {
+  const getReviewBadgeVariant = (status: string): 'success' | 'warning' | 'default' => {
+    switch (status) {
+      case 'APPROVED':
+        return 'success';
+      case 'CHANGES_REQUESTED':
+        return 'warning';
+      default:
+        return 'default';
+    }
+  };
+
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-white">Reviews</h2>
+      <h2 className="text-heading-3 text-gray-900 dark:text-white">Review History</h2>
 
       {reviews.length === 0 ? (
-        <div className="bg-[#1A2F4B] rounded-xl p-12 text-center">
-          <p className="text-gray-400">No reviews requested yet</p>
-        </div>
+        <UniversalCard>
+          <CardBody>
+            <TableEmptyState
+              icon={<Eye className="w-12 h-12" />}
+              title="No reviews yet"
+              description="Request reviews from team members or clients"
+            />
+          </CardBody>
+        </UniversalCard>
       ) : (
-        <div className="space-y-3">
-          {reviews.map(review => (
-            <div key={review.id} className="bg-[#1A2F4B] rounded-xl p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className={`px-3 py-1 rounded-lg text-sm font-medium ${
-                  review.status === 'APPROVED' ? 'bg-green-500/20 text-green-400' :
-                  review.status === 'CHANGES_REQUESTED' ? 'bg-yellow-500/20 text-yellow-400' :
-                  'bg-gray-500/20 text-gray-400'
-                }`}>
-                  {review.status.replace('_', ' ')}
-                </span>
-                <span className="text-sm text-gray-400">
-                  {new Date(review.requestedAt).toLocaleDateString()}
-                </span>
-              </div>
-              {review.comments && (
-                <p className="text-gray-300 text-sm">{review.comments}</p>
-              )}
+        <UniversalCard>
+          <CardBody>
+            <div className="space-y-3">
+              {reviews.map(review => (
+                <div
+                  key={review.id}
+                  className="p-4 bg-gray-50 dark:bg-[#0E1A2B] rounded-lg border border-gray-200 dark:border-[#2979FF]/20"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <UniversalBadge variant={getReviewBadgeVariant(review.status)}>
+                      {review.status.replace('_', ' ')}
+                    </UniversalBadge>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      {new Date(review.requestedAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  {review.comments && (
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
+                      {review.comments}
+                    </p>
+                  )}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </CardBody>
+        </UniversalCard>
       )}
     </div>
   );
@@ -459,40 +635,86 @@ function ReviewsTab({ reviews }: { reviews: Review[] }) {
 
 // Renders Tab Component
 function RendersTab({ renders }: { renders: Render[] }) {
+  const getRenderStatus = (status: string): 'active' | 'completed' | 'cancelled' | 'pending' => {
+    switch (status) {
+      case 'READY':
+        return 'completed';
+      case 'RENDERING':
+        return 'active';
+      case 'FAILED':
+        return 'cancelled';
+      default:
+        return 'pending';
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-white">Renders</h2>
-        <button className="px-4 py-2 bg-[#2979FF] hover:bg-[#1E5FCC] text-white text-sm font-medium rounded-lg transition-colors">
-          + New Render
-        </button>
+        <h2 className="text-heading-3 text-gray-900 dark:text-white">Renders</h2>
+        <UniversalButton variant="primary" leftIcon={<Plus className="w-4 h-4" />}>
+          New Render
+        </UniversalButton>
       </div>
 
       {renders.length === 0 ? (
-        <div className="bg-[#1A2F4B] rounded-xl p-12 text-center">
-          <p className="text-gray-400">No renders created yet</p>
-        </div>
+        <UniversalCard>
+          <CardBody>
+            <TableEmptyState
+              icon={<Palette className="w-12 h-12" />}
+              title="No renders created"
+              description="Create renders for different formats and platforms"
+              action={
+                <UniversalButton variant="primary">
+                  Create First Render
+                </UniversalButton>
+              }
+            />
+          </CardBody>
+        </UniversalCard>
       ) : (
-        <div className="space-y-3">
-          {renders.map(render => (
-            <div key={render.id} className="bg-[#1A2F4B] rounded-xl p-4 flex items-center justify-between">
-              <div>
-                <p className="text-white font-medium">{render.format}</p>
-                <p className="text-sm text-gray-400 mt-1">
-                  {new Date(render.createdAt).toLocaleDateString()}
-                </p>
-              </div>
-              <span className={`px-3 py-1 rounded-lg text-sm font-medium ${
-                render.status === 'READY' ? 'bg-green-500/20 text-green-400' :
-                render.status === 'RENDERING' ? 'bg-blue-500/20 text-blue-400' :
-                render.status === 'FAILED' ? 'bg-red-500/20 text-red-400' :
-                'bg-gray-500/20 text-gray-400'
-              }`}>
-                {render.status}
-              </span>
-            </div>
-          ))}
-        </div>
+        <UniversalCard>
+          <UniversalTable>
+            <UniversalTableHeader>
+              <UniversalTableRow>
+                <UniversalTableHead>Format</UniversalTableHead>
+                <UniversalTableHead>Status</UniversalTableHead>
+                <UniversalTableHead>Created</UniversalTableHead>
+                <UniversalTableHead></UniversalTableHead>
+              </UniversalTableRow>
+            </UniversalTableHeader>
+            <UniversalTableBody>
+              {renders.map(render => (
+                <UniversalTableRow key={render.id} hoverable>
+                  <UniversalTableCell>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {render.format}
+                    </span>
+                  </UniversalTableCell>
+                  <UniversalTableCell>
+                    <StatusBadge status={getRenderStatus(render.status)} />
+                  </UniversalTableCell>
+                  <UniversalTableCell>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      {new Date(render.createdAt).toLocaleDateString()}
+                    </span>
+                  </UniversalTableCell>
+                  <UniversalTableCell>
+                    {render.outputUrl && (
+                      <UniversalButton
+                        variant="ghost"
+                        size="sm"
+                        leftIcon={<Download className="w-4 h-4" />}
+                      >
+                        Download
+                      </UniversalButton>
+                    )}
+                  </UniversalTableCell>
+                </UniversalTableRow>
+              ))}
+            </UniversalTableBody>
+          </UniversalTable>
+        </UniversalCard>
       )}
     </div>
   );
@@ -508,13 +730,12 @@ interface NewTaskModalProps {
 function NewTaskModal({ projectId, onClose, onSuccess }: NewTaskModalProps) {
   const [formData, setFormData] = useState({
     title: '',
-    type: 'SCRIPT' as const,
+    type: 'SCRIPT',
     priority: 0,
   });
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setSubmitting(true);
 
     try {
@@ -536,48 +757,51 @@ function NewTaskModal({ projectId, onClose, onSuccess }: NewTaskModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-[#1A2F4B] rounded-xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
-        <h3 className="text-xl font-bold text-white mb-4">New Task</h3>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Task Title *</label>
-            <input
-              type="text"
-              required
-              value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              className="w-full px-4 py-2 bg-[#0E1A2B] border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF]"
-            />
-          </div>
+    <FormModal
+      isOpen={true}
+      onClose={onClose}
+      onSubmit={handleSubmit}
+      title="New Task"
+      description="Create a new task for this project"
+      submitText="Create Task"
+      cancelText="Cancel"
+      loading={submitting}
+      size="md"
+    >
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Task Title <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            required
+            value={formData.title}
+            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+            className="w-full px-4 py-3 bg-white dark:bg-[#0E1A2B] border border-gray-300 dark:border-[#2979FF]/20 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2979FF] focus:border-transparent"
+            placeholder="Write script for Scene 1"
+          />
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Type</label>
-            <select
-              value={formData.type}
-              onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as any }))}
-              className="w-full px-4 py-2 bg-[#0E1A2B] border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF]"
-            >
-              <option value="SCRIPT">Script</option>
-              <option value="DESIGN">Design</option>
-              <option value="EDIT">Edit</option>
-              <option value="VOICEOVER">Voiceover</option>
-              <option value="SHOOT">Shoot</option>
-              <option value="CUTDOWN">Cutdown</option>
-              <option value="LOCALIZATION">Localization</option>
-            </select>
-          </div>
-
-          <div className="flex gap-3">
-            <button type="button" onClick={onClose} className="flex-1 px-4 py-2 bg-[#0E1A2B] text-white rounded-lg">
-              Cancel
-            </button>
-            <button type="submit" disabled={submitting} className="flex-1 px-4 py-2 bg-[#2979FF] hover:bg-[#1E5FCC] text-white rounded-lg disabled:opacity-50">
-              {submitting ? 'Creating...' : 'Create'}
-            </button>
-          </div>
-        </form>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Task Type
+          </label>
+          <select
+            value={formData.type}
+            onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
+            className="w-full px-4 py-3 bg-white dark:bg-[#0E1A2B] border border-gray-300 dark:border-[#2979FF]/20 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] focus:border-transparent"
+          >
+            <option value="SCRIPT">Script</option>
+            <option value="DESIGN">Design</option>
+            <option value="EDIT">Edit</option>
+            <option value="VOICEOVER">Voiceover</option>
+            <option value="SHOOT">Shoot</option>
+            <option value="CUTDOWN">Cutdown</option>
+            <option value="LOCALIZATION">Localization</option>
+          </select>
+        </div>
       </div>
-    </div>
+    </FormModal>
   );
 }

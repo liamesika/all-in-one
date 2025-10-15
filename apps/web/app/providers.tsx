@@ -9,6 +9,7 @@ import { AuthProvider } from '../lib/auth-context';
 import { OrganizationProvider } from '../lib/organization-context';
 import { MustChangePasswordGate } from '../components/auth/must-change-password-gate';
 import { ApiUtils } from '../lib/api';
+import { QueryProvider } from '../providers/QueryProvider';
 
 // Public routes that don't need authentication
 const PUBLIC_ROUTES = ['/login', '/register', '/', '/real-estate', '/e-commerce', '/law', '/industries'];
@@ -53,12 +54,13 @@ export default function AppProviders({
   }
 
   return (
-    <SWRConfig value={swrConfig}>
-      {isPublicRoute ? (
-        // Public routes: No AuthProvider, no /api/auth/me calls
-        <LanguageProvider initialLang={initialLang}>
-          {children}
-          <Toaster
+    <QueryProvider>
+      <SWRConfig value={swrConfig}>
+        {isPublicRoute ? (
+          // Public routes: No AuthProvider, no /api/auth/me calls
+          <LanguageProvider initialLang={initialLang}>
+            {children}
+            <Toaster
             position="top-right"
             toastOptions={{
               duration: 4000,
@@ -119,6 +121,7 @@ export default function AppProviders({
           </LanguageProvider>
         </AuthProvider>
       )}
-    </SWRConfig>
+      </SWRConfig>
+    </QueryProvider>
   );
 }

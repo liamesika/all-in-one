@@ -1,8 +1,29 @@
 'use client';
 
+/**
+ * Real Estate Dashboard - Redesigned with Design System 2.0
+ * Unified component library with consistent visual language
+ */
+
+import { useState } from 'react';
+import {
+  TrendingUp,
+  Home,
+  CheckCircle,
+  DollarSign,
+  Users,
+  Building2,
+  BarChart3,
+  Shield,
+  Zap,
+} from 'lucide-react';
+
+// Import unified components
+import { KPICard } from '@/components/shared';
+
+// Import legacy components (to be updated)
 import { RealEstateHeader } from '@/components/dashboard/RealEstateHeader';
 import { NotificationSystem } from '@/components/dashboard/NotificationSystem';
-import { KPICard } from '@/components/dashboard/KPICard';
 import { FilterBar } from '@/components/dashboard/FilterBar';
 import { DashboardNavigation } from '@/components/dashboard/DashboardNavigation';
 import { QuickStatsBar } from '@/components/dashboard/QuickStatsBar';
@@ -17,7 +38,6 @@ import { ComplianceRiskSection } from './components/sections/ComplianceRiskSecti
 import { AutomationHealthSection } from './components/sections/AutomationHealthSection';
 import { useLang } from '@/components/i18n/LangProvider';
 import { LanguageProvider } from '@/lib/language-context';
-import { useState } from 'react';
 
 // Mock data generator - replace with actual API data
 function generateMockData() {
@@ -238,10 +258,7 @@ function RealEstateDashboardContent() {
   };
 
   return (
-    <div
-      className="min-h-screen"
-      style={{ background: 'var(--re-deep-navy)' }}
-    >
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B]">
       {/* Fixed Header */}
       <RealEstateHeader />
 
@@ -260,36 +277,50 @@ function RealEstateDashboardContent() {
 
       {/* Main Content - Add padding-top to account for fixed header + extra spacing */}
       <div className="pt-20 pb-20">
-        {/* Quick Stats Bar with top margin */}
+        {/* Quick Stats Bar with Design System 2.0 */}
         <div className="px-6 mt-10">
-          <QuickStatsBar
-            stats={[
-              {
-                label: 'Total Leads',
-                value: data.kpis.totalLeads,
-                change: 12,
-                changeLabel: 'vs last month',
-              },
-              {
-                label: 'Active Listings',
-                value: data.kpis.activeListings,
-                change: 5,
-                changeLabel: 'this week',
-              },
-              {
-                label: 'Open Deals',
-                value: data.kpis.dealsClosed,
-                change: -3,
-                changeLabel: 'pending',
-              },
-              {
-                label: 'Avg Response Time',
-                value: '2.4h',
-                change: -15,
-                changeLabel: 'improved',
-              },
-            ]}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white dark:bg-[#1A2F4B] rounded-lg p-4 border border-gray-200 dark:border-[#2979FF]/20 transition-all hover:shadow-md">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-body-sm text-gray-600 dark:text-gray-400">Total Leads</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{data.kpis.totalLeads}</p>
+                  <p className="text-xs text-green-500 mt-1">+12 vs last month</p>
+                </div>
+                <TrendingUp className="w-5 h-5 text-[#2979FF]" />
+              </div>
+            </div>
+            <div className="bg-white dark:bg-[#1A2F4B] rounded-lg p-4 border border-gray-200 dark:border-[#2979FF]/20 transition-all hover:shadow-md">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-body-sm text-gray-600 dark:text-gray-400">Active Listings</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{data.kpis.activeListings}</p>
+                  <p className="text-xs text-green-500 mt-1">+5 this week</p>
+                </div>
+                <Home className="w-5 h-5 text-[#2979FF]" />
+              </div>
+            </div>
+            <div className="bg-white dark:bg-[#1A2F4B] rounded-lg p-4 border border-gray-200 dark:border-[#2979FF]/20 transition-all hover:shadow-md">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-body-sm text-gray-600 dark:text-gray-400">Open Deals</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{data.kpis.dealsClosed}</p>
+                  <p className="text-xs text-gray-500 mt-1">-3 pending</p>
+                </div>
+                <CheckCircle className="w-5 h-5 text-[#2979FF]" />
+              </div>
+            </div>
+            <div className="bg-white dark:bg-[#1A2F4B] rounded-lg p-4 border border-gray-200 dark:border-[#2979FF]/20 transition-all hover:shadow-md">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-body-sm text-gray-600 dark:text-gray-400">Avg Response Time</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">2.4h</p>
+                  <p className="text-xs text-green-500 mt-1">-15% improved</p>
+                </div>
+                <Zap className="w-5 h-5 text-[#2979FF]" />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Filter Bar */}
@@ -312,76 +343,32 @@ function RealEstateDashboardContent() {
           />
         </div>
 
-        {/* KPI Grid - Top Level Metrics */}
+        {/* KPI Grid - Updated with Unified KPICard Component */}
         <div className="px-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <KPICard
-              title={lang === 'he' ? 'סה"כ לידים' : 'Total Leads'}
+              icon={<Users className="w-6 h-6" />}
+              label={lang === 'he' ? 'סה"כ לידים' : 'Total Leads'}
               value={data.kpis.totalLeads}
-              delta="+12%"
-              subtitle={lang === 'he' ? 'החודש' : 'This Month'}
-              color="#2979FF"
-              icon={
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"
-                  />
-                </svg>
-              }
+              change={{ value: '+12% from last month', trend: 'up' }}
             />
             <KPICard
-              title={lang === 'he' ? 'רשימות פעילות' : 'Active Listings'}
+              icon={<Building2 className="w-6 h-6" />}
+              label={lang === 'he' ? 'רשימות פעילות' : 'Active Listings'}
               value={data.kpis.activeListings}
-              delta="+5"
-              subtitle={lang === 'he' ? 'נכסים' : 'Properties'}
-              color="#6EA8FE"
-              icon={
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                  />
-                </svg>
-              }
+              change={{ value: '+5 new properties', trend: 'up' }}
             />
             <KPICard
-              title={lang === 'he' ? 'עסקאות סגורות' : 'Deals Closed'}
+              icon={<CheckCircle className="w-6 h-6" />}
+              label={lang === 'he' ? 'עסקאות סגורות' : 'Deals Closed'}
               value={data.kpis.dealsClosed}
-              delta="+4"
-              subtitle={lang === 'he' ? 'החודש' : 'This Month'}
-              color="#10B981"
-              icon={
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              }
+              change={{ value: '+4 this month', trend: 'up' }}
             />
             <KPICard
-              title={lang === 'he' ? 'הכנסות' : 'Revenue'}
+              icon={<DollarSign className="w-6 h-6" />}
+              label={lang === 'he' ? 'הכנסות' : 'Revenue'}
               value={`$${(data.kpis.revenue / 1000).toFixed(0)}K`}
-              delta="+15%"
-              subtitle={lang === 'he' ? 'החודש' : 'This Month'}
-              color="#FFB347"
-              icon={
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              }
+              change={{ value: '+15% from last month', trend: 'up' }}
             />
           </div>
         </div>

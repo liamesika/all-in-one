@@ -1,5 +1,9 @@
 'use client';
 
+/**
+ * Real Estate Leads Management - Redesigned with Design System 2.0
+ */
+
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/lib/language-context';
 import {
@@ -20,6 +24,20 @@ import {
   AlertCircle,
   MessageCircle,
 } from 'lucide-react';
+import {
+  UniversalCard,
+  CardHeader,
+  CardBody,
+  UniversalButton,
+  UniversalTable,
+  UniversalTableHeader,
+  UniversalTableBody,
+  UniversalTableRow,
+  UniversalTableHead,
+  UniversalTableCell,
+  TableEmptyState,
+  StatusBadge,
+} from '@/components/shared';
 import { ImportLeadsModal } from '@/components/real-estate/leads/ImportLeadsModal';
 import { ViewLeadModal } from '@/components/real-estate/leads/ViewLeadModal';
 import { EditLeadModal } from '@/components/real-estate/leads/EditLeadModal';
@@ -264,262 +282,210 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
   };
 
   return (
-    <div className={`min-h-screen ${language === 'he' ? 'rtl' : 'ltr'}`} style={{ background: '#0E1A2B' }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main className={`min-h-screen bg-gray-50 dark:bg-[#0E1A2B] p-6 lg:p-8 ${language === 'he' ? 'rtl' : 'ltr'}`}>
+      <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold" style={{ color: '#FFFFFF' }}>
-            {t.title}
-          </h1>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-heading-1 text-gray-900 dark:text-white">
+              {t.title}
+            </h1>
+            <p className="text-body-sm text-gray-600 dark:text-gray-400 mt-1">
+              {language === 'he' ? 'נהל ועקוב אחר הלידים שלך' : 'Manage and track your leads'}
+            </p>
+          </div>
         </div>
 
         {/* Actions Bar */}
-        <div className="rounded-xl p-4 mb-6" style={{ background: '#1A2F4B', border: '1px solid #374151' }}>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            {/* Left Actions */}
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                onClick={() => setShowImportModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all shadow-sm"
-              >
-                <Upload className="w-4 h-4" />
-                {t.import}
-              </button>
-
-              <button
-                onClick={() => handleExport(false)}
-                disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors"
-                style={{ border: '1px solid #6B7280', color: '#E5E7EB' }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = '#374151')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-              >
-                {loading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Download className="w-4 h-4" />
-                )}
-                {t.export}
-              </button>
-
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm"
-              >
-                <Plus className="w-4 h-4" />
-                {t.create}
-              </button>
-            </div>
-
-            {/* Selected Count & Bulk Actions */}
-            {selectedLeads.size > 0 && (
-              <div className="flex items-center gap-3">
-                <span className="text-sm" style={{ color: '#E5E7EB' }}>
-                  {selectedLeads.size} {t.selected}
-                </span>
-                <BatchWhatsAppActions
-                  leads={getSelectedLeadsData()}
-                  onComplete={() => setSelectedLeads(new Set())}
-                />
-                <button
-                  onClick={() => handleExport(true)}
-                  className="text-sm px-3 py-1.5 rounded-lg transition-colors"
-                  style={{ border: '1px solid #6B7280', color: '#E5E7EB' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = '#374151')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+        <UniversalCard variant="default">
+          <CardBody className="p-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              {/* Left Actions */}
+              <div className="flex flex-wrap items-center gap-3">
+                <UniversalButton
+                  variant="success"
+                  size="md"
+                  leftIcon={<Upload className="w-4 h-4" />}
+                  onClick={() => setShowImportModal(true)}
+                  className="!bg-gradient-to-r from-green-600 to-green-700"
                 >
-                  {t.bulkExport}
-                </button>
+                  {t.import}
+                </UniversalButton>
+
+                <UniversalButton
+                  variant="outline"
+                  size="md"
+                  leftIcon={loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                  onClick={() => handleExport(false)}
+                  disabled={loading}
+                >
+                  {t.export}
+                </UniversalButton>
+
+                <UniversalButton
+                  variant="primary"
+                  size="md"
+                  leftIcon={<Plus className="w-4 h-4" />}
+                  onClick={() => setShowCreateModal(true)}
+                >
+                  {t.create}
+                </UniversalButton>
               </div>
-            )}
-          </div>
-        </div>
+
+              {/* Selected Count & Bulk Actions */}
+              {selectedLeads.size > 0 && (
+                <div className="flex items-center gap-3">
+                  <span className="text-body-sm text-gray-700 dark:text-gray-300 font-medium">
+                    {selectedLeads.size} {t.selected}
+                  </span>
+                  <BatchWhatsAppActions
+                    leads={getSelectedLeadsData()}
+                    onComplete={() => setSelectedLeads(new Set())}
+                  />
+                  <UniversalButton
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleExport(true)}
+                  >
+                    {t.bulkExport}
+                  </UniversalButton>
+                </div>
+              )}
+            </div>
+          </CardBody>
+        </UniversalCard>
 
         {/* Filters */}
-        <div className="rounded-xl p-4 mb-6" style={{ background: '#1A2F4B', border: '1px solid #374151' }}>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Search */}
-            <div className="md:col-span-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: '#9CA3AF' }} />
-                <input
-                  type="text"
-                  placeholder={t.search}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 transition-all"
-                  style={{ background: '#0E1A2B', border: '1px solid #374151', color: '#FFFFFF' }}
-                  onFocus={(e) => (e.currentTarget.style.borderColor = '#2979FF')}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = '#374151')}
-                />
+        <UniversalCard variant="default">
+          <CardBody className="p-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {/* Search */}
+              <div className="md:col-span-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder={t.search}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-[#2979FF]/20 bg-white dark:bg-[#1A2F4B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all"
+                  />
+                </div>
               </div>
+
+              {/* Status Filter */}
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-4 py-2 rounded-lg border border-gray-300 dark:border-[#2979FF]/20 bg-white dark:bg-[#1A2F4B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all"
+              >
+                <option value="">{t.all} - {t.status}</option>
+                <option value="HOT">{t.hot}</option>
+                <option value="WARM">{t.warm}</option>
+                <option value="COLD">{t.cold}</option>
+              </select>
+
+              {/* Source Filter */}
+              <select
+                value={sourceFilter}
+                onChange={(e) => setSourceFilter(e.target.value)}
+                className="px-4 py-2 rounded-lg border border-gray-300 dark:border-[#2979FF]/20 bg-white dark:bg-[#1A2F4B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all"
+              >
+                <option value="">{t.all} - {t.source}</option>
+                <option value="Website">{t.website}</option>
+                <option value="Facebook">{t.facebook}</option>
+                <option value="Instagram">{t.instagram}</option>
+                <option value="Other">{t.other}</option>
+              </select>
             </div>
-
-            {/* Status Filter */}
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 transition-all"
-              style={{ background: '#0E1A2B', border: '1px solid #374151', color: '#FFFFFF' }}
-              onFocus={(e) => (e.currentTarget.style.borderColor = '#2979FF')}
-              onBlur={(e) => (e.currentTarget.style.borderColor = '#374151')}
-            >
-              <option value="">{t.all} - {t.status}</option>
-              <option value="HOT">{t.hot}</option>
-              <option value="WARM">{t.warm}</option>
-              <option value="COLD">{t.cold}</option>
-            </select>
-
-            {/* Source Filter */}
-            <select
-              value={sourceFilter}
-              onChange={(e) => setSourceFilter(e.target.value)}
-              className="px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 transition-all"
-              style={{ background: '#0E1A2B', border: '1px solid #374151', color: '#FFFFFF' }}
-              onFocus={(e) => (e.currentTarget.style.borderColor = '#2979FF')}
-              onBlur={(e) => (e.currentTarget.style.borderColor = '#374151')}
-            >
-              <option value="">{t.all} - {t.source}</option>
-              <option value="Website">{t.website}</option>
-              <option value="Facebook">{t.facebook}</option>
-              <option value="Instagram">{t.instagram}</option>
-              <option value="Other">{t.other}</option>
-            </select>
-          </div>
-        </div>
+          </CardBody>
+        </UniversalCard>
 
         {/* Leads Table */}
         {filteredLeads.length === 0 ? (
-          <div className="rounded-xl shadow-sm p-12 text-center" style={{ background: '#1A2F4B', border: '1px solid #374151' }}>
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: '#374151' }}>
-              <Filter className="w-8 h-8" style={{ color: '#9CA3AF' }} />
-            </div>
-            <h3 className="text-lg font-semibold mb-2" style={{ color: '#FFFFFF' }}>
-              {leads.length === 0 ? t.emptyTitle : t.noResults}
-            </h3>
-            <p className="mb-6" style={{ color: '#9CA3AF' }}>
-              {leads.length === 0 ? t.emptyDescription : 'Try adjusting your filters'}
-            </p>
-            {leads.length === 0 && (
-              <button
-                onClick={() => setShowImportModal(true)}
-                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-sm"
-              >
+          <TableEmptyState
+            icon={<Filter className="w-12 h-12" />}
+            title={leads.length === 0 ? t.emptyTitle : t.noResults}
+            description={leads.length === 0 ? t.emptyDescription : 'Try adjusting your filters'}
+            action={leads.length === 0 ? (
+              <UniversalButton variant="primary" size="md" leftIcon={<Upload />} onClick={() => setShowImportModal(true)}>
                 {t.import}
-              </button>
-            )}
-          </div>
+              </UniversalButton>
+            ) : undefined}
+          />
         ) : (
-          <div className="rounded-xl shadow-sm overflow-hidden" style={{ background: '#1A2F4B', border: '1px solid #374151' }}>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead style={{ background: '#0E1A2B', borderBottom: '1px solid #374151' }}>
-                  <tr>
-                    <th className="px-4 py-3 text-left">
-                      <button
-                        onClick={handleSelectAll}
-                        className="p-1 rounded transition-colors"
-                        onMouseEnter={(e) => (e.currentTarget.style.background = '#374151')}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                      >
-                        {selectedLeads.size === filteredLeads.length ? (
-                          <CheckSquare className="w-5 h-5 text-blue-600" />
+          <UniversalCard variant="default">
+            <CardHeader className="border-b border-gray-200 dark:border-[#2979FF]/20">
+              <h2 className="text-heading-4 text-gray-900 dark:text-white">
+                {language === 'he' ? 'רשימת לידים' : 'Leads List'}
+              </h2>
+            </CardHeader>
+            <UniversalTable>
+              <UniversalTableHeader>
+                <UniversalTableRow>
+                  <UniversalTableHead>
+                    <button onClick={handleSelectAll} className="p-1 rounded hover:bg-gray-100 dark:hover:bg-[#374151] transition-colors">
+                      {selectedLeads.size === filteredLeads.length ? (
+                        <CheckSquare className="w-5 h-5 text-[#2979FF]" />
+                      ) : (
+                        <Square className="w-5 h-5 text-gray-400" />
+                      )}
+                    </button>
+                  </UniversalTableHead>
+                  <UniversalTableHead>{language === 'he' ? 'שם' : 'Name'}</UniversalTableHead>
+                  <UniversalTableHead>{language === 'he' ? 'טלפון' : 'Phone'}</UniversalTableHead>
+                  <UniversalTableHead>{language === 'he' ? 'אימייל' : 'Email'}</UniversalTableHead>
+                  <UniversalTableHead>{t.status}</UniversalTableHead>
+                  <UniversalTableHead>{t.source}</UniversalTableHead>
+                  <UniversalTableHead>{language === 'he' ? 'פעולות' : 'Actions'}</UniversalTableHead>
+                </UniversalTableRow>
+              </UniversalTableHeader>
+              <UniversalTableBody>
+                {filteredLeads.map((lead) => (
+                  <UniversalTableRow key={lead.id} hoverable>
+                    <UniversalTableCell>
+                      <button onClick={() => handleSelectLead(lead.id)} className="p-1 rounded hover:bg-gray-100 dark:hover:bg-[#374151] transition-colors">
+                        {selectedLeads.has(lead.id) ? (
+                          <CheckSquare className="w-5 h-5 text-[#2979FF]" />
                         ) : (
                           <Square className="w-5 h-5 text-gray-400" />
                         )}
                       </button>
-                    </th>
-                    <th className="px-4 py-3 text-left font-semibold" style={{ color: '#FFFFFF' }}>
-                      {language === 'he' ? 'שם' : 'Name'}
-                    </th>
-                    <th className="px-4 py-3 text-left font-semibold" style={{ color: '#FFFFFF' }}>
-                      {language === 'he' ? 'טלפון' : 'Phone'}
-                    </th>
-                    <th className="px-4 py-3 text-left font-semibold" style={{ color: '#FFFFFF' }}>
-                      {language === 'he' ? 'אימייל' : 'Email'}
-                    </th>
-                    <th className="px-4 py-3 text-left font-semibold" style={{ color: '#FFFFFF' }}>{t.status}</th>
-                    <th className="px-4 py-3 text-left font-semibold" style={{ color: '#FFFFFF' }}>{t.source}</th>
-                    <th className="px-4 py-3 text-left font-semibold" style={{ color: '#FFFFFF' }}>
-                      {language === 'he' ? 'פעולות' : 'Actions'}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y" style={{ borderColor: '#374151' }}>
-                  {filteredLeads.map((lead) => (
-                    <tr
-                      key={lead.id}
-                      className="transition-colors"
-                      onMouseEnter={(e) => (e.currentTarget.style.background = '#0E1A2B')}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                    >
-                      <td className="px-4 py-3">
-                        <button
-                          onClick={() => handleSelectLead(lead.id)}
-                          className="p-1 rounded transition-colors"
-                          onMouseEnter={(e) => (e.currentTarget.style.background = '#374151')}
-                          onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                        >
-                          {selectedLeads.has(lead.id) ? (
-                            <CheckSquare className="w-5 h-5 text-blue-600" />
-                          ) : (
-                            <Square className="w-5 h-5 text-gray-400" />
-                          )}
-                        </button>
-                      </td>
-                      <td className="px-4 py-3 font-medium" style={{ color: '#FFFFFF' }}>{lead.name}</td>
-                      <td className="px-4 py-3" style={{ color: '#9CA3AF' }} dir="ltr">{lead.phone}</td>
-                      <td className="px-4 py-3" style={{ color: '#9CA3AF' }}>{lead.email || '-'}</td>
-                      <td className="px-4 py-3">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(lead.status)}`}>
-                          {t[lead.status.toLowerCase() as keyof typeof t]}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3" style={{ color: '#9CA3AF' }}>{lead.source}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => handleViewLead(lead.id)}
-                            title={t.view}
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleEditLead(lead.id)}
-                            title={t.edit}
-                            className="p-1.5 hover:bg-gray-100 rounded transition-colors"
-                            style={{ color: '#9CA3AF' }}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleQualifyLead(lead.id)}
-                            title={t.qualify}
-                            className="p-1.5 text-purple-600 hover:bg-purple-50 rounded transition-colors"
-                          >
-                            <Sparkles className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleLinkProperty(lead.id)}
-                            title={t.linkProperty}
-                            className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors"
-                          >
-                            <LinkIcon className="w-4 h-4" />
-                          </button>
-                          <WhatsAppActions
-                            phone={lead.phone}
-                            leadName={lead.name}
-                            variant="icon"
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                    </UniversalTableCell>
+                    <UniversalTableCell className="font-medium">{lead.name}</UniversalTableCell>
+                    <UniversalTableCell dir="ltr">{lead.phone}</UniversalTableCell>
+                    <UniversalTableCell>{lead.email || '-'}</UniversalTableCell>
+                    <UniversalTableCell>
+                      <StatusBadge
+                        status={lead.status === 'HOT' ? 'failed' : lead.status === 'WARM' ? 'pending' : 'active'}
+                        className={lead.status === 'HOT' ? '!bg-red-100 !text-red-800' : lead.status === 'WARM' ? '!bg-yellow-100 !text-yellow-800' : '!bg-blue-100 !text-blue-800'}
+                      >
+                        {t[lead.status.toLowerCase() as keyof typeof t]}
+                      </StatusBadge>
+                    </UniversalTableCell>
+                    <UniversalTableCell>{lead.source}</UniversalTableCell>
+                    <UniversalTableCell>
+                      <div className="flex items-center gap-2">
+                        <UniversalButton variant="ghost" size="sm" onClick={() => handleViewLead(lead.id)} className="!p-1.5">
+                          <Eye className="w-4 h-4 text-[#2979FF]" />
+                        </UniversalButton>
+                        <UniversalButton variant="ghost" size="sm" onClick={() => handleEditLead(lead.id)} className="!p-1.5">
+                          <Edit className="w-4 h-4 text-gray-600" />
+                        </UniversalButton>
+                        <UniversalButton variant="ghost" size="sm" onClick={() => handleQualifyLead(lead.id)} className="!p-1.5">
+                          <Sparkles className="w-4 h-4 text-purple-600" />
+                        </UniversalButton>
+                        <UniversalButton variant="ghost" size="sm" onClick={() => handleLinkProperty(lead.id)} className="!p-1.5">
+                          <LinkIcon className="w-4 h-4 text-green-600" />
+                        </UniversalButton>
+                        <WhatsAppActions phone={lead.phone} leadName={lead.name} variant="icon" />
+                      </div>
+                    </UniversalTableCell>
+                  </UniversalTableRow>
+                ))}
+              </UniversalTableBody>
+            </UniversalTable>
+          </UniversalCard>
         )}
       </div>
 
@@ -602,6 +568,6 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
           <p className="text-gray-900 font-medium">{toast.message}</p>
         </div>
       )}
-    </div>
+    </main>
   );
 }

@@ -1,12 +1,38 @@
 'use client';
 
 /**
- * Creative Productions - Overview Client Component
- * Stats cards, filters, and recent activity feed
+ * Creative Productions - Overview Client Component (Redesigned with Design System 2.0)
+ * Modern dashboard with KPI cards, project status, and quick actions
  */
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  Film,
+  FolderOpen,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  Calendar,
+  TrendingUp,
+  Users,
+  Play,
+} from 'lucide-react';
+
+// Import unified components
+import {
+  UniversalCard,
+  KPICard,
+  UniversalButton,
+  StatusBadge,
+  UniversalTable,
+  UniversalTableHeader,
+  UniversalTableBody,
+  UniversalTableRow,
+  UniversalTableHead,
+  UniversalTableCell,
+  TableEmptyState,
+} from '@/components/shared';
 
 interface Stats {
   activeProjects: number;
@@ -60,25 +86,20 @@ export default function ProductionsOverviewClient() {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusBadgeType = (status: string): 'active' | 'pending' | 'completed' | 'cancelled' => {
     switch (status) {
       case 'DRAFT':
-        return 'text-gray-400';
+        return 'pending';
       case 'IN_PROGRESS':
-        return 'text-blue-400';
+        return 'active';
       case 'REVIEW':
-        return 'text-yellow-400';
+        return 'pending';
       case 'APPROVED':
-        return 'text-green-400';
       case 'DELIVERED':
-        return 'text-green-600';
+        return 'completed';
       default:
-        return 'text-gray-400';
+        return 'pending';
     }
-  };
-
-  const formatStatus = (status: string) => {
-    return status.replace('_', ' ');
   };
 
   const formatDate = (dateString: string) => {
@@ -96,210 +117,251 @@ export default function ProductionsOverviewClient() {
     return date.toLocaleDateString();
   };
 
+  // Loading State
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0E1A2B] p-4 md:p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="animate-pulse">
-            <div className="h-10 bg-[#1A2F4B] rounded w-64 mb-8"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-32 bg-[#1A2F4B] rounded-xl"></div>
-              ))}
-            </div>
+      <div className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B] p-8">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="h-12 bg-gray-200 dark:bg-[#1A2F4B] rounded-lg animate-pulse w-96"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-40 bg-gray-200 dark:bg-[#1A2F4B] rounded-lg animate-pulse"></div>
+            ))}
           </div>
+          <div className="h-64 bg-gray-200 dark:bg-[#1A2F4B] rounded-lg animate-pulse"></div>
         </div>
       </div>
     );
   }
 
+  // Error State
   if (error) {
     return (
-      <div className="min-h-screen bg-[#0E1A2B] p-4 md:p-8 flex items-center justify-center">
-        <div className="bg-red-900/20 border border-red-500/50 rounded-xl p-6 max-w-md">
-          <h2 className="text-xl font-semibold text-red-400 mb-2">Error Loading Stats</h2>
-          <p className="text-gray-300">{error}</p>
-          <button
-            onClick={fetchStats}
-            className="mt-4 px-4 py-2 bg-[#2979FF] hover:bg-[#1E5FCC] text-white rounded-lg transition-colors"
-          >
+      <div className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B] p-8 flex items-center justify-center">
+        <UniversalCard variant="outlined" className="max-w-md p-8 text-center">
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+            Error Loading Dashboard
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
+          <UniversalButton variant="primary" onClick={fetchStats}>
             Retry
-          </button>
-        </div>
+          </UniversalButton>
+        </UniversalCard>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0E1A2B] p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B] p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+            <h1 className="text-heading-1 text-gray-900 dark:text-white mb-2">
               Creative Productions
             </h1>
-            <p className="text-gray-400">
+            <p className="text-body-base text-gray-600 dark:text-gray-400">
               Manage video projects, assets, and creative workflows
             </p>
           </div>
-          <button
+          <UniversalButton
+            variant="primary"
+            size="lg"
+            leftIcon={<Play className="w-5 h-5" />}
             onClick={() => router.push('/dashboard/productions/projects')}
-            className="px-6 py-3 bg-[#2979FF] hover:bg-[#1E5FCC] text-white font-medium rounded-lg transition-all duration-300 shadow-lg hover:shadow-[0_0_20px_rgba(41,121,255,0.4)] focus:outline-none focus:ring-2 focus:ring-[#2979FF] focus:ring-offset-2 focus:ring-offset-[#0E1A2B]"
           >
-            + New Project
-          </button>
+            New Project
+          </UniversalButton>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <StatCard
-            title="Active Projects"
+        {/* KPI Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <KPICard
+            icon={<FolderOpen className="w-6 h-6" />}
+            label="Active Projects"
             value={stats?.activeProjects || 0}
-            icon="📊"
-            color="blue"
+            change={{ value: '+12% from last month', trend: 'up' }}
           />
-          <StatCard
-            title="Total Assets"
+          <KPICard
+            icon={<Film className="w-6 h-6" />}
+            label="Total Assets"
             value={stats?.totalAssets || 0}
-            icon="🎬"
-            color="purple"
+            change={{ value: '+245 this month', trend: 'up' }}
           />
-          <StatCard
-            title="Pending Reviews"
+          <KPICard
+            icon={<Clock className="w-6 h-6" />}
+            label="Pending Reviews"
             value={stats?.pendingReviews || 0}
-            icon="👁️"
-            color="yellow"
+            change={{ value: '3 urgent', trend: 'neutral' }}
           />
-          <StatCard
-            title="Due This Week"
+          <KPICard
+            icon={<Calendar className="w-6 h-6" />}
+            label="Due This Week"
             value={stats?.dueThisWeek || 0}
-            icon="📅"
-            color="red"
+            change={{ value: '2 overdue', trend: 'down' }}
           />
         </div>
 
         {/* Projects by Status */}
-        <div className="bg-[#1A2F4B] rounded-xl p-6 mb-8">
-          <h2 className="text-xl font-semibold text-white mb-4">Projects by Status</h2>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {Object.entries(projectsByStatus).map(([status, count]) => (
-              <div key={status} className="text-center">
-                <div className="text-3xl font-bold text-white mb-1">{count}</div>
-                <div className={`text-sm font-medium ${getStatusColor(status)}`}>
-                  {formatStatus(status)}
-                </div>
+        <UniversalCard>
+          <div className="p-6 border-b border-gray-200 dark:border-[#2979FF]/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-heading-3 text-gray-900 dark:text-white">
+                  Projects by Status
+                </h2>
+                <p className="text-body-sm text-gray-600 dark:text-gray-400 mt-1">
+                  Overview of all project stages
+                </p>
               </div>
-            ))}
+              <TrendingUp className="w-6 h-6 text-[#2979FF]" />
+            </div>
           </div>
-        </div>
+          <div className="p-6">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+              {Object.entries(projectsByStatus).map(([status, count]) => (
+                <div key={status} className="text-center">
+                  <div className="text-display-2 font-bold text-gray-900 dark:text-white mb-2">
+                    {count}
+                  </div>
+                  <StatusBadge status={getStatusBadgeType(status)} />
+                </div>
+              ))}
+              {Object.keys(projectsByStatus).length === 0 && (
+                <div className="col-span-full text-center py-8">
+                  <p className="text-gray-500 dark:text-gray-400">
+                    No projects yet. Create your first project to get started!
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </UniversalCard>
 
-        {/* Recent Activity */}
-        <div className="bg-[#1A2F4B] rounded-xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-white">Recent Activity</h2>
-            <button
-              onClick={() => router.push('/dashboard/productions/projects')}
-              className="text-[#2979FF] hover:text-[#1E5FCC] text-sm font-medium transition-colors"
-            >
-              View All →
-            </button>
+        {/* Recent Activity Table */}
+        <UniversalCard>
+          <div className="p-6 border-b border-gray-200 dark:border-[#2979FF]/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-heading-3 text-gray-900 dark:text-white">
+                  Recent Activity
+                </h2>
+                <p className="text-body-sm text-gray-600 dark:text-gray-400 mt-1">
+                  Latest updates across all projects
+                </p>
+              </div>
+              <UniversalButton
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push('/dashboard/productions/projects')}
+              >
+                View All
+              </UniversalButton>
+            </div>
           </div>
-          <div className="space-y-3">
-            {recentActivity.length === 0 ? (
-              <p className="text-gray-400 text-center py-8">
-                No recent activity. Create your first project to get started!
-              </p>
-            ) : (
-              recentActivity.map((project) => (
-                <button
-                  key={project.id}
-                  onClick={() => router.push(`/dashboard/productions/projects/${project.id}`)}
-                  className="w-full flex items-center justify-between p-4 bg-[#0E1A2B]/50 hover:bg-[#0E1A2B] rounded-lg transition-colors duration-200 text-left"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="text-white font-medium truncate mb-1">{project.name}</div>
-                    <div className="text-sm text-gray-400">
-                      Updated {formatDate(project.updatedAt)}
-                    </div>
-                  </div>
-                  <div className={`text-sm font-medium ml-4 ${getStatusColor(project.status)}`}>
-                    {formatStatus(project.status)}
-                  </div>
-                </button>
-              ))
-            )}
-          </div>
-        </div>
+
+          <UniversalTable>
+            <UniversalTableHeader>
+              <UniversalTableRow>
+                <UniversalTableHead>Project Name</UniversalTableHead>
+                <UniversalTableHead>Status</UniversalTableHead>
+                <UniversalTableHead>Last Updated</UniversalTableHead>
+                <UniversalTableHead></UniversalTableHead>
+              </UniversalTableRow>
+            </UniversalTableHeader>
+            <UniversalTableBody>
+              {recentActivity.length === 0 ? (
+                <TableEmptyState
+                  icon={<FolderOpen className="w-12 h-12" />}
+                  title="No recent activity"
+                  description="Create your first project to see activity here"
+                  action={
+                    <UniversalButton
+                      variant="primary"
+                      onClick={() => router.push('/dashboard/productions/projects')}
+                    >
+                      Create Project
+                    </UniversalButton>
+                  }
+                />
+              ) : (
+                recentActivity.map((project) => (
+                  <UniversalTableRow key={project.id} hoverable>
+                    <UniversalTableCell>
+                      <div className="font-medium text-gray-900 dark:text-white">
+                        {project.name}
+                      </div>
+                    </UniversalTableCell>
+                    <UniversalTableCell>
+                      <StatusBadge status={getStatusBadgeType(project.status)} />
+                    </UniversalTableCell>
+                    <UniversalTableCell>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        {formatDate(project.updatedAt)}
+                      </span>
+                    </UniversalTableCell>
+                    <UniversalTableCell>
+                      <UniversalButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => router.push(`/dashboard/productions/projects/${project.id}`)}
+                      >
+                        View
+                      </UniversalButton>
+                    </UniversalTableCell>
+                  </UniversalTableRow>
+                ))
+              )}
+            </UniversalTableBody>
+          </UniversalTable>
+        </UniversalCard>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-          <QuickActionCard
-            title="Projects"
-            description="View and manage all projects"
-            icon="📋"
-            onClick={() => router.push('/dashboard/productions/projects')}
-          />
-          <QuickActionCard
-            title="Assets Library"
-            description="Browse and organize media"
-            icon="🎨"
-            onClick={() => router.push('/dashboard/productions/assets')}
-          />
-          <QuickActionCard
-            title="Templates"
-            description="Manage briefs and scripts"
-            icon="📝"
-            onClick={() => router.push('/dashboard/productions/templates')}
-          />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <UniversalCard hoverable className="cursor-pointer" onClick={() => router.push('/dashboard/productions/projects')}>
+            <div className="p-6">
+              <div className="flex items-center justify-center w-12 h-12 bg-[#2979FF]/10 rounded-lg mb-4">
+                <FolderOpen className="w-6 h-6 text-[#2979FF]" />
+              </div>
+              <h3 className="text-heading-4 text-gray-900 dark:text-white mb-2">
+                All Projects
+              </h3>
+              <p className="text-body-sm text-gray-600 dark:text-gray-400">
+                View and manage all your video projects
+              </p>
+            </div>
+          </UniversalCard>
+
+          <UniversalCard hoverable className="cursor-pointer" onClick={() => router.push('/dashboard/productions/assets')}>
+            <div className="p-6">
+              <div className="flex items-center justify-center w-12 h-12 bg-purple-500/10 rounded-lg mb-4">
+                <Film className="w-6 h-6 text-purple-500" />
+              </div>
+              <h3 className="text-heading-4 text-gray-900 dark:text-white mb-2">
+                Assets Library
+              </h3>
+              <p className="text-body-sm text-gray-600 dark:text-gray-400">
+                Browse and organize your media files
+              </p>
+            </div>
+          </UniversalCard>
+
+          <UniversalCard hoverable className="cursor-pointer" onClick={() => router.push('/dashboard/productions/team')}>
+            <div className="p-6">
+              <div className="flex items-center justify-center w-12 h-12 bg-green-500/10 rounded-lg mb-4">
+                <Users className="w-6 h-6 text-green-500" />
+              </div>
+              <h3 className="text-heading-4 text-gray-900 dark:text-white mb-2">
+                Team & Clients
+              </h3>
+              <p className="text-body-sm text-gray-600 dark:text-gray-400">
+                Manage your team members and clients
+              </p>
+            </div>
+          </UniversalCard>
         </div>
       </div>
     </div>
-  );
-}
-
-interface StatCardProps {
-  title: string;
-  value: number;
-  icon: string;
-  color: 'blue' | 'purple' | 'yellow' | 'red';
-}
-
-function StatCard({ title, value, icon, color }: StatCardProps) {
-  const colorClasses = {
-    blue: 'from-blue-500/20 to-blue-600/20 border-blue-500/30',
-    purple: 'from-purple-500/20 to-purple-600/20 border-purple-500/30',
-    yellow: 'from-yellow-500/20 to-yellow-600/20 border-yellow-500/30',
-    red: 'from-red-500/20 to-red-600/20 border-red-500/30',
-  };
-
-  return (
-    <div className={`bg-gradient-to-br ${colorClasses[color]} border rounded-xl p-6 transition-transform hover:scale-105 duration-200`}>
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-3xl">{icon}</span>
-        <div className="text-4xl font-bold text-white">{value}</div>
-      </div>
-      <div className="text-gray-300 font-medium">{title}</div>
-    </div>
-  );
-}
-
-interface QuickActionCardProps {
-  title: string;
-  description: string;
-  icon: string;
-  onClick: () => void;
-}
-
-function QuickActionCard({ title, description, icon, onClick }: QuickActionCardProps) {
-  return (
-    <button
-      onClick={onClick}
-      className="bg-[#1A2F4B] hover:bg-[#234060] rounded-xl p-6 transition-all duration-200 hover:scale-105 text-left focus:outline-none focus:ring-2 focus:ring-[#2979FF]"
-    >
-      <div className="text-4xl mb-3">{icon}</div>
-      <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
-      <p className="text-gray-400 text-sm">{description}</p>
-    </button>
   );
 }
