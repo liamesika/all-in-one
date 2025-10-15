@@ -217,6 +217,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@next/swc-darwin-arm64':
+        specifier: ^15.5.5
+        version: 15.5.5
       '@prisma/client':
         specifier: 6.16.1
         version: 6.16.1(prisma@6.16.1)(typescript@5.9.3)
@@ -3611,8 +3614,6 @@ packages:
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
-    dev: true
-    optional: true
 
   /@next/swc-darwin-x64@15.5.5:
     resolution: {integrity: sha512-cacs/WQqa96IhqUm+7CY+z/0j9sW6X80KE07v3IAJuv+z0UNvJtKSlT/T1w1SpaQRa9l0wCYYZlRZUhUOvEVmg==}
