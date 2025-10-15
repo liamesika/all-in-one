@@ -469,7 +469,7 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
           </CardBody>
         </UniversalCard>
 
-        {/* Leads Table */}
+        {/* Leads Table/Cards */}
         {filteredLeads.length === 0 ? (
           <TableEmptyState
             icon={<Filter className="w-12 h-12" />}
@@ -482,7 +482,55 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
             ) : undefined}
           />
         ) : (
-          <UniversalCard variant="default">
+          <>
+            {/* Mobile Card View */}
+            <div className="sm:hidden space-y-3">
+              {filteredLeads.map((lead) => (
+                <UniversalCard key={lead.id} variant="default" className="p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => handleSelectLead(lead.id)} className="p-1">
+                        {selectedLeads.has(lead.id) ? (
+                          <CheckSquare className="w-5 h-5 text-[#2979FF]" />
+                        ) : (
+                          <Square className="w-5 h-5 text-gray-400" />
+                        )}
+                      </button>
+                      <div>
+                        <h3 className="font-semibold text-gray-900 dark:text-white">{lead.name}</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400" dir="ltr">{lead.phone}</p>
+                      </div>
+                    </div>
+                    <StatusBadge
+                      status={lead.status === 'HOT' ? 'failed' : lead.status === 'WARM' ? 'pending' : 'active'}
+                      className={lead.status === 'HOT' ? '!bg-red-100 !text-red-800' : lead.status === 'WARM' ? '!bg-yellow-100 !text-yellow-800' : '!bg-blue-100 !text-blue-800'}
+                    >
+                      {t[lead.status.toLowerCase() as keyof typeof t]}
+                    </StatusBadge>
+                  </div>
+                  <div className="space-y-2 mb-3 text-sm">
+                    {lead.email && (
+                      <div className="text-gray-600 dark:text-gray-400">{lead.email}</div>
+                    )}
+                    <div className="text-gray-600 dark:text-gray-400">{t.source}: {lead.source}</div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <UniversalButton variant="outline" size="sm" onClick={() => handleViewLead(lead.id)} leftIcon={<Eye className="w-4 h-4" />} className="flex-1 !min-h-[44px]">
+                      {t.view}
+                    </UniversalButton>
+                    <UniversalButton variant="outline" size="sm" onClick={() => handleEditLead(lead.id)} leftIcon={<Edit className="w-4 h-4" />} className="flex-1 !min-h-[44px]">
+                      {t.edit}
+                    </UniversalButton>
+                    <UniversalButton variant="primary" size="sm" onClick={() => handleQualifyLead(lead.id)} leftIcon={<Sparkles className="w-4 h-4" />} className="w-full !min-h-[44px]">
+                      {t.qualify}
+                    </UniversalButton>
+                  </div>
+                </UniversalCard>
+              ))}
+            </div>
+
+            {/* Desktop Table View */}
+            <UniversalCard variant="default" className="hidden sm:block">
             <CardHeader className="border-b border-gray-200 dark:border-[#2979FF]/20">
               <h2 className="text-heading-4 text-gray-900 dark:text-white">
                 {language === 'he' ? 'רשימת לידים' : 'Leads List'}
@@ -553,7 +601,8 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
                 ))}
               </UniversalTableBody>
             </UniversalTable>
-          </UniversalCard>
+            </UniversalCard>
+          </>
         )}
       </div>
 
