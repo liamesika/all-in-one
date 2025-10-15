@@ -189,19 +189,24 @@ export function LineChart({
           </div>
         )}
 
-        {/* Labels */}
-        <div className="flex justify-between mt-2">
-          {data.map((item, index) => (
-            <span
-              key={index}
-              className="text-xs"
-              style={{ color: 'var(--re-steel-gray)' }}
-            >
-              {item.label}
-            </span>
-          ))}
-        </div>
-      </div>
+        {/* Labels - Horizontal scroll on mobile */}
+        <div className="overflow-x-auto mt-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
+          <div className="flex gap-4 min-w-max">
+            {data.map((item, index) => (
+              <span
+                key={index}
+                className="text-xs whitespace-nowrap dark:text-gray-300"
+                style={{
+                  color: "var(--re-steel-gray)",
+                  minWidth: "60px",
+                  maxWidth: "120px"
+                }}
+              >
+                {item.label}
+              </span>
+            ))}
+          </div>
+        </div>      </div>
     </div>
   );
 }

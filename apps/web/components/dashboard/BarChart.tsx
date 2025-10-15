@@ -78,8 +78,8 @@ export function BarChart({ data, title, height = 200 }: BarChartProps) {
                   </div>
                 </div>
                 <span
-                  className="text-xs text-center truncate w-full transition-colors duration-300"
-                  style={{ color: isHovered ? '#FFFFFF' : 'var(--re-steel-gray)' }}
+                  className="text-xs text-center truncate w-full transition-colors duration-300 dark:text-gray-300"
+                  style={{ color: isHovered ? "#FFFFFF" : "var(--re-steel-gray)", maxWidth: "120px" }}
                   title={item.label}
                 >
                   {item.label}

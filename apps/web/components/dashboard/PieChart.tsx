@@ -74,7 +74,7 @@ export function PieChart({ data, title }: PieChartProps) {
     >
       <h3
         className="text-lg font-semibold mb-4"
-        style={{ color: 'var(--re-white)' }}
+        style={{ color: "var(--re-white)", maxWidth: "150px" }}
       >
         {title}
       </h3>
@@ -102,10 +102,10 @@ export function PieChart({ data, title }: PieChartProps) {
         </div>
 
         {/* Legend */}
-        <div className="flex-1 space-y-2">
+        <div className="flex-1 space-y-2 overflow-y-auto max-h-64 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
           {slices.map((slice, index) => (
             <div key={index} className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 flex-1">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
                 <div
                   className="w-3 h-3 rounded-sm flex-shrink-0"
                   style={{
@@ -114,8 +114,8 @@ export function PieChart({ data, title }: PieChartProps) {
                   }}
                 />
                 <span
-                  className="text-sm truncate"
-                  style={{ color: 'var(--re-white)' }}
+                  className="text-sm truncate dark:text-white"
+                  style={{ color: "var(--re-white)", maxWidth: "150px" }}
                   title={slice.label}
                 >
                   {slice.label}
@@ -123,13 +123,13 @@ export function PieChart({ data, title }: PieChartProps) {
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <span
-                  className="text-sm font-semibold"
-                  style={{ color: 'var(--re-white)' }}
+                  className="text-sm font-semibold dark:text-white"
+                  style={{ color: "var(--re-white)", maxWidth: "150px" }}
                 >
                   {slice.value}
                 </span>
                 <span
-                  className="text-xs"
+                  className="text-xs dark:text-gray-300"
                   style={{ color: 'var(--re-steel-gray)' }}
                 >
                   ({slice.percentage}%)
