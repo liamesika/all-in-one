@@ -238,6 +238,9 @@ importers:
       '@types/dompurify':
         specifier: ^3.2.0
         version: 3.2.0
+      '@types/leaflet':
+        specifier: ^1.9.21
+        version: 1.9.21
       babel-loader:
         specifier: ^10.0.0
         version: 10.0.0(@babel/core@7.28.4)(webpack@5.102.1)
@@ -274,6 +277,9 @@ importers:
       jspdf:
         specifier: ^2.5.2
         version: 2.5.2
+      leaflet:
+        specifier: ^1.9.4
+        version: 1.9.4
       lucide-react:
         specifier: ^0.543.0
         version: 0.543.0(react@19.2.0)
@@ -295,6 +301,9 @@ importers:
       react-is:
         specifier: ^19.1.1
         version: 19.2.0
+      react-leaflet:
+        specifier: ^5.0.0
+        version: 5.0.0(leaflet@1.9.4)(react-dom@19.2.0)(react@19.2.0)
       recharts:
         specifier: ^2.12.0
         version: 2.15.4(react-dom@19.2.0)(react@19.2.0)
@@ -4308,6 +4317,18 @@ packages:
       - supports-color
     dev: true
 
+  /@react-leaflet/core@3.0.0(leaflet@1.9.4)(react-dom@19.2.0)(react@19.2.0):
+    resolution: {integrity: sha512-3EWmekh4Nz+pGcr+xjf0KNyYfC3U2JjnkWsh0zcqaexYqmmB5ZhH37kz41JXGmKzpaMZCnPofBBm64i+YrEvGQ==}
+    peerDependencies:
+      leaflet: ^1.9.0
+      react: ^19.0.0
+      react-dom: ^19.0.0
+    dependencies:
+      leaflet: 1.9.4
+      react: 19.2.0
+      react-dom: 19.2.0(react@19.2.0)
+    dev: false
+
   /@sentry/core@9.46.0:
     resolution: {integrity: sha512-it7JMFqxVproAgEtbLgCVBYtQ9fIb+Bu0JD+cEplTN/Ukpe6GaolyYib5geZqslVxhp2sQgT+58aGvfd/k0N8Q==}
     engines: {node: '>=18'}
@@ -5252,6 +5273,10 @@ packages:
       '@types/qs': 6.14.0
       '@types/serve-static': 1.15.9
 
+  /@types/geojson@7946.0.16:
+    resolution: {integrity: sha512-6C8nqWur3j98U6+lXDfTUWIfgvZU+EumvpHKcYjujKH7woYyLj2sUmff0tRhrqM7BohUw7Pz3ZB1jj2gW9Fvmg==}
+    dev: false
+
   /@types/graceful-fs@4.1.9:
     resolution: {integrity: sha512-olP3sd1qOEe5dXTSaFvQG+02VdRXcdytWLAZsAq1PecU8uqQAhkrnbli7DagjtXKW/Bl7YJbUsa8MPcuc8LHEQ==}
     dependencies:
@@ -5300,6 +5325,12 @@ packages:
     dependencies:
       '@types/ms': 2.1.0
       '@types/node': 24.7.2
+
+  /@types/leaflet@1.9.21:
+    resolution: {integrity: sha512-TbAd9DaPGSnzp6QvtYngntMZgcRk+igFELwR2N99XZn7RXUdKgsXMR+28bUO0rPsWp8MIu/f47luLIQuSLYv/w==}
+    dependencies:
+      '@types/geojson': 7946.0.16
+    dev: false
 
   /@types/long@4.0.2:
     resolution: {integrity: sha512-MqTGEo5bj5t157U6fA/BiDynNkn0YknVdh48CMPkTSpFTVmvao5UQmm7uEF6xBEo7qIMAlY/JSleYaE6VOdpaA==}
@@ -10385,6 +10416,10 @@ packages:
       language-subtag-registry: 0.3.23
     dev: false
 
+  /leaflet@1.9.4:
+    resolution: {integrity: sha512-nxS1ynzJOmOlHp+iL3FyWqK89GtNL8U8rvlMOsQdTTssxZwCXh8N2NB3GDQOL+YR3XnWyZAxwQixURb+FA74PA==}
+    dev: false
+
   /legacy-javascript@0.0.1:
     resolution: {integrity: sha512-lPyntS4/aS7jpuvOlitZDFifBCb4W8L/3QU0PLbUTUj+zYah8rfVjYic88yG7ZKTxhS5h9iz7duT8oUXKszLhg==}
     dev: true
@@ -11776,6 +11811,19 @@ packages:
 
   /react-is@19.2.0:
     resolution: {integrity: sha512-x3Ax3kNSMIIkyVYhWPyO09bu0uttcAIoecO/um/rKGQ4EltYWVYtyiGkS/3xMynrbVQdS69Jhlv8FXUEZehlzA==}
+    dev: false
+
+  /react-leaflet@5.0.0(leaflet@1.9.4)(react-dom@19.2.0)(react@19.2.0):
+    resolution: {integrity: sha512-CWbTpr5vcHw5bt9i4zSlPEVQdTVcML390TjeDG0cK59z1ylexpqC6M1PJFjV8jD7CF+ACBFsLIDs6DRMoLEofw==}
+    peerDependencies:
+      leaflet: ^1.9.0
+      react: ^19.0.0
+      react-dom: ^19.0.0
+    dependencies:
+      '@react-leaflet/core': 3.0.0(leaflet@1.9.4)(react-dom@19.2.0)(react@19.2.0)
+      leaflet: 1.9.4
+      react: 19.2.0
+      react-dom: 19.2.0(react@19.2.0)
     dev: false
 
   /react-smooth@4.0.4(react-dom@19.2.0)(react@19.2.0):
