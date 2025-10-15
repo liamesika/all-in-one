@@ -31,7 +31,6 @@
     "node": ">=20.0.0 <23.0.0"
   },
   "dependencies": {
-    "@axe-core/react": "^4.10.2",
     "@prisma/client": "6.16.1",
     "@stripe/stripe-js": "^5.8.0",
     "@tanstack/query-sync-storage-persister": "^5.90.5",
@@ -68,6 +67,7 @@
     "zod": "3.23.8"
   },
   "devDependencies": {
+    "@axe-core/react": "^4.10.2",
     "@babel/core": "^7.28.4",
     "@next/bundle-analyzer": "^15.5.2",
     "@tanstack/react-query": "^5.90.3",
@@ -83,6 +83,7 @@
     "@types/react-dom": "^18.3.7",
     "@types/react-is": "^19",
     "autoprefixer": "^10.4.21",
+    "axe-core": "^4.11.0",
     "chrome-launcher": "^1.1.0",
     "critters": "^0.0.23",
     "eslint": "^9.35.0",

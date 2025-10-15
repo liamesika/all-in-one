@@ -217,9 +217,6 @@ importers:
 
   apps/web:
     dependencies:
-      '@axe-core/react':
-        specifier: ^4.10.2
-        version: 4.10.2
       '@prisma/client':
         specifier: 6.16.1
         version: 6.16.1(prisma@6.16.1)(typescript@5.9.3)
@@ -323,6 +320,9 @@ importers:
         specifier: 3.23.8
         version: 3.23.8
     devDependencies:
+      '@axe-core/react':
+        specifier: ^4.10.2
+        version: 4.10.2
       '@babel/core':
         specifier: ^7.28.4
         version: 7.28.4
@@ -368,6 +368,9 @@ importers:
       autoprefixer:
         specifier: ^10.4.21
         version: 10.4.21(postcss@8.5.6)
+      axe-core:
+        specifier: ^4.11.0
+        version: 4.11.0
       chrome-launcher:
         specifier: ^1.1.0
         version: 1.2.1
@@ -1175,7 +1178,7 @@ packages:
     dependencies:
       axe-core: 4.10.3
       requestidlecallback: 0.3.0
-    dev: false
+    dev: true
 
   /@babel/code-frame@7.27.1:
     resolution: {integrity: sha512-cjQ7ZlQ0Mv3b47hABuTevyTuYN4i+loJKGeV9flcCgIK37cCXRh+L1bd3iBHlynerhQ7BhCkn2BPbQUL+rGqFg==}
@@ -6125,7 +6128,7 @@ packages:
   /axe-core@4.10.3:
     resolution: {integrity: sha512-Xm7bpRXnDSX2YE2YFfBk2FnF0ep6tmG7xPh8iHee8MIcrgq762Nkce856dYtJYLkuIoYZvGfTs/PbZhideTcEg==}
     engines: {node: '>=4'}
-    dev: false
+    dev: true
 
   /axe-core@4.11.0:
     resolution: {integrity: sha512-ilYanEU8vxxBexpJd8cWM4ElSQq4QctCLKih0TSfjIfCQTeyH/6zVrmIJfLPrKTKJRbiG+cfnZbQIjAlJmF1jQ==}
@@ -11969,7 +11972,7 @@ packages:
 
   /requestidlecallback@0.3.0:
     resolution: {integrity: sha512-TWHFkT7S9p7IxLC5A1hYmAYQx2Eb9w1skrXmQ+dS1URyvR8tenMLl4lHbqEOUnpEYxNKpkVMXUgknVpBZWXXfQ==}
-    dev: false
+    dev: true
 
   /require-directory@2.1.1:
     resolution: {integrity: sha512-fGxEI7+wsG9xrvdjsrlmL22OMTTiHRwAMroiEeMgq8gzoLC/PQr7RsRDSTLUg/bZAZtF+TVIkHc6/4RIKrui+Q==}
