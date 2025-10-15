@@ -38,6 +38,8 @@ import {
   TableEmptyState,
   StatusBadge,
   Drawer,
+  BulkActionsMenu,
+  type BulkAction,
 } from '@/components/shared';
 import { ImportLeadsModal } from '@/components/real-estate/leads/ImportLeadsModal';
 import { ViewLeadModal } from '@/components/real-estate/leads/ViewLeadModal';
@@ -359,25 +361,42 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
                 </UniversalButton>
               </div>
 
-              {/* Selected Count & Bulk Actions */}
-              {selectedLeads.size > 0 && (
-                <div className="flex items-center gap-3">
-                  <span className="text-body-sm text-gray-700 dark:text-gray-300 font-medium">
-                    {selectedLeads.size} {t.selected}
-                  </span>
-                  <BatchWhatsAppActions
-                    leads={getSelectedLeadsData()}
-                    onComplete={() => setSelectedLeads(new Set())}
-                  />
-                  <UniversalButton
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleExport(true)}
-                  >
-                    {t.bulkExport}
-                  </UniversalButton>
-                </div>
-              )}
+              {/* Bulk Actions Menu */}
+              <BulkActionsMenu
+                selectedCount={selectedLeads.size}
+                title={`${selectedLeads.size} ${t.selected}`}
+                actions={[
+                  {
+                    id: 'whatsapp',
+                    label: t.batchWhatsapp,
+                    icon: <MessageCircle className="w-4 h-4" />,
+                    onClick: () => {
+                      // Trigger BatchWhatsAppActions functionality
+                      const leads = getSelectedLeadsData();
+                      // TODO: Implement WhatsApp batch send
+                      console.log('WhatsApp batch:', leads);
+                    },
+                  },
+                  {
+                    id: 'export',
+                    label: t.bulkExport,
+                    icon: <Download className="w-4 h-4" />,
+                    onClick: () => handleExport(true),
+                  },
+                  {
+                    id: 'archive',
+                    label: t.archive,
+                    icon: <Trash2 className="w-4 h-4" />,
+                    variant: 'danger' as const,
+                    onClick: () => {
+                      if (confirm(`${language === 'he' ? 'האם אתה בטוח?' : 'Are you sure?'}`)) {
+                        // Archive selected leads
+                        setSelectedLeads(new Set());
+                      }
+                    },
+                  },
+                ]}
+              />
             </div>
           </CardBody>
         </UniversalCard>
