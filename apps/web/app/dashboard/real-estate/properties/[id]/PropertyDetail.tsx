@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useLanguage } from '@/lib/language-context';
 import {
   Home,
@@ -229,12 +230,15 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
               {property.images && property.images.length > 0 ? (
                 <div className="grid grid-cols-2 gap-2 p-4">
                   {property.images.map((image, index) => (
-                    <img
-                      key={index}
-                      src={image}
-                      alt={`${property.name} - ${index + 1}`}
-                      className="w-full h-64 object-cover rounded-lg"
-                    />
+                    <div key={index} className="relative w-full h-64 rounded-lg overflow-hidden">
+                      <Image
+                        src={image}
+                        alt={`${property.name} - ${index + 1}`}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                      />
+                    </div>
                   ))}
                 </div>
               ) : (

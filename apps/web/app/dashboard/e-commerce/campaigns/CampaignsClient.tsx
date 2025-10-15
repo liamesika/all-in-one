@@ -4,7 +4,10 @@ import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { LanguageProvider, useLanguage } from '@/lib/language-context';
 import { LanguageToggle } from '@/components/language-toggle';
-import NewCampaignModal from '@/components/modals/NewCampaignModal';
+import { lazyLoadModal } from '@/lib/lazyLoad';
+
+// Lazy load modal for better code splitting
+const NewCampaignModal = lazyLoadModal(() => import('@/components/modals/NewCampaignModal'));
 import {
   UniversalCard,
   CardHeader,
