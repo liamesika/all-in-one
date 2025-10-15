@@ -7,14 +7,14 @@
 // Cards
 export {
   UniversalCard,
-  CardHeader,
-  CardBody,
-  CardFooter,
+  UniversalCardHeader as CardHeader,
+  UniversalCardBody as CardBody,
+  UniversalCardFooter as CardFooter,
   KPICard,
   type UniversalCardProps,
-  type CardHeaderProps,
-  type CardBodyProps,
-  type CardFooterProps,
+  type UniversalCardHeaderProps as CardHeaderProps,
+  type UniversalCardBodyProps as CardBodyProps,
+  type UniversalCardFooterProps as CardFooterProps,
   type KPICardProps,
 } from './UniversalCard';
 
@@ -71,3 +71,11 @@ export {
   type ConfirmModalProps,
   type FormModalProps,
 } from './UniversalModal';
+
+// Drawers
+export {
+  Drawer,
+  MobileDrawer,
+  DesktopDrawer,
+  type DrawerProps,
+} from './Drawer';

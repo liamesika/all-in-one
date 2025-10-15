@@ -37,6 +37,7 @@ import {
   UniversalTableCell,
   TableEmptyState,
   StatusBadge,
+  Drawer,
 } from '@/components/shared';
 import { ImportLeadsModal } from '@/components/real-estate/leads/ImportLeadsModal';
 import { ViewLeadModal } from '@/components/real-estate/leads/ViewLeadModal';
@@ -79,6 +80,11 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
   const [currentLeadId, setCurrentLeadId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [showFilterDrawer, setShowFilterDrawer] = useState(false);
+
+  // Temporary filter state for drawer (applied on "Apply" button)
+  const [tempStatusFilter, setTempStatusFilter] = useState<string>('');
+  const [tempSourceFilter, setTempSourceFilter] = useState<string>('');
 
   const t = {
     title: language === 'he' ? 'ניהול לידים' : 'Leads Management',
@@ -116,6 +122,9 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
     batchWhatsapp: language === 'he' ? 'שלח WhatsApp לנבחרים' : 'Send WhatsApp to Selected',
     updateSuccess: language === 'he' ? 'הליד עודכן בהצלחה' : 'Lead updated successfully',
     createSuccess: language === 'he' ? 'הליד נוצר בהצלחה' : 'Lead created successfully',
+    filters: language === 'he' ? 'סינון' : 'Filters',
+    resetFilters: language === 'he' ? 'אפס סינון' : 'Reset',
+    applyFilters: language === 'he' ? 'החל סינון' : 'Apply',
   };
 
   // Debounced search
@@ -264,6 +273,24 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
     return filteredLeads.find((l) => l.id === currentLeadId);
   };
 
+  // Filter drawer handlers
+  const handleOpenFilterDrawer = () => {
+    setTempStatusFilter(statusFilter);
+    setTempSourceFilter(sourceFilter);
+    setShowFilterDrawer(true);
+  };
+
+  const handleResetFilters = () => {
+    setTempStatusFilter('');
+    setTempSourceFilter('');
+  };
+
+  const handleApplyFilters = () => {
+    setStatusFilter(tempStatusFilter);
+    setSourceFilter(tempSourceFilter);
+    setShowFilterDrawer(false);
+  };
+
   const getSelectedLeadsData = () => {
     return filteredLeads.filter((l) => selectedLeads.has(l.id)).map((l) => ({
       id: l.id,
@@ -358,9 +385,9 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
         {/* Filters */}
         <UniversalCard variant="default">
           <CardBody className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {/* Search */}
-              <div className="md:col-span-2">
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Search - Full width on mobile, 2/3 on desktop */}
+              <div className="flex-1">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
@@ -368,35 +395,57 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
                     placeholder={t.search}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-[#2979FF]/20 bg-white dark:bg-[#1A2F4B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 min-h-[44px] rounded-lg border border-gray-300 dark:border-[#2979FF]/20 bg-white dark:bg-[#1A2F4B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all"
                   />
                 </div>
               </div>
 
-              {/* Status Filter */}
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-2 rounded-lg border border-gray-300 dark:border-[#2979FF]/20 bg-white dark:bg-[#1A2F4B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all"
-              >
-                <option value="">{t.all} - {t.status}</option>
-                <option value="HOT">{t.hot}</option>
-                <option value="WARM">{t.warm}</option>
-                <option value="COLD">{t.cold}</option>
-              </select>
+              {/* Desktop Filters - Hidden on mobile */}
+              <div className="hidden sm:flex gap-4">
+                {/* Status Filter */}
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="px-4 py-2.5 min-h-[44px] rounded-lg border border-gray-300 dark:border-[#2979FF]/20 bg-white dark:bg-[#1A2F4B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all"
+                >
+                  <option value="">{t.all} - {t.status}</option>
+                  <option value="HOT">{t.hot}</option>
+                  <option value="WARM">{t.warm}</option>
+                  <option value="COLD">{t.cold}</option>
+                </select>
 
-              {/* Source Filter */}
-              <select
-                value={sourceFilter}
-                onChange={(e) => setSourceFilter(e.target.value)}
-                className="px-4 py-2 rounded-lg border border-gray-300 dark:border-[#2979FF]/20 bg-white dark:bg-[#1A2F4B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all"
-              >
-                <option value="">{t.all} - {t.source}</option>
-                <option value="Website">{t.website}</option>
-                <option value="Facebook">{t.facebook}</option>
-                <option value="Instagram">{t.instagram}</option>
-                <option value="Other">{t.other}</option>
-              </select>
+                {/* Source Filter */}
+                <select
+                  value={sourceFilter}
+                  onChange={(e) => setSourceFilter(e.target.value)}
+                  className="px-4 py-2.5 min-h-[44px] rounded-lg border border-gray-300 dark:border-[#2979FF]/20 bg-white dark:bg-[#1A2F4B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all"
+                >
+                  <option value="">{t.all} - {t.source}</option>
+                  <option value="Website">{t.website}</option>
+                  <option value="Facebook">{t.facebook}</option>
+                  <option value="Instagram">{t.instagram}</option>
+                  <option value="Other">{t.other}</option>
+                </select>
+              </div>
+
+              {/* Mobile Filter Button - Only visible on small screens */}
+              <div className="sm:hidden">
+                <UniversalButton
+                  variant="outline"
+                  size="sm"
+                  onClick={handleOpenFilterDrawer}
+                  leftIcon={<Filter className="w-5 h-5" />}
+                  fullWidth
+                  className="!min-h-[44px]"
+                >
+                  {t.filters}
+                  {(statusFilter || sourceFilter) && (
+                    <span className="ml-2 px-2 py-0.5 bg-[#2979FF] text-white rounded-full text-xs font-semibold">
+                      {[statusFilter, sourceFilter].filter(Boolean).length}
+                    </span>
+                  )}
+                </UniversalButton>
+              </div>
             </div>
           </CardBody>
         </UniversalCard>
@@ -554,6 +603,76 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
           onPropertyLink={handleLinkSuccess}
         />
       )}
+
+      {/* Mobile Filter Drawer */}
+      <Drawer
+        isOpen={showFilterDrawer}
+        onClose={() => setShowFilterDrawer(false)}
+        onReset={handleResetFilters}
+        onApply={handleApplyFilters}
+        title={t.filters}
+        resetLabel={t.resetFilters}
+        applyLabel={t.applyFilters}
+        width="sm"
+      >
+        <div className="space-y-6">
+          {/* Status Filter */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              {t.status}
+            </label>
+            <select
+              value={tempStatusFilter}
+              onChange={(e) => setTempStatusFilter(e.target.value)}
+              className="w-full px-4 py-2.5 min-h-[44px] rounded-lg border border-gray-300 dark:border-[#2979FF]/20 bg-white dark:bg-[#1A2F4B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all"
+            >
+              <option value="">{t.all}</option>
+              <option value="HOT">{t.hot}</option>
+              <option value="WARM">{t.warm}</option>
+              <option value="COLD">{t.cold}</option>
+            </select>
+          </div>
+
+          {/* Source Filter */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              {t.source}
+            </label>
+            <select
+              value={tempSourceFilter}
+              onChange={(e) => setTempSourceFilter(e.target.value)}
+              className="w-full px-4 py-2.5 min-h-[44px] rounded-lg border border-gray-300 dark:border-[#2979FF]/20 bg-white dark:bg-[#1A2F4B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all"
+            >
+              <option value="">{t.all}</option>
+              <option value="Website">{t.website}</option>
+              <option value="Facebook">{t.facebook}</option>
+              <option value="Instagram">{t.instagram}</option>
+              <option value="Other">{t.other}</option>
+            </select>
+          </div>
+
+          {/* Active Filters Display */}
+          {(tempStatusFilter || tempSourceFilter) && (
+            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                Active Filters:
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {tempStatusFilter && (
+                  <span className="px-3 py-1 bg-[#2979FF]/10 text-[#2979FF] rounded-full text-sm font-medium">
+                    {t.status}: {tempStatusFilter === 'HOT' ? t.hot : tempStatusFilter === 'WARM' ? t.warm : t.cold}
+                  </span>
+                )}
+                {tempSourceFilter && (
+                  <span className="px-3 py-1 bg-[#2979FF]/10 text-[#2979FF] rounded-full text-sm font-medium">
+                    {t.source}: {tempSourceFilter}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </Drawer>
 
       {/* Toast */}
       {toast && (

@@ -31,10 +31,10 @@ export interface UniversalButtonProps
 
   /**
    * Size of the button
-   * - sm: Small (32px height)
-   * - md: Medium (40px height) - default
-   * - lg: Large (48px height)
-   * - xl: Extra large (56px height)
+   * - sm: Small (44px height minimum - WCAG touch target compliance)
+   * - md: Medium (48px height) - default
+   * - lg: Large (56px height)
+   * - xl: Extra large (64px height)
    */
   size?: 'sm' | 'md' | 'lg' | 'xl';
 
@@ -130,10 +130,10 @@ export function UniversalButton({
   };
 
   const sizeStyles = {
-    sm: 'px-3 py-1.5 text-sm h-8',
-    md: 'px-4 py-2 text-base h-10',
-    lg: 'px-6 py-3 text-lg h-12',
-    xl: 'px-8 py-4 text-xl h-14',
+    sm: 'px-4 py-2 text-sm min-h-[44px] min-w-[44px]', // WCAG 2.1 AA compliant touch target
+    md: 'px-5 py-2.5 text-base min-h-[48px]',
+    lg: 'px-6 py-3 text-lg min-h-[56px]',
+    xl: 'px-8 py-4 text-xl min-h-[64px]',
   };
 
   const isDisabled = disabled || loading;
@@ -180,16 +180,16 @@ export function IconButton({
   ...props
 }: IconButtonProps) {
   const sizeStyles = {
-    sm: 'w-8 h-8 p-1',
-    md: 'w-10 h-10 p-2',
-    lg: 'w-12 h-12 p-3',
-    xl: 'w-14 h-14 p-4',
+    sm: '!w-11 !h-11 !min-w-[44px] !min-h-[44px] !p-2', // WCAG 2.1 AA compliant
+    md: '!w-12 !h-12 !min-w-[48px] !min-h-[48px] !p-2',
+    lg: '!w-14 !h-14 !min-w-[56px] !min-h-[56px] !p-3',
+    xl: '!w-16 !h-16 !min-w-[64px] !min-h-[64px] !p-4',
   };
 
   return (
     <UniversalButton
       variant={variant}
-      className={cn('!p-0', sizeStyles[size], className)}
+      className={cn(sizeStyles[size], className)}
       {...props}
     >
       <span className="w-5 h-5">{icon}</span>
