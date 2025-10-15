@@ -3,6 +3,7 @@
   "installCommand": "pnpm install --frozen-lockfile",
   "framework": null,
   "outputDirectory": "apps/web/.next",
+  "devCommand": "pnpm --filter web dev",
   "build": {
     "env": {
       "SKIP_ENV_VALIDATION": "true"
