@@ -6,7 +6,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Sparkles, Plus, Upload, Share2, Eye, Edit } from "lucide-react";
+import { Sparkles, Plus, Upload, Share2, Eye, Edit, Filter } from "lucide-react";
 import {
   UniversalCard,
   CardHeader,
@@ -20,6 +20,7 @@ import {
   UniversalTableCell,
   TableEmptyState,
   StatusBadge,
+  Drawer,
 } from "@/components/shared";
 import { PropertyAdGenerator } from "@/components/real-estate/PropertyAdGenerator";
 import { PropertyFormModal } from "@/components/real-estate/properties/PropertyFormModal";
@@ -42,6 +43,9 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
   const [transactionTypeFilter, setTransactionTypeFilter] = useState<'ALL' | 'SALE' | 'RENT'>('ALL');
   const [assignedAgentFilter, setAssignedAgentFilter] = useState<string>('ALL');
   const [accountType, setAccountType] = useState<'COMPANY' | 'FREELANCER'>('COMPANY'); // TODO: Get from auth context
+  const [showFilterDrawer, setShowFilterDrawer] = useState(false);
+  const [tempTransactionTypeFilter, setTempTransactionTypeFilter] = useState<'ALL' | 'SALE' | 'RENT'>('ALL');
+  const [tempAssignedAgentFilter, setTempAssignedAgentFilter] = useState<string>('ALL');
 
   // Filter properties by transaction type and assigned agent
   const filteredProperties = properties.filter(property => {
@@ -89,6 +93,24 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
       // Add new property
       setProperties(prev => [savedProperty, ...prev]);
     }
+  };
+
+  // Filter drawer handlers
+  const handleOpenFilterDrawer = () => {
+    setTempTransactionTypeFilter(transactionTypeFilter);
+    setTempAssignedAgentFilter(assignedAgentFilter);
+    setShowFilterDrawer(true);
+  };
+
+  const handleResetFilters = () => {
+    setTempTransactionTypeFilter('ALL');
+    setTempAssignedAgentFilter('ALL');
+  };
+
+  const handleApplyFilters = () => {
+    setTransactionTypeFilter(tempTransactionTypeFilter);
+    setAssignedAgentFilter(tempAssignedAgentFilter);
+    setShowFilterDrawer(false);
   };
 
   const handleImportComplete = () => {
@@ -154,41 +176,64 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
         {/* Filters */}
         <UniversalCard variant="default">
           <CardBody className="p-4">
-            <div className="flex flex-wrap gap-4 items-center">
-              {/* Transaction Type Filter */}
-              <div className="flex items-center gap-2">
-                <label className="text-body-sm font-medium text-gray-700 dark:text-gray-300">
-                  {language === 'he' ? 'סוג עסקה:' : 'Transaction Type:'}
-                </label>
-                <select
-                  value={transactionTypeFilter}
-                  onChange={(e) => setTransactionTypeFilter(e.target.value as 'ALL' | 'SALE' | 'RENT')}
-                  className="px-4 py-2 bg-white dark:bg-[#1A2F4B] border border-gray-300 dark:border-[#2979FF]/20 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF]"
-                >
-                  <option value="ALL">{language === 'he' ? 'כל הנכסים' : 'All Properties'}</option>
-                  <option value="SALE">{language === 'he' ? 'למכירה' : 'For Sale'}</option>
-                  <option value="RENT">{language === 'he' ? 'להשכרה' : 'For Rent'}</option>
-                </select>
-              </div>
-
-              {/* Assigned Agent Filter (Company only) */}
-              {accountType === 'COMPANY' && (
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+              {/* Desktop Filters - Hidden on mobile */}
+              <div className="hidden sm:flex flex-wrap gap-4 items-center flex-1">
+                {/* Transaction Type Filter */}
                 <div className="flex items-center gap-2">
                   <label className="text-body-sm font-medium text-gray-700 dark:text-gray-300">
-                    {language === 'he' ? 'סוכן מוקצה:' : 'Assigned Agent:'}
+                    {language === 'he' ? 'סוג עסקה:' : 'Transaction Type:'}
                   </label>
                   <select
-                    value={assignedAgentFilter}
-                    onChange={(e) => setAssignedAgentFilter(e.target.value)}
-                    className="px-4 py-2 bg-white dark:bg-[#1A2F4B] border border-gray-300 dark:border-[#2979FF]/20 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF]"
+                    value={transactionTypeFilter}
+                    onChange={(e) => setTransactionTypeFilter(e.target.value as 'ALL' | 'SALE' | 'RENT')}
+                    className="px-4 py-2.5 min-h-[44px] bg-white dark:bg-[#1A2F4B] border border-gray-300 dark:border-[#2979FF]/20 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF]"
                   >
-                    <option value="ALL">{language === 'he' ? 'כל הסוכנים' : 'All Agents'}</option>
-                    <option value="UNASSIGNED">{language === 'he' ? 'לא מוקצה' : 'Unassigned'}</option>
-                    {/* TODO: Fetch and populate actual agents from organization */}
+                    <option value="ALL">{language === 'he' ? 'כל הנכסים' : 'All Properties'}</option>
+                    <option value="SALE">{language === 'he' ? 'למכירה' : 'For Sale'}</option>
+                    <option value="RENT">{language === 'he' ? 'להשכרה' : 'For Rent'}</option>
                   </select>
                 </div>
-              )}
 
+                {/* Assigned Agent Filter (Company only) */}
+                {accountType === 'COMPANY' && (
+                  <div className="flex items-center gap-2">
+                    <label className="text-body-sm font-medium text-gray-700 dark:text-gray-300">
+                      {language === 'he' ? 'סוכן מוקצה:' : 'Assigned Agent:'}
+                    </label>
+                    <select
+                      value={assignedAgentFilter}
+                      onChange={(e) => setAssignedAgentFilter(e.target.value)}
+                      className="px-4 py-2.5 min-h-[44px] bg-white dark:bg-[#1A2F4B] border border-gray-300 dark:border-[#2979FF]/20 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF]"
+                    >
+                      <option value="ALL">{language === 'he' ? 'כל הסוכנים' : 'All Agents'}</option>
+                      <option value="UNASSIGNED">{language === 'he' ? 'לא מוקצה' : 'Unassigned'}</option>
+                      {/* TODO: Fetch and populate actual agents from organization */}
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              {/* Mobile Filter Button - Only visible on small screens */}
+              <div className="sm:hidden w-full">
+                <UniversalButton
+                  variant="outline"
+                  size="sm"
+                  onClick={handleOpenFilterDrawer}
+                  leftIcon={<Filter className="w-5 h-5" />}
+                  fullWidth
+                  className="!min-h-[44px]"
+                >
+                  {language === 'he' ? 'סינון' : 'Filters'}
+                  {(transactionTypeFilter !== 'ALL' || assignedAgentFilter !== 'ALL') && (
+                    <span className="ml-2 px-2 py-0.5 bg-[#2979FF] text-white rounded-full text-xs font-semibold">
+                      {[transactionTypeFilter !== 'ALL', assignedAgentFilter !== 'ALL'].filter(Boolean).length}
+                    </span>
+                  )}
+                </UniversalButton>
+              </div>
+
+              {/* Properties Count */}
               <div className="ml-auto text-body-sm text-gray-600 dark:text-gray-400">
                 {filteredProperties.length} {language === 'he' ? 'נכסים' : 'properties'}
               </div>
@@ -370,6 +415,83 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
           onClose={handleCloseShareModal}
         />
       )}
+
+      {/* Mobile Filter Drawer */}
+      <Drawer
+        isOpen={showFilterDrawer}
+        onClose={() => setShowFilterDrawer(false)}
+        onReset={handleResetFilters}
+        onApply={handleApplyFilters}
+        title={language === 'he' ? 'סינון' : 'Filters'}
+        resetLabel={language === 'he' ? 'אפס סינון' : 'Reset'}
+        applyLabel={language === 'he' ? 'החל סינון' : 'Apply'}
+        width="sm"
+      >
+        <div className="space-y-6">
+          {/* Transaction Type Filter */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              {language === 'he' ? 'סוג עסקה' : 'Transaction Type'}
+            </label>
+            <select
+              value={tempTransactionTypeFilter}
+              onChange={(e) => setTempTransactionTypeFilter(e.target.value as 'ALL' | 'SALE' | 'RENT')}
+              className="w-full px-4 py-2.5 min-h-[44px] rounded-lg border border-gray-300 dark:border-[#2979FF]/20 bg-white dark:bg-[#1A2F4B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all"
+            >
+              <option value="ALL">{language === 'he' ? 'כל הנכסים' : 'All Properties'}</option>
+              <option value="SALE">{language === 'he' ? 'למכירה' : 'For Sale'}</option>
+              <option value="RENT">{language === 'he' ? 'להשכרה' : 'For Rent'}</option>
+            </select>
+          </div>
+
+          {/* Assigned Agent Filter (Company only) */}
+          {accountType === 'COMPANY' && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                {language === 'he' ? 'סוכן מוקצה' : 'Assigned Agent'}
+              </label>
+              <select
+                value={tempAssignedAgentFilter}
+                onChange={(e) => setTempAssignedAgentFilter(e.target.value)}
+                className="w-full px-4 py-2.5 min-h-[44px] rounded-lg border border-gray-300 dark:border-[#2979FF]/20 bg-white dark:bg-[#1A2F4B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all"
+              >
+                <option value="ALL">{language === 'he' ? 'כל הסוכנים' : 'All Agents'}</option>
+                <option value="UNASSIGNED">{language === 'he' ? 'לא מוקצה' : 'Unassigned'}</option>
+                {/* TODO: Fetch and populate actual agents from organization */}
+              </select>
+            </div>
+          )}
+
+          {/* Active Filters Display */}
+          {(tempTransactionTypeFilter !== 'ALL' || tempAssignedAgentFilter !== 'ALL') && (
+            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                {language === 'he' ? 'סינונים פעילים:' : 'Active Filters:'}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {tempTransactionTypeFilter !== 'ALL' && (
+                  <span className="px-3 py-1 bg-[#2979FF]/10 text-[#2979FF] rounded-full text-sm font-medium">
+                    {language === 'he' ? 'סוג: ' : 'Type: '}
+                    {tempTransactionTypeFilter === 'SALE'
+                      ? (language === 'he' ? 'למכירה' : 'Sale')
+                      : (language === 'he' ? 'להשכרה' : 'Rent')
+                    }
+                  </span>
+                )}
+                {tempAssignedAgentFilter !== 'ALL' && (
+                  <span className="px-3 py-1 bg-[#2979FF]/10 text-[#2979FF] rounded-full text-sm font-medium">
+                    {language === 'he' ? 'סוכן: ' : 'Agent: '}
+                    {tempAssignedAgentFilter === 'UNASSIGNED'
+                      ? (language === 'he' ? 'לא מוקצה' : 'Unassigned')
+                      : tempAssignedAgentFilter
+                    }
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </Drawer>
     </main>
   );
 }
