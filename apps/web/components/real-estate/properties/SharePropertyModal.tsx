@@ -133,13 +133,10 @@ export function SharePropertyModal({
   const t = texts[language as keyof typeof texts];
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg relative"
-        style={{ maxHeight: "90vh", overflowY: "auto" }}
-      >
-        {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
+        {/* Sticky Header */}
+        <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between flex-shrink-0 rounded-t-2xl">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 rounded-lg">
               <Share2 className="w-5 h-5 text-blue-600" />
@@ -159,8 +156,8 @@ export function SharePropertyModal({
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-6 space-y-6">
+        {/* Scrollable Content */}
+        <div className="p-6 space-y-6 overflow-y-auto flex-1">
           {/* Description */}
           <p className="text-sm text-gray-600">
             {t.description}
@@ -259,11 +256,11 @@ export function SharePropertyModal({
           )}
         </div>
 
-        {/* Footer */}
-        <div className="sticky bottom-0 bg-gray-50 px-6 py-4 border-t border-gray-200 rounded-b-2xl">
+        {/* Sticky Footer */}
+        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex-shrink-0 rounded-b-2xl">
           <button
             onClick={onClose}
-            className="w-full px-6 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+            className="w-full px-6 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium min-h-[44px]"
           >
             {t.close}
           </button>

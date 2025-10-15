@@ -177,14 +177,14 @@ export function ImportPropertiesModal({ onClose, onImportComplete }: ImportPrope
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
       <div
-        className={`bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto ${
+        className={`bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden ${
           language === 'he' ? 'rtl' : 'ltr'
         }`}
       >
-        {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-4 rounded-t-2xl flex items-center justify-between">
+        {/* Sticky Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-4 rounded-t-2xl flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
             <FileText className="w-6 h-6" />
             <h2 className="text-xl font-bold">
@@ -199,8 +199,8 @@ export function ImportPropertiesModal({ onClose, onImportComplete }: ImportPrope
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-6">
+        {/* Scrollable Content */}
+        <div className="p-6 overflow-y-auto flex-1">
           {/* Error Message */}
           {error && (
             <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">

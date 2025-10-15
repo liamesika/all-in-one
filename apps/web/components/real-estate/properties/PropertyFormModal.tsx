@@ -181,10 +181,10 @@ export function PropertyFormModal({ isOpen, onClose, onSuccess, property }: Prop
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className={`bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden ${language === 'he' ? 'rtl' : 'ltr'}`}>
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 flex items-center justify-between">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <div className={`bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden ${language === 'he' ? 'rtl' : 'ltr'}`}>
+        {/* Sticky Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 flex items-center justify-between flex-shrink-0">
           <h2 className="text-2xl font-bold">
             {property
               ? (language === 'he' ? 'ערוך נכס' : 'Edit Property')
@@ -199,8 +199,9 @@ export function PropertyFormModal({ isOpen, onClose, onSuccess, property }: Prop
           </button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+        {/* Scrollable Form Body */}
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="p-6 overflow-y-auto flex-1">
           <div className="space-y-6">
             {/* Title */}
             <div>
@@ -371,21 +372,22 @@ export function PropertyFormModal({ isOpen, onClose, onSuccess, property }: Prop
               />
             </div>
           </div>
+          </div>
 
-          {/* Actions */}
-          <div className="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-gray-200">
+          {/* Sticky Footer */}
+          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-white flex-shrink-0">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium min-h-[44px]"
             >
               {language === 'he' ? 'ביטול' : 'Cancel'}
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
             >
               {loading ? (
                 <>
