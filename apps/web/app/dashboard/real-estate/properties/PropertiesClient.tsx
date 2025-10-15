@@ -6,7 +6,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Sparkles, Plus, Upload, Share2, Eye, Edit, Filter } from "lucide-react";
+import { Sparkles, Plus, Upload, Share2, Eye, Edit, Filter, CheckSquare, Square, Download, Trash2 } from "lucide-react";
 import {
   UniversalCard,
   CardHeader,
@@ -21,6 +21,8 @@ import {
   TableEmptyState,
   StatusBadge,
   Drawer,
+  BulkActionsMenu,
+  type BulkAction,
 } from "@/components/shared";
 import { PropertyAdGenerator } from "@/components/real-estate/PropertyAdGenerator";
 import { PropertyFormModal } from "@/components/real-estate/properties/PropertyFormModal";
@@ -46,6 +48,7 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
   const [showFilterDrawer, setShowFilterDrawer] = useState(false);
   const [tempTransactionTypeFilter, setTempTransactionTypeFilter] = useState<'ALL' | 'SALE' | 'RENT'>('ALL');
   const [tempAssignedAgentFilter, setTempAssignedAgentFilter] = useState<string>('ALL');
+  const [selectedProperties, setSelectedProperties] = useState<Set<string>>(new Set());
 
   // Filter properties by transaction type and assigned agent
   const filteredProperties = properties.filter(property => {
@@ -136,6 +139,54 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
   const handleCloseShareModal = () => {
     setShowShareModal(false);
     setSharingProperty(null);
+  };
+
+  // Selection handlers
+  const handleSelectAll = () => {
+    if (selectedProperties.size === filteredProperties.length) {
+      setSelectedProperties(new Set());
+    } else {
+      setSelectedProperties(new Set(filteredProperties.map(p => p.id)));
+    }
+  };
+
+  const handleSelectProperty = (id: string) => {
+    const newSelected = new Set(selectedProperties);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedProperties(newSelected);
+  };
+
+  // Bulk actions
+  const handleBulkExport = () => {
+    console.log('Bulk export:', Array.from(selectedProperties));
+    // TODO: Implement bulk export
+    setSelectedProperties(new Set());
+  };
+
+  const handleBulkShare = () => {
+    console.log('Bulk share:', Array.from(selectedProperties));
+    // TODO: Implement bulk share
+    setSelectedProperties(new Set());
+  };
+
+  const handleBulkArchive = () => {
+    console.log('Bulk archive:', Array.from(selectedProperties));
+    // TODO: Implement bulk archive
+    setSelectedProperties(new Set());
+  };
+
+  const t = {
+    selected: language === 'he' ? 'נבחרו' : 'selected',
+    bulkExport: language === 'he' ? 'ייצא לקובץ' : 'Export',
+    bulkShare: language === 'he' ? 'שתף' : 'Share',
+    archive: language === 'he' ? 'העבר לארכיון' : 'Archive',
+    view: language === 'he' ? 'צפייה' : 'View',
+    edit: language === 'he' ? 'עריכה' : 'Edit',
+    generateAd: language === 'he' ? 'AI' : 'AI',
   };
 
   return (
@@ -233,6 +284,33 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
                 </UniversalButton>
               </div>
 
+              {/* Bulk Actions Menu */}
+              <BulkActionsMenu
+                selectedCount={selectedProperties.size}
+                title={`${selectedProperties.size} ${t.selected}`}
+                actions={[
+                  {
+                    id: 'export',
+                    label: t.bulkExport,
+                    icon: <Download className="w-4 h-4" />,
+                    onClick: handleBulkExport,
+                  },
+                  {
+                    id: 'share',
+                    label: t.bulkShare,
+                    icon: <Share2 className="w-4 h-4" />,
+                    onClick: handleBulkShare,
+                  },
+                  {
+                    id: 'archive',
+                    label: t.archive,
+                    icon: <Trash2 className="w-4 h-4" />,
+                    variant: 'danger' as const,
+                    onClick: handleBulkArchive,
+                  },
+                ]}
+              />
+
               {/* Properties Count */}
               <div className="ml-auto text-body-sm text-gray-600 dark:text-gray-400">
                 {filteredProperties.length} {language === 'he' ? 'נכסים' : 'properties'}
@@ -241,8 +319,134 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
           </CardBody>
         </UniversalCard>
 
-        {/* Properties Table */}
-        <UniversalCard variant="default">
+        {/* Mobile Card View */}
+        <div className="sm:hidden space-y-3">
+          {filteredProperties.length > 0 ? (
+            filteredProperties.map((property) => {
+              const transactionType = property.transactionType || 'SALE';
+              const isSale = transactionType === 'SALE';
+
+              return (
+                <UniversalCard key={property.id} variant="default" className="p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => handleSelectProperty(property.id)}
+                        className="p-1 text-gray-600 dark:text-gray-400 hover:text-[#2979FF] transition-colors"
+                        aria-label={language === 'he' ? 'בחר נכס' : 'Select property'}
+                      >
+                        {selectedProperties.has(property.id) ? (
+                          <CheckSquare className="w-5 h-5 text-[#2979FF]" />
+                        ) : (
+                          <Square className="w-5 h-5" />
+                        )}
+                      </button>
+                      <div>
+                        <h3 className="font-semibold text-gray-900 dark:text-white">{property.name}</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{property.city || '-'}</p>
+                      </div>
+                    </div>
+                    <StatusBadge
+                      status={isSale ? 'active' : 'pending'}
+                      className={isSale ? '!bg-blue-100 !text-blue-700' : '!bg-green-100 !text-green-700'}
+                    >
+                      {isSale
+                        ? (language === 'he' ? 'למכירה' : 'Sale')
+                        : (language === 'he' ? 'להשכרה' : 'Rent')
+                      }
+                    </StatusBadge>
+                  </div>
+
+                  <div className="space-y-2 mb-3 text-sm">
+                    <div className="font-semibold text-gray-900 dark:text-white">
+                      {isSale ? (
+                        property.price ? `₪${property.price.toLocaleString()}` : '-'
+                      ) : (
+                        property.rentPriceMonthly
+                          ? `₪${property.rentPriceMonthly.toLocaleString()}${language === 'he' ? '/חודש' : '/mo'}`
+                          : '-'
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-600 dark:text-gray-400">{language === 'he' ? 'ציון:' : 'Score:'}</span>
+                      <ScoreBadge property={property} language={language as 'en' | 'he'} size="sm" />
+                    </div>
+                    <div>
+                      <span className="text-gray-600 dark:text-gray-400">{language === 'he' ? 'סטטוס: ' : 'Status: '}</span>
+                      <StatusBadge status="completed">{property.status}</StatusBadge>
+                    </div>
+                    {accountType === 'COMPANY' && (
+                      <div className="pt-1">
+                        <AssignAgentButton
+                          propertyId={property.id}
+                          currentAgentId={property.assignedAgentId}
+                          currentAgentName={property.assignedAgentName}
+                          onAssignSuccess={(agentId, agentName) => handleAgentAssigned(property.id, agentId, agentName)}
+                          accountType={accountType}
+                          className="text-xs"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <Link href={`/dashboard/real-estate/properties/${property.id}`} className="flex-1">
+                      <UniversalButton
+                        variant="outline"
+                        size="sm"
+                        leftIcon={<Eye className="w-4 h-4" />}
+                        className="w-full !min-h-[44px]"
+                      >
+                        {t.view}
+                      </UniversalButton>
+                    </Link>
+                    <UniversalButton
+                      variant="outline"
+                      size="sm"
+                      leftIcon={<Edit className="w-4 h-4" />}
+                      onClick={() => handleEditProperty(property)}
+                      className="flex-1 !min-h-[44px]"
+                    >
+                      {t.edit}
+                    </UniversalButton>
+                    <UniversalButton
+                      variant="primary"
+                      size="sm"
+                      leftIcon={<Sparkles className="w-4 h-4" />}
+                      onClick={() => handleGenerateAd(property)}
+                      className="w-full !min-h-[44px] !bg-gradient-to-r from-purple-600 to-blue-600"
+                    >
+                      {t.generateAd}
+                    </UniversalButton>
+                  </div>
+                </UniversalCard>
+              );
+            })
+          ) : (
+            <UniversalCard variant="default" className="p-8 text-center">
+              <Plus className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                {language === 'he' ? 'אין נכסים' : 'No Properties'}
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                {language === 'he'
+                  ? 'לחץ "נכס חדש" כדי להוסיף את הנכס הראשון שלך'
+                  : 'Click "New Property" to add your first property'}
+              </p>
+              <UniversalButton
+                variant="primary"
+                size="md"
+                leftIcon={<Plus className="w-5 h-5" />}
+                onClick={handleCreateProperty}
+              >
+                {language === 'he' ? 'נכס חדש' : 'New Property'}
+              </UniversalButton>
+            </UniversalCard>
+          )}
+        </div>
+
+        {/* Desktop Properties Table */}
+        <UniversalCard variant="default" className="hidden sm:block">
           <CardHeader className="border-b border-gray-200 dark:border-[#2979FF]/20">
             <h2 className="text-heading-4 text-gray-900 dark:text-white">
               {language === 'he' ? 'רשימת נכסים' : 'Properties List'}
@@ -251,6 +455,19 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
           <UniversalTable>
             <UniversalTableHeader>
               <UniversalTableRow>
+                <UniversalTableHead className="w-12">
+                  <button
+                    onClick={handleSelectAll}
+                    className="p-1 text-gray-600 dark:text-gray-400 hover:text-[#2979FF] transition-colors"
+                    aria-label={language === 'he' ? 'בחר הכל' : 'Select all'}
+                  >
+                    {selectedProperties.size === filteredProperties.length && filteredProperties.length > 0 ? (
+                      <CheckSquare className="w-5 h-5 text-[#2979FF]" />
+                    ) : (
+                      <Square className="w-5 h-5" />
+                    )}
+                  </button>
+                </UniversalTableHead>
                 <UniversalTableHead>{language === 'he' ? 'שם' : 'Name'}</UniversalTableHead>
                 <UniversalTableHead>{language === 'he' ? 'עיר' : 'City'}</UniversalTableHead>
                 <UniversalTableHead>{language === 'he' ? 'סוג' : 'Type'}</UniversalTableHead>
@@ -272,6 +489,19 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
 
                   return (
                     <UniversalTableRow key={r.id} hoverable>
+                      <UniversalTableCell>
+                        <button
+                          onClick={() => handleSelectProperty(r.id)}
+                          className="p-1 text-gray-600 dark:text-gray-400 hover:text-[#2979FF] transition-colors"
+                          aria-label={language === 'he' ? 'בחר נכס' : 'Select property'}
+                        >
+                          {selectedProperties.has(r.id) ? (
+                            <CheckSquare className="w-5 h-5 text-[#2979FF]" />
+                          ) : (
+                            <Square className="w-5 h-5" />
+                          )}
+                        </button>
+                      </UniversalTableCell>
                       <UniversalTableCell className="font-semibold">{r.name}</UniversalTableCell>
                       <UniversalTableCell>{r.city || "-"}</UniversalTableCell>
                       <UniversalTableCell>
