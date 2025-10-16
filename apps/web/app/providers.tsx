@@ -1,127 +1,40 @@
 'use client';
 
 import React from 'react';
-import { usePathname } from 'next/navigation';
-import { SWRConfig } from 'swr';
-import { Toaster } from 'react-hot-toast';
-import { LanguageProvider } from '../lib/language-context';
-import { AuthProvider } from '../lib/auth-context';
-import { OrganizationProvider } from '../lib/organization-context';
-import { MustChangePasswordGate } from '../components/auth/must-change-password-gate';
-import { ApiUtils } from '../lib/api';
-import { QueryProvider } from '../providers/QueryProvider';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from '../lib/cache/queryClient';
+import { ThemeProvider } from '../lib/theme/ThemeProvider';
 
-// Public routes that don't need authentication
-const PUBLIC_ROUTES = ['/login', '/register', '/', '/real-estate', '/e-commerce', '/law', '/industries'];
+// Initialize Sentry on client side
+if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_SENTRY_DSN) {
+  import('@sentry/nextjs').then((Sentry) => {
+    Sentry.init({
+      dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+      environment: process.env.NODE_ENV,
+      tracesSampleRate: 1.0,
+      replaysSessionSampleRate: 0.1,
+      replaysOnErrorSampleRate: 1.0,
+      beforeSend(event) {
+        if (event.request) {
+          delete event.request.cookies;
+          delete event.request.headers?.['authorization'];
+        }
+        return event;
+      },
+      ignoreErrors: [
+        'ResizeObserver loop limit exceeded',
+        'Non-Error promise rejection',
+      ],
+    });
+  });
+}
 
-// SWR configuration
-const swrConfig = {
-  fetcher: (url: string) => ApiUtils.getCached(url, 30000),
-  revalidateOnFocus: false,
-  revalidateOnReconnect: true,
-  dedupingInterval: 30000,
-  errorRetryCount: 3,
-  errorRetryInterval: 1000,
-  onError: (error: any, key: string) => {
-    console.error('SWR Error:', error, 'Key:', key);
-
-    // Handle specific error types
-    if (error?.statusCode === 401) {
-      // Don't show toast for auth errors - handled by API client
-      return;
-    }
-
-    if (error?.statusCode >= 500) {
-      // Don't show toast for server errors - handled by API client
-      return;
-    }
-  },
-};
-
-export default function AppProviders({
-  children,
-  initialLang,
-}: {
-  children: React.ReactNode;
-  initialLang: 'he' | 'en';
-}) {
-  const pathname = usePathname();
-  const isPublicRoute = pathname ? PUBLIC_ROUTES.some(route => pathname.startsWith(route)) : false;
-
-  // Only log on client side to avoid SSR issues
-  if (typeof window !== 'undefined') {
-    console.log('🔵 [AppProviders] Pathname:', pathname, 'isPublicRoute:', isPublicRoute);
-  }
-
+export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <QueryProvider>
-      <SWRConfig value={swrConfig}>
-        {isPublicRoute ? (
-          // Public routes: No AuthProvider, no /api/auth/me calls
-          <LanguageProvider initialLang={initialLang}>
-            {children}
-            <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: '#363636',
-                color: '#fff',
-              },
-              success: {
-                duration: 3000,
-                iconTheme: {
-                  primary: '#10B981',
-                  secondary: '#fff',
-                },
-              },
-              error: {
-                duration: 5000,
-                iconTheme: {
-                  primary: '#EF4444',
-                  secondary: '#fff',
-                },
-              },
-            }}
-          />
-        </LanguageProvider>
-      ) : (
-        // Protected routes: Include AuthProvider
-        <AuthProvider>
-          <LanguageProvider initialLang={initialLang}>
-            <MustChangePasswordGate>
-              <OrganizationProvider>
-                {children}
-                <Toaster
-                  position="top-right"
-                  toastOptions={{
-                    duration: 4000,
-                    style: {
-                      background: '#363636',
-                      color: '#fff',
-                    },
-                    success: {
-                      duration: 3000,
-                      iconTheme: {
-                        primary: '#10B981',
-                        secondary: '#fff',
-                      },
-                    },
-                    error: {
-                      duration: 5000,
-                      iconTheme: {
-                        primary: '#EF4444',
-                        secondary: '#fff',
-                      },
-                    },
-                  }}
-                />
-              </OrganizationProvider>
-            </MustChangePasswordGate>
-          </LanguageProvider>
-        </AuthProvider>
-      )}
-      </SWRConfig>
-    </QueryProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        {children}
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
