@@ -11,14 +11,26 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
   title: {
-    default: 'All-in-One Platform - EFFINITY',
-    template: '%s | EFFINITY All-in-One Platform'
+    default: 'Effinity — AI-Powered Business Management Platform',
+    template: '%s | Effinity'
   },
-  description: 'AI-powered efficiency for modern teams - Real Estate, E-commerce, and Law verticals',
-  keywords: ['real estate', 'e-commerce', 'law', 'CRM', 'lead management', 'AI', 'productivity'],
-  authors: [{ name: 'EFFINITY Team' }],
-  creator: 'EFFINITY',
-  publisher: 'EFFINITY',
+  description: 'Manage Real Estate, E-Commerce, Productions, and Law operations in one unified SaaS platform. AI-driven automation, unified analytics, and enterprise-grade tools.',
+  keywords: [
+    'business management platform',
+    'real estate CRM',
+    'e-commerce management',
+    'production management',
+    'law practice management',
+    'AI automation',
+    'unified analytics',
+    'multi-vertical SaaS',
+    'lead management',
+    'property management',
+    'project management'
+  ],
+  authors: [{ name: 'Effinity Team' }],
+  creator: 'Effinity',
+  publisher: 'Effinity',
   robots: {
     index: true,
     follow: true,
@@ -27,9 +39,24 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     alternateLocale: ['he_IL'],
-    title: 'All-in-One Platform - EFFINITY',
-    description: 'AI-powered efficiency for modern teams',
-    siteName: 'EFFINITY All-in-One Platform',
+    title: 'Effinity — AI-Powered Business Management Platform',
+    description: 'One intelligent platform for Real Estate, E-Commerce, Productions, and Law. Unified CRM, AI automation, and analytics for modern businesses.',
+    siteName: 'Effinity',
+    url: 'https://effinity.co.il',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Effinity Multi-Vertical Platform'
+      }
+    ]
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Effinity — AI-Powered Business Management Platform',
+    description: 'Manage Real Estate, E-Commerce, Productions, and Law in one unified platform',
+    images: ['/og-image.png']
   },
   icons: {
     icon: '/favicon.ico',
@@ -39,7 +66,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'EFFINITY',
+    title: 'Effinity',
   },
   formatDetection: {
     telephone: false,
