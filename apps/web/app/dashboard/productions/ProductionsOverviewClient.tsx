@@ -1,30 +1,33 @@
 'use client';
 
 /**
- * Creative Productions - Overview Client Component (Redesigned with Design System 2.0)
- * Modern dashboard with KPI cards, project status, and quick actions
+ * Productions - Overview Dashboard
+ * Modern dashboard with live analytics, KPIs, and project stats
+ * Connected to ProductionProject backend via React Query
  */
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Film,
-  FolderOpen,
   Clock,
   CheckCircle2,
   AlertCircle,
-  Calendar,
   TrendingUp,
-  Users,
-  Play,
+  DollarSign,
+  ListTodo,
+  Folder,
+  BarChart3,
 } from 'lucide-react';
 
 // Import unified components
 import {
   UniversalCard,
+  CardHeader,
+  CardBody,
   KPICard,
   UniversalButton,
-  StatusBadge,
+  UniversalBadge,
   UniversalTable,
   UniversalTableHeader,
   UniversalTableBody,
@@ -34,223 +37,282 @@ import {
   TableEmptyState,
 } from '@/components/shared';
 
-interface Stats {
-  activeProjects: number;
-  totalAssets: number;
-  pendingReviews: number;
-  dueThisWeek: number;
-}
+// Import React Query hooks
+import {
+  useProjects,
+  useProjectStats,
+  useAnalyticsOverview,
+  useRevenueData,
+  useProjectDistribution,
+  useTaskMetrics,
+} from '@/hooks/useProductionsData';
 
-interface ProjectsByStatus {
-  [key: string]: number;
-}
+import { ProjectStatus } from '@/lib/api/productions';
 
-interface RecentProject {
-  id: string;
-  name: string;
-  status: string;
-  updatedAt: string;
-  ownerUid: string;
-}
+const STATUS_CONFIG: Record<ProjectStatus, { label: string; color: 'default' | 'primary' | 'success' | 'warning' }> = {
+  PLANNING: { label: 'Planning', color: 'default' },
+  ACTIVE: { label: 'Active', color: 'primary' },
+  DONE: { label: 'Done', color: 'success' },
+  ON_HOLD: { label: 'On Hold', color: 'warning' },
+};
 
 export default function ProductionsOverviewClient() {
   const router = useRouter();
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [projectsByStatus, setProjectsByStatus] = useState<ProjectsByStatus>({});
-  const [recentActivity, setRecentActivity] = useState<RecentProject[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [revenuePeriod, setRevenuePeriod] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
+  // Fetch data with React Query
+  const { data: projects = [], isLoading: projectsLoading } = useProjects();
+  const { data: projectStats, isLoading: statsLoading } = useProjectStats();
+  const { data: analyticsOverview, isLoading: overviewLoading } = useAnalyticsOverview();
+  const { data: revenueData = [], isLoading: revenueLoading } = useRevenueData(revenuePeriod);
+  const { data: projectDistribution = [], isLoading: distributionLoading } = useProjectDistribution();
+  const { data: taskMetrics = [], isLoading: taskMetricsLoading } = useTaskMetrics();
 
-  const fetchStats = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch('/api/productions/stats');
+  const isLoading = projectsLoading || statsLoading || overviewLoading;
 
-      if (!res.ok) {
-        throw new Error('Failed to fetch stats');
-      }
-
-      const data = await res.json();
-      setStats(data.stats);
-      setProjectsByStatus(data.projectsByStatus || {});
-      setRecentActivity(data.recentActivity || []);
-    } catch (err: any) {
-      console.error('Error fetching stats:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getStatusBadgeType = (status: string): 'active' | 'pending' | 'completed' | 'cancelled' => {
-    switch (status) {
-      case 'DRAFT':
-        return 'pending';
-      case 'IN_PROGRESS':
-        return 'active';
-      case 'REVIEW':
-        return 'pending';
-      case 'APPROVED':
-      case 'DELIVERED':
-        return 'completed';
-      default:
-        return 'pending';
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString();
-  };
+  // Recent projects (last 5 updated)
+  const recentProjects = [...projects]
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    .slice(0, 5);
 
   // Loading State
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B] p-8">
-        <div className="max-w-7xl mx-auto space-y-6">
-          <div className="h-12 bg-gray-200 dark:bg-[#1A2F4B] rounded-lg animate-pulse w-96"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-40 bg-gray-200 dark:bg-[#1A2F4B] rounded-lg animate-pulse"></div>
-            ))}
+      <div className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B] p-6">
+        <div className="max-w-[1600px] mx-auto">
+          <div className="animate-pulse space-y-6">
+            <div className="h-12 bg-gray-200 dark:bg-[#1A2F4B] rounded-lg w-64"></div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-32 bg-gray-200 dark:bg-[#1A2F4B] rounded-xl"></div>
+              ))}
+            </div>
+            <div className="h-[400px] bg-gray-200 dark:bg-[#1A2F4B] rounded-xl"></div>
           </div>
-          <div className="h-64 bg-gray-200 dark:bg-[#1A2F4B] rounded-lg animate-pulse"></div>
         </div>
-      </div>
-    );
-  }
-
-  // Error State
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B] p-8 flex items-center justify-center">
-        <UniversalCard variant="outlined" className="max-w-md p-8 text-center">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-            Error Loading Dashboard
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
-          <UniversalButton variant="primary" onClick={fetchStats}>
-            Retry
-          </UniversalButton>
-        </UniversalCard>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B] p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
+      <div className="max-w-[1600px] mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-heading-1 text-gray-900 dark:text-white mb-2">
-              Creative Productions
-            </h1>
-            <p className="text-body-base text-gray-600 dark:text-gray-400">
-              Manage video projects, assets, and creative workflows
+            <h1 className="text-heading-1 text-gray-900 dark:text-white">Productions Dashboard</h1>
+            <p className="text-body-base text-gray-600 dark:text-gray-400 mt-1">
+              Manage your production projects, budgets, and tasks
             </p>
           </div>
           <UniversalButton
             variant="primary"
             size="lg"
-            leftIcon={<Play className="w-5 h-5" />}
+            leftIcon={<Film className="w-5 h-5" />}
             onClick={() => router.push('/dashboard/productions/projects')}
           >
-            New Project
+            View All Projects
           </UniversalButton>
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <KPICard
-            icon={<FolderOpen className="w-6 h-6" />}
-            label="Active Projects"
-            value={stats?.activeProjects || 0}
-            change={{ value: '+12% from last month', trend: 'up' }}
-          />
-          <KPICard
+            title="Total Projects"
+            value={projectStats?.total || 0}
             icon={<Film className="w-6 h-6" />}
-            label="Total Assets"
-            value={stats?.totalAssets || 0}
-            change={{ value: '+245 this month', trend: 'up' }}
+            trend={projectStats ? `${projectStats.active} active` : undefined}
+            variant="primary"
           />
           <KPICard
+            title="Active Projects"
+            value={projectStats?.active || 0}
             icon={<Clock className="w-6 h-6" />}
-            label="Pending Reviews"
-            value={stats?.pendingReviews || 0}
-            change={{ value: '3 urgent', trend: 'neutral' }}
+            trend={projectStats ? `${projectStats.planning} planning` : undefined}
+            variant="info"
           />
           <KPICard
-            icon={<Calendar className="w-6 h-6" />}
-            label="Due This Week"
-            value={stats?.dueThisWeek || 0}
-            change={{ value: '2 overdue', trend: 'down' }}
+            title="Completed"
+            value={projectStats?.done || 0}
+            icon={<CheckCircle2 className="w-6 h-6" />}
+            variant="success"
+          />
+          <KPICard
+            title="On Hold"
+            value={projectStats?.byType?.ON_HOLD || 0}
+            icon={<AlertCircle className="w-6 h-6" />}
+            variant="warning"
           />
         </div>
 
-        {/* Projects by Status */}
-        <UniversalCard>
-          <div className="p-6 border-b border-gray-200 dark:border-[#2979FF]/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-heading-3 text-gray-900 dark:text-white">
-                  Projects by Status
-                </h2>
-                <p className="text-body-sm text-gray-600 dark:text-gray-400 mt-1">
-                  Overview of all project stages
-                </p>
-              </div>
-              <TrendingUp className="w-6 h-6 text-[#2979FF]" />
-            </div>
-          </div>
-          <div className="p-6">
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
-              {Object.entries(projectsByStatus).map(([status, count]) => (
-                <div key={status} className="text-center">
-                  <div className="text-display-2 font-bold text-gray-900 dark:text-white mb-2">
-                    {count}
+        {/* Analytics Overview */}
+        {analyticsOverview && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <UniversalCard>
+              <CardBody>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Total Revenue</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                      ₪{analyticsOverview.totalRevenue.toLocaleString()}
+                    </p>
                   </div>
-                  <StatusBadge status={getStatusBadgeType(status)} />
+                  <DollarSign className="w-10 h-10 text-green-500" />
                 </div>
-              ))}
-              {Object.keys(projectsByStatus).length === 0 && (
-                <div className="col-span-full text-center py-8">
-                  <p className="text-gray-500 dark:text-gray-400">
-                    No projects yet. Create your first project to get started!
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </UniversalCard>
+              </CardBody>
+            </UniversalCard>
 
-        {/* Recent Activity Table */}
-        <UniversalCard>
-          <div className="p-6 border-b border-gray-200 dark:border-[#2979FF]/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-heading-3 text-gray-900 dark:text-white">
-                  Recent Activity
-                </h2>
-                <p className="text-body-sm text-gray-600 dark:text-gray-400 mt-1">
-                  Latest updates across all projects
-                </p>
+            <UniversalCard>
+              <CardBody>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Completed Tasks</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {analyticsOverview.completedTasks}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {analyticsOverview.taskCompletionRate.toFixed(1)}% completion rate
+                    </p>
+                  </div>
+                  <ListTodo className="w-10 h-10 text-blue-500" />
+                </div>
+              </CardBody>
+            </UniversalCard>
+
+            <UniversalCard>
+              <CardBody>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Project Growth</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {analyticsOverview.projectGrowth >= 0 ? '+' : ''}
+                      {analyticsOverview.projectGrowth.toFixed(1)}%
+                    </p>
+                  </div>
+                  <TrendingUp className="w-10 h-10 text-purple-500" />
+                </div>
+              </CardBody>
+            </UniversalCard>
+          </div>
+        )}
+
+        {/* Project Distribution by Type */}
+        {!distributionLoading && projectDistribution.length > 0 && (
+          <UniversalCard>
+            <CardHeader
+              title="Projects by Type"
+              action={
+                <UniversalButton variant="ghost" size="sm" leftIcon={<BarChart3 className="w-4 h-4" />}>
+                  View Details
+                </UniversalButton>
+              }
+            />
+            <CardBody>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {projectDistribution.map((item) => (
+                  <div
+                    key={item.label}
+                    className="p-4 bg-gray-50 dark:bg-[#1A2F4B] rounded-lg border border-gray-200 dark:border-[#2979FF]/20"
+                  >
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{item.label}</p>
+                    <p className="text-3xl font-bold text-gray-900 dark:text-white">{item.value}</p>
+                    <div
+                      className="mt-3 h-2 rounded-full"
+                      style={{
+                        backgroundColor: item.color,
+                        width: `${(item.value / projects.length) * 100}%`,
+                      }}
+                    />
+                  </div>
+                ))}
               </div>
+            </CardBody>
+          </UniversalCard>
+        )}
+
+        {/* Revenue Chart */}
+        {!revenueLoading && revenueData.length > 0 && (
+          <UniversalCard>
+            <CardHeader
+              title="Revenue Over Time"
+              action={
+                <select
+                  value={revenuePeriod}
+                  onChange={(e) => setRevenuePeriod(e.target.value as any)}
+                  className="px-3 py-2 bg-white dark:bg-[#0E1A2B] border border-gray-300 dark:border-[#2979FF]/20 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF]"
+                >
+                  <option value="7d">Last 7 Days</option>
+                  <option value="30d">Last 30 Days</option>
+                  <option value="90d">Last 90 Days</option>
+                  <option value="1y">Last Year</option>
+                </select>
+              }
+            />
+            <CardBody>
+              <div className="space-y-2">
+                {revenueData.slice(-10).map((item, index) => {
+                  const maxValue = Math.max(...revenueData.map((d) => d.value));
+                  const percentage = maxValue > 0 ? (item.value / maxValue) * 100 : 0;
+
+                  return (
+                    <div key={index} className="flex items-center gap-3">
+                      <span className="text-xs text-gray-600 dark:text-gray-400 w-24">
+                        {new Date(item.label).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </span>
+                      <div className="flex-1 h-8 bg-gray-100 dark:bg-[#1A2F4B] rounded-lg overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-300"
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white w-20 text-right">
+                        ₪{item.value.toLocaleString()}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardBody>
+          </UniversalCard>
+        )}
+
+        {/* Task Metrics */}
+        {!taskMetricsLoading && taskMetrics.length > 0 && (
+          <UniversalCard>
+            <CardHeader title="Task Status Distribution" />
+            <CardBody>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {taskMetrics.map((metric) => {
+                  const colors = {
+                    OPEN: 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
+                    IN_PROGRESS: 'bg-blue-200 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+                    DONE: 'bg-green-200 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+                    BLOCKED: 'bg-red-200 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+                  };
+
+                  return (
+                    <div
+                      key={metric.label}
+                      className={`p-4 rounded-lg ${colors[metric.label as keyof typeof colors] || 'bg-gray-200'}`}
+                    >
+                      <p className="text-sm font-medium mb-1">{metric.label.replace('_', ' ')}</p>
+                      <p className="text-3xl font-bold">{metric.value}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardBody>
+          </UniversalCard>
+        )}
+
+        {/* Recent Projects */}
+        <UniversalCard>
+          <CardHeader
+            title="Recent Projects"
+            action={
               <UniversalButton
                 variant="ghost"
                 size="sm"
@@ -258,109 +320,76 @@ export default function ProductionsOverviewClient() {
               >
                 View All
               </UniversalButton>
-            </div>
-          </div>
-
-          <UniversalTable>
-            <UniversalTableHeader>
-              <UniversalTableRow>
-                <UniversalTableHead>Project Name</UniversalTableHead>
-                <UniversalTableHead>Status</UniversalTableHead>
-                <UniversalTableHead>Last Updated</UniversalTableHead>
-                <UniversalTableHead></UniversalTableHead>
-              </UniversalTableRow>
-            </UniversalTableHeader>
-            <UniversalTableBody>
-              {recentActivity.length === 0 ? (
-                <TableEmptyState
-                  icon={<FolderOpen className="w-12 h-12" />}
-                  title="No recent activity"
-                  description="Create your first project to see activity here"
-                  action={
-                    <UniversalButton
-                      variant="primary"
-                      onClick={() => router.push('/dashboard/productions/projects')}
-                    >
-                      Create Project
-                    </UniversalButton>
-                  }
-                />
-              ) : (
-                recentActivity.map((project) => (
-                  <UniversalTableRow key={project.id} hoverable>
-                    <UniversalTableCell>
-                      <div className="font-medium text-gray-900 dark:text-white">
-                        {project.name}
-                      </div>
-                    </UniversalTableCell>
-                    <UniversalTableCell>
-                      <StatusBadge status={getStatusBadgeType(project.status)} />
-                    </UniversalTableCell>
-                    <UniversalTableCell>
-                      <span className="text-gray-600 dark:text-gray-400">
-                        {formatDate(project.updatedAt)}
-                      </span>
-                    </UniversalTableCell>
-                    <UniversalTableCell>
-                      <UniversalButton
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => router.push(`/dashboard/productions/projects/${project.id}`)}
-                      >
-                        View
-                      </UniversalButton>
-                    </UniversalTableCell>
+            }
+          />
+          <CardBody>
+            {recentProjects.length === 0 ? (
+              <TableEmptyState
+                icon={<Film className="w-16 h-16" />}
+                title="No projects yet"
+                description="Create your first production project to get started"
+                action={
+                  <UniversalButton
+                    variant="primary"
+                    onClick={() => router.push('/dashboard/productions/projects')}
+                  >
+                    Create Project
+                  </UniversalButton>
+                }
+              />
+            ) : (
+              <UniversalTable>
+                <UniversalTableHeader>
+                  <UniversalTableRow>
+                    <UniversalTableHead>Project Name</UniversalTableHead>
+                    <UniversalTableHead>Status</UniversalTableHead>
+                    <UniversalTableHead>Type</UniversalTableHead>
+                    <UniversalTableHead>Last Updated</UniversalTableHead>
+                    <UniversalTableHead>Actions</UniversalTableHead>
                   </UniversalTableRow>
-                ))
-              )}
-            </UniversalTableBody>
-          </UniversalTable>
+                </UniversalTableHeader>
+                <UniversalTableBody>
+                  {recentProjects.map((project) => (
+                    <UniversalTableRow key={project.id}>
+                      <UniversalTableCell>
+                        <button
+                          onClick={() => router.push(`/dashboard/productions/projects/${project.id}`)}
+                          className="font-medium text-[#2979FF] hover:underline"
+                        >
+                          {project.name}
+                        </button>
+                      </UniversalTableCell>
+                      <UniversalTableCell>
+                        <UniversalBadge variant={STATUS_CONFIG[project.status].color}>
+                          {STATUS_CONFIG[project.status].label}
+                        </UniversalBadge>
+                      </UniversalTableCell>
+                      <UniversalTableCell>
+                        <UniversalBadge variant="default">{project.type}</UniversalBadge>
+                      </UniversalTableCell>
+                      <UniversalTableCell>
+                        {new Date(project.updatedAt).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </UniversalTableCell>
+                      <UniversalTableCell>
+                        <UniversalButton
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => router.push(`/dashboard/productions/projects/${project.id}`)}
+                        >
+                          View
+                        </UniversalButton>
+                      </UniversalTableCell>
+                    </UniversalTableRow>
+                  ))}
+                </UniversalTableBody>
+              </UniversalTable>
+            )}
+          </CardBody>
         </UniversalCard>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <UniversalCard hoverable className="cursor-pointer" onClick={() => router.push('/dashboard/productions/projects')}>
-            <div className="p-6">
-              <div className="flex items-center justify-center w-12 h-12 bg-[#2979FF]/10 rounded-lg mb-4">
-                <FolderOpen className="w-6 h-6 text-[#2979FF]" />
-              </div>
-              <h3 className="text-heading-4 text-gray-900 dark:text-white mb-2">
-                All Projects
-              </h3>
-              <p className="text-body-sm text-gray-600 dark:text-gray-400">
-                View and manage all your video projects
-              </p>
-            </div>
-          </UniversalCard>
-
-          <UniversalCard hoverable className="cursor-pointer" onClick={() => router.push('/dashboard/productions/assets')}>
-            <div className="p-6">
-              <div className="flex items-center justify-center w-12 h-12 bg-purple-500/10 rounded-lg mb-4">
-                <Film className="w-6 h-6 text-purple-500" />
-              </div>
-              <h3 className="text-heading-4 text-gray-900 dark:text-white mb-2">
-                Assets Library
-              </h3>
-              <p className="text-body-sm text-gray-600 dark:text-gray-400">
-                Browse and organize your media files
-              </p>
-            </div>
-          </UniversalCard>
-
-          <UniversalCard hoverable className="cursor-pointer" onClick={() => router.push('/dashboard/productions/team')}>
-            <div className="p-6">
-              <div className="flex items-center justify-center w-12 h-12 bg-green-500/10 rounded-lg mb-4">
-                <Users className="w-6 h-6 text-green-500" />
-              </div>
-              <h3 className="text-heading-4 text-gray-900 dark:text-white mb-2">
-                Team & Clients
-              </h3>
-              <p className="text-body-sm text-gray-600 dark:text-gray-400">
-                Manage your team members and clients
-              </p>
-            </div>
-          </UniversalCard>
-        </div>
       </div>
     </div>
   );
