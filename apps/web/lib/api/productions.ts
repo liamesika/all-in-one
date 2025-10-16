@@ -134,12 +134,54 @@ export interface ProductionProjectSupplier {
 
 // ============= API Client =============
 
-const API_BASE = '/api/productions';
+const API_BASE = '/api/productions-v2';
+
+/**
+ * Get Firebase auth token from client
+ * This assumes Firebase auth is initialized and user is logged in
+ */
+async function getAuthToken(): Promise<string | null> {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    // Dynamic import to avoid SSR issues
+    const { getAuth } = await import('firebase/auth');
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
+    return await user.getIdToken();
+  } catch (error) {
+    console.error('[Productions API] Failed to get auth token:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get organization ID from context
+ * This should be implemented based on how the app manages active org
+ */
+function getOrgId(): string {
+  if (typeof window === 'undefined') return '';
+
+  // Try to get from localStorage or context
+  // For now, using a placeholder - this should be replaced with actual org context
+  const orgId = localStorage.getItem('activeOrgId') || 'demo';
+  return orgId;
+}
 
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  const token = await getAuthToken();
+  const orgId = getOrgId();
+
   const response = await fetch(`${API_BASE}${endpoint}`, {
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+      'x-org-id': orgId,
       ...options?.headers,
     },
     ...options,
