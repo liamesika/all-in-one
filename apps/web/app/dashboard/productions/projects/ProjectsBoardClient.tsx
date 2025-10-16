@@ -35,7 +35,7 @@ import {
   useCreateProject,
   useProjectStats,
 } from '@/hooks/useProductionsData';
-import { ProjectStatus, type ProductionProject } from '@/lib/api/productions';
+import { ProjectStatus, ProjectType, type ProductionProject } from '@/lib/api/productions';
 
 type Project = ProductionProject;
 
@@ -462,20 +462,14 @@ function NewProjectModal({ onClose, onSuccess }: NewProjectModalProps) {
       isOpen={true}
       onClose={onClose}
       onSubmit={handleSubmit}
-      title="New Creative Project"
-      description="Create a new video production project with details and target channels"
+      title="New Production Project"
+      description="Create a new production project for conferences, shows, filming, or other events"
       submitText="Create Project"
       cancelText="Cancel"
-      loading={submitting}
+      loading={createProject.isPending}
       size="lg"
     >
       <div className="space-y-4">
-        {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/50 rounded-lg p-4 text-red-600 dark:text-red-400 text-sm">
-            {error}
-          </div>
-        )}
-
         {/* Project Name */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -487,72 +481,71 @@ function NewProjectModal({ onClose, onSuccess }: NewProjectModalProps) {
             value={formData.name}
             onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
             className="w-full px-4 py-3 bg-white dark:bg-[#0E1A2B] border border-gray-300 dark:border-[#2979FF]/20 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2979FF] focus:border-transparent"
-            placeholder="Summer Campaign 2025"
+            placeholder="Tech Conference 2025"
           />
         </div>
 
-        {/* Objective */}
+        {/* Description */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Objective
+            Description
           </label>
           <textarea
-            value={formData.objective}
-            onChange={(e) => setFormData(prev => ({ ...prev, objective: e.target.value }))}
+            value={formData.description}
+            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
             rows={3}
             className="w-full px-4 py-3 bg-white dark:bg-[#0E1A2B] border border-gray-300 dark:border-[#2979FF]/20 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2979FF] resize-none"
-            placeholder="What's the goal of this project?"
+            placeholder="Brief description of the production project"
           />
         </div>
 
-        {/* Target Audience */}
+        {/* Project Type */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Target Audience
+            Project Type
           </label>
-          <input
-            type="text"
-            value={formData.targetAudience}
-            onChange={(e) => setFormData(prev => ({ ...prev, targetAudience: e.target.value }))}
-            className="w-full px-4 py-3 bg-white dark:bg-[#0E1A2B] border border-gray-300 dark:border-[#2979FF]/20 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2979FF]"
-            placeholder="e.g., Women 25-45, Tech enthusiasts"
-          />
-        </div>
-
-        {/* Target Channels */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Target Channels
-          </label>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            {channelOptions.map(channel => (
+          <div className="grid grid-cols-2 gap-2">
+            {projectTypes.map(({ value, label }) => (
               <button
-                key={channel}
+                key={value}
                 type="button"
-                onClick={() => toggleChannel(channel)}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                  formData.channels.includes(channel)
+                onClick={() => setFormData(prev => ({ ...prev, type: value }))}
+                className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                  formData.type === value
                     ? 'bg-[#2979FF] text-white shadow-md'
-                    : 'bg-gray-100 dark:bg-[#0E1A2B] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#0E1A2B]/70'
+                    : 'bg-gray-100 dark:bg-[#0E1A2B] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#0E1A2B]/70 border border-gray-300 dark:border-[#2979FF]/20'
                 }`}
               >
-                {channel.replace('_', ' ')}
+                {label}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Due Date */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Due Date
-          </label>
-          <input
-            type="date"
-            value={formData.dueDate}
-            onChange={(e) => setFormData(prev => ({ ...prev, dueDate: e.target.value }))}
-            className="w-full px-4 py-3 bg-white dark:bg-[#0E1A2B] border border-gray-300 dark:border-[#2979FF]/20 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF]"
-          />
+        {/* Date Range */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Start Date
+            </label>
+            <input
+              type="date"
+              value={formData.startDate}
+              onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
+              className="w-full px-4 py-3 bg-white dark:bg-[#0E1A2B] border border-gray-300 dark:border-[#2979FF]/20 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF]"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              End Date
+            </label>
+            <input
+              type="date"
+              value={formData.endDate}
+              onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
+              className="w-full px-4 py-3 bg-white dark:bg-[#0E1A2B] border border-gray-300 dark:border-[#2979FF]/20 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF]"
+            />
+          </div>
         </div>
       </div>
     </FormModal>
