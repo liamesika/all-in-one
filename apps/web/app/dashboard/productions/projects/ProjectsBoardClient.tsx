@@ -3,9 +3,10 @@
 /**
  * Creative Productions - Projects Board Client (Redesigned with Design System 2.0)
  * Kanban view with drag-and-drop, filters, and modern modal
+ * Updated to use React Query and real backend data
  */
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
@@ -17,6 +18,7 @@ import {
   Film,
   AlertCircle,
 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 // Import unified components
 import {
@@ -26,80 +28,45 @@ import {
   UniversalCard,
 } from '@/components/shared';
 
-type ProjectStatus = 'DRAFT' | 'IN_PROGRESS' | 'REVIEW' | 'APPROVED' | 'DELIVERED';
+// Import React Query hooks
+import {
+  useProjects,
+  useUpdateProject,
+  useCreateProject,
+  useProjectStats,
+} from '@/hooks/useProductionsData';
+import { ProjectStatus, type ProductionProject } from '@/lib/api/productions';
 
-interface Project {
-  id: string;
-  name: string;
-  objective?: string | null;
-  targetAudience?: string | null;
-  channels: string[];
-  status: ProjectStatus;
-  dueDate?: string | null;
-  ownerUid: string;
-  createdAt: string;
-  updatedAt: string;
-  _count?: {
-    tasks: number;
-    assets: number;
-    reviews: number;
-    renders: number;
-  };
-}
+type Project = ProductionProject;
 
 const STATUS_CONFIG: Record<ProjectStatus, { label: string; color: 'default' | 'primary' | 'success' | 'warning' | 'info'; icon: React.ReactNode }> = {
-  DRAFT: { label: 'Draft', color: 'default', icon: <FileText className="w-4 h-4" /> },
-  IN_PROGRESS: { label: 'In Progress', color: 'primary', icon: <Clock className="w-4 h-4" /> },
-  REVIEW: { label: 'Review', color: 'warning', icon: <AlertCircle className="w-4 h-4" /> },
-  APPROVED: { label: 'Approved', color: 'success', icon: <CheckCircle2 className="w-4 h-4" /> },
-  DELIVERED: { label: 'Delivered', color: 'success', icon: <CheckCircle2 className="w-4 h-4" /> },
+  PLANNING: { label: 'Planning', color: 'default', icon: <FileText className="w-4 h-4" /> },
+  ACTIVE: { label: 'Active', color: 'primary', icon: <Clock className="w-4 h-4" /> },
+  DONE: { label: 'Done', color: 'success', icon: <CheckCircle2 className="w-4 h-4" /> },
+  ON_HOLD: { label: 'On Hold', color: 'warning', icon: <AlertCircle className="w-4 h-4" /> },
 };
 
 export default function ProjectsBoardClient() {
   const router = useRouter();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
   const [draggedProject, setDraggedProject] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchProjects();
-  }, []);
-
-  const fetchProjects = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch('/api/productions/projects?limit=100');
-      if (!res.ok) throw new Error('Failed to fetch projects');
-
-      const data = await res.json();
-      setProjects(data.projects || []);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // React Query hooks for data fetching
+  const { data: projects = [], isLoading: loading, error, refetch } = useProjects();
+  const { data: stats } = useProjectStats();
+  const updateProject = useUpdateProject();
+  const createProject = useCreateProject();
 
   const handleStatusChange = async (projectId: string, newStatus: ProjectStatus) => {
     try {
-      const res = await fetch(`/api/productions/projects/${projectId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
+      await updateProject.mutateAsync({
+        id: projectId,
+        data: { status: newStatus },
       });
-
-      if (!res.ok) throw new Error('Failed to update project');
-
-      // Optimistic update
-      setProjects(prev =>
-        prev.map(p => (p.id === projectId ? { ...p, status: newStatus } : p))
-      );
+      toast.success('Project status updated');
     } catch (err: any) {
+      toast.error('Failed to update project status');
       console.error('Error updating project:', err);
-      alert('Failed to update project status');
-      fetchProjects(); // Reload on error
     }
   };
 
@@ -165,11 +132,63 @@ export default function ProjectsBoardClient() {
         <UniversalCard variant="outlined" className="max-w-md p-8 text-center">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Error Loading Projects</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
-          <UniversalButton variant="primary" onClick={fetchProjects}>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">{error instanceof Error ? error.message : 'An error occurred'}</p>
+          <UniversalButton variant="primary" onClick={() => refetch()}>
             Retry
           </UniversalButton>
         </UniversalCard>
+      </div>
+    );
+  }
+
+  // Empty State
+  if (!loading && projects.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B] p-6 lg:p-8">
+        <div className="max-w-[1600px] mx-auto">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <div>
+              <UniversalButton
+                variant="ghost"
+                size="sm"
+                leftIcon={<ArrowLeft className="w-4 h-4" />}
+                onClick={() => router.push('/dashboard/productions')}
+                className="mb-3"
+              >
+                Back
+              </UniversalButton>
+              <h1 className="text-heading-1 text-gray-900 dark:text-white">Projects Board</h1>
+            </div>
+          </div>
+
+          <UniversalCard variant="outlined" className="p-12 text-center">
+            <Film className="w-20 h-20 text-gray-300 dark:text-gray-600 mx-auto mb-6" />
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+              No projects yet
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+              Get started by creating your first production project. Track conferences, shows, filming, and more.
+            </p>
+            <UniversalButton
+              variant="primary"
+              size="lg"
+              leftIcon={<Plus className="w-5 h-5" />}
+              onClick={() => setShowNewProjectModal(true)}
+            >
+              Create Your First Project
+            </UniversalButton>
+          </UniversalCard>
+
+          {showNewProjectModal && (
+            <NewProjectModal
+              onClose={() => setShowNewProjectModal(false)}
+              onSuccess={() => {
+                setShowNewProjectModal(false);
+                refetch();
+              }}
+            />
+          )}
+        </div>
       </div>
     );
   }
@@ -228,7 +247,7 @@ export default function ProjectsBoardClient() {
           onClose={() => setShowNewProjectModal(false)}
           onSuccess={() => {
             setShowNewProjectModal(false);
-            fetchProjects();
+            refetch(); // React Query refetch
           }}
         />
       )}
@@ -406,62 +425,36 @@ interface NewProjectModalProps {
 }
 
 function NewProjectModal({ onClose, onSuccess }: NewProjectModalProps) {
+  const createProject = useCreateProject();
   const [formData, setFormData] = useState({
     name: '',
-    objective: '',
-    targetAudience: '',
-    channels: [] as string[],
-    dueDate: '',
+    description: '',
+    type: 'OTHER' as ProjectType,
+    startDate: '',
+    endDate: '',
   });
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const channelOptions = [
-    'META_FEED',
-    'META_STORY',
-    'INSTAGRAM_FEED',
-    'INSTAGRAM_STORY',
-    'INSTAGRAM_REEL',
-    'YOUTUBE',
-    'TIKTOK',
-    'LINKEDIN',
-    'TWITTER',
+  const projectTypes: { value: ProjectType; label: string }[] = [
+    { value: 'CONFERENCE', label: 'Conference' },
+    { value: 'SHOW', label: 'Show' },
+    { value: 'FILMING', label: 'Filming' },
+    { value: 'OTHER', label: 'Other' },
   ];
 
   const handleSubmit = async () => {
-    setSubmitting(true);
-    setError(null);
-
     try {
-      const res = await fetch('/api/productions/projects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          dueDate: formData.dueDate || null,
-        }),
+      await createProject.mutateAsync({
+        name: formData.name,
+        description: formData.description || null,
+        type: formData.type,
+        startDate: formData.startDate || null,
+        endDate: formData.endDate || null,
       });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to create project');
-      }
-
+      toast.success('Project created successfully!');
       onSuccess();
     } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setSubmitting(false);
+      toast.error(err.message || 'Failed to create project');
     }
-  };
-
-  const toggleChannel = (channel: string) => {
-    setFormData(prev => ({
-      ...prev,
-      channels: prev.channels.includes(channel)
-        ? prev.channels.filter(c => c !== channel)
-        : [...prev.channels, channel],
-    }));
   };
 
   return (
