@@ -29,7 +29,7 @@ if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_SENTRY_DSN) {
   });
 }
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({ children, initialLang }: { children: React.ReactNode; initialLang?: 'he' | 'en' }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
@@ -38,3 +38,5 @@ export function Providers({ children }: { children: React.ReactNode }) {
     </QueryClientProvider>
   );
 }
+
+export default Providers;
