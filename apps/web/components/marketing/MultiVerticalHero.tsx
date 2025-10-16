@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
   Home,
@@ -81,11 +82,28 @@ export function MultiVerticalHero() {
       <div className="relative max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 lg:py-36">
         {/* Header Content */}
         <div className="text-center mb-16 space-y-6">
+          {/* Logo */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6 }}
+            className="flex justify-center mb-8"
+          >
+            <Image
+              src="/logo/logo-silver.png"
+              alt="Effinity Logo"
+              width={200}
+              height={60}
+              priority
+              className="h-12 sm:h-16 w-auto"
+            />
+          </motion.div>
+
           {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
             className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20"
           >
             <Sparkles size={16} className="text-yellow-400" />
@@ -96,7 +114,7 @@ export function MultiVerticalHero() {
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
             className="text-4xl sm:text-5xl lg:text-7xl font-semibold leading-tight tracking-tight max-w-5xl mx-auto"
           >
             The Intelligent Platform
@@ -110,7 +128,7 @@ export function MultiVerticalHero() {
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
             className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed"
           >
             Effinity powers Real Estate agencies, E-Commerce businesses, Production studios,
@@ -122,7 +140,7 @@ export function MultiVerticalHero() {
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12"
         >
           {verticals.map((vertical, index) => {
@@ -134,7 +152,7 @@ export function MultiVerticalHero() {
                 key={vertical.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.4 + index * 0.1 }}
+                transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
                 onHoverStart={() => setHoveredVertical(vertical.id)}
                 onHoverEnd={() => setHoveredVertical(null)}
                 className="group relative"
@@ -199,7 +217,7 @@ export function MultiVerticalHero() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.8 }}
+          transition={{ duration: 0.6, delay: 0.9 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
           <Link
