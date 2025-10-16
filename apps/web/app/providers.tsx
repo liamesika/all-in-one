@@ -4,6 +4,7 @@ import React from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '../lib/cache/queryClient';
 import { ThemeProvider } from '../lib/theme/ThemeProvider';
+import { LanguageProvider } from '../lib/language-context';
 
 // Initialize Sentry on client side
 if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_SENTRY_DSN) {
@@ -32,9 +33,11 @@ if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_SENTRY_DSN) {
 export function Providers({ children, initialLang }: { children: React.ReactNode; initialLang?: 'he' | 'en' }) {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        {children}
-      </ThemeProvider>
+      <LanguageProvider initialLang={initialLang}>
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }
