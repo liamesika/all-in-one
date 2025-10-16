@@ -131,10 +131,10 @@ export default function ProductionsDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB]">
+    <div className="flex-1 flex flex-col min-h-screen bg-[#F9FAFB]">
       <ProductionsHeader userName={userName} />
 
-      <main className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         {/* Hero Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
