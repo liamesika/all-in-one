@@ -23,18 +23,16 @@ import {
   ArrowDownRight
 } from 'lucide-react';
 import { ProductionsHeader } from '@/components/productions/ProductionsHeader';
+import {
+  useAnalyticsOverview,
+  useRevenueData,
+  useProjectDistribution,
+  useTaskMetrics,
+  useProjects,
+} from '@/hooks/useProductionsData';
 
-type TimeRange = '7d' | '30d' | '90d' | '1y' | 'all';
-type ChartType = 'revenue' | 'projects' | 'tasks' | 'clients';
-
-interface MetricCard {
-  title: string;
-  value: string;
-  change: number;
-  trend: 'up' | 'down';
-  icon: React.ElementType;
-  color: string;
-}
+type TimeRange = '7d' | '30d' | '90d' | '1y';
+type ChartType = 'revenue' | 'projects' | 'tasks';
 
 interface ChartData {
   label: string;
@@ -47,105 +45,39 @@ export default function ReportsPage() {
   const [selectedChart, setSelectedChart] = useState<ChartType>('revenue');
   const [showAIInsights, setShowAIInsights] = useState(true);
 
-  // Mock metrics data
-  const metrics: MetricCard[] = [
+  // Fetch live analytics data
+  const { data: analyticsOverview, isLoading: overviewLoading } = useAnalyticsOverview();
+  const { data: revenueData = [], isLoading: revenueLoading } = useRevenueData(timeRange);
+  const { data: projectDistribution = [], isLoading: distributionLoading } = useProjectDistribution();
+  const { data: taskMetrics = [], isLoading: taskMetricsLoading } = useTaskMetrics();
+  const { data: projects = [], isLoading: projectsLoading } = useProjects();
+
+  const isLoading = overviewLoading || revenueLoading || distributionLoading || taskMetricsLoading;
+
+  // Generate AI insights from live data
+  const aiInsights = analyticsOverview ? [
     {
-      title: 'Total Revenue',
-      value: '$1,245,000',
-      change: 12.5,
-      trend: 'up',
-      icon: DollarSign,
-      color: 'green'
+      type: analyticsOverview.revenueGrowth > 0 ? 'opportunity' : 'warning',
+      title: analyticsOverview.revenueGrowth > 0 ? 'Revenue Growth Opportunity' : 'Revenue Growth Concern',
+      description: `Revenue ${analyticsOverview.revenueGrowth > 0 ? 'increased' : 'decreased'} by ${Math.abs(analyticsOverview.revenueGrowth).toFixed(1)}% in the selected period. ${analyticsOverview.revenueGrowth > 10 ? 'Strong momentum - consider scaling efforts.' : 'Review pricing and market strategy.'}`,
+      impact: Math.abs(analyticsOverview.revenueGrowth) > 10 ? 'high' : 'medium',
+      icon: analyticsOverview.revenueGrowth > 0 ? TrendingUp : TrendingDown
     },
     {
-      title: 'Active Projects',
-      value: '24',
-      change: 8.3,
-      trend: 'up',
-      icon: FolderKanban,
-      color: 'blue'
-    },
-    {
-      title: 'Completed Tasks',
-      value: '1,847',
-      change: -3.2,
-      trend: 'down',
-      icon: CheckSquare,
-      color: 'purple'
-    },
-    {
-      title: 'Total Clients',
-      value: '89',
-      change: 15.7,
-      trend: 'up',
-      icon: Users,
-      color: 'orange'
-    }
-  ];
-
-  // Mock revenue data (line chart)
-  const revenueData: ChartData[] = [
-    { label: 'Jan', value: 85000 },
-    { label: 'Feb', value: 92000 },
-    { label: 'Mar', value: 78000 },
-    { label: 'Apr', value: 115000 },
-    { label: 'May', value: 125000 },
-    { label: 'Jun', value: 145000 },
-    { label: 'Jul', value: 132000 },
-    { label: 'Aug', value: 158000 },
-    { label: 'Sep', value: 142000 },
-    { label: 'Oct', value: 165000 },
-    { label: 'Nov', value: 178000 },
-    { label: 'Dec', value: 195000 }
-  ];
-
-  // Mock project distribution (donut chart)
-  const projectDistribution: ChartData[] = [
-    { label: 'Active', value: 14, color: '#10B981' },
-    { label: 'Planning', value: 6, color: '#3B82F6' },
-    { label: 'On Hold', value: 3, color: '#F59E0B' },
-    { label: 'Completed', value: 1, color: '#6B7280' }
-  ];
-
-  // Mock task completion (bar chart)
-  const taskCompletion: ChartData[] = [
-    { label: 'Week 1', value: 87 },
-    { label: 'Week 2', value: 92 },
-    { label: 'Week 3', value: 78 },
-    { label: 'Week 4', value: 95 }
-  ];
-
-  // Mock client growth
-  const clientGrowth: ChartData[] = [
-    { label: 'Q1', value: 12 },
-    { label: 'Q2', value: 18 },
-    { label: 'Q3', value: 25 },
-    { label: 'Q4', value: 34 }
-  ];
-
-  const aiInsights = [
-    {
-      type: 'opportunity',
-      title: 'Revenue Growth Opportunity',
-      description: 'Q4 shows strong growth momentum (+23%). Consider scaling marketing efforts to maintain trajectory.',
-      impact: 'high',
-      icon: TrendingUp
-    },
-    {
-      type: 'warning',
-      title: 'Task Completion Rate Dip',
-      description: 'Week 3 showed a 14% drop in task completion. Review team capacity and project timelines.',
-      impact: 'medium',
+      type: analyticsOverview.taskCompletionRate > 80 ? 'success' : 'warning',
+      title: analyticsOverview.taskCompletionRate > 80 ? 'Strong Task Performance' : 'Task Completion Below Target',
+      description: `Current task completion rate is ${analyticsOverview.taskCompletionRate.toFixed(1)}%. ${analyticsOverview.taskCompletionRate > 80 ? 'Team is performing well.' : 'Review team capacity and project timelines.'}`,
+      impact: analyticsOverview.taskCompletionRate < 70 ? 'high' : 'medium',
       icon: Activity
     },
     {
-      type: 'success',
-      title: 'Client Acquisition Accelerating',
-      description: 'New client rate increased 41% QoQ. Client satisfaction scores remain high (4.8/5).',
-      impact: 'high',
-      icon: Users
+      type: analyticsOverview.projectGrowth > 0 ? 'success' : 'warning',
+      title: analyticsOverview.projectGrowth > 0 ? 'Project Portfolio Growing' : 'Project Growth Stagnant',
+      description: `Project count ${analyticsOverview.projectGrowth > 0 ? 'increased' : 'decreased'} by ${Math.abs(analyticsOverview.projectGrowth).toFixed(1)}%. ${analyticsOverview.projectGrowth > 15 ? 'Excellent client acquisition.' : 'Focus on new business development.'}`,
+      impact: Math.abs(analyticsOverview.projectGrowth) > 15 ? 'high' : 'medium',
+      icon: analyticsOverview.projectGrowth > 0 ? FolderKanban : Users
     }
-  ];
+  ] : [];
 
   const exportFormats = [
     { label: 'Export as PDF', icon: FileText, format: 'pdf' },
@@ -341,13 +273,34 @@ export default function ReportsPage() {
       case 'projects':
         return projectDistribution;
       case 'tasks':
-        return taskCompletion;
-      case 'clients':
-        return clientGrowth;
+        return taskMetrics;
       default:
         return revenueData;
     }
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#F9FAFB]">
+        <ProductionsHeader
+          title="Reports & Analytics"
+          subtitle="Comprehensive insights and performance metrics"
+          icon={BarChart3}
+        />
+        <div className="p-8 space-y-6">
+          <div className="animate-pulse space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-32 bg-gray-200 rounded-xl"></div>
+              ))}
+            </div>
+            <div className="h-[400px] bg-gray-200 rounded-xl"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F9FAFB]">
@@ -367,7 +320,6 @@ export default function ReportsPage() {
               <option value="30d">Last 30 days</option>
               <option value="90d">Last 90 days</option>
               <option value="1y">Last year</option>
-              <option value="all">All time</option>
             </select>
 
             {/* Export Dropdown */}
@@ -465,38 +417,85 @@ export default function ReportsPage() {
         )}
 
         {/* Key Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {metrics.map((metric, index) => {
-            const Icon = metric.icon;
-            const TrendIcon = metric.trend === 'up' ? ArrowUpRight : ArrowDownRight;
+        {analyticsOverview && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              {
+                title: 'Total Revenue',
+                value: `₪${analyticsOverview.totalRevenue.toLocaleString()}`,
+                change: analyticsOverview.revenueGrowth,
+                trend: analyticsOverview.revenueGrowth >= 0 ? 'up' : 'down',
+                icon: DollarSign,
+                color: 'green'
+              },
+              {
+                title: 'Active Projects',
+                value: analyticsOverview.activeProjects.toString(),
+                change: analyticsOverview.projectGrowth,
+                trend: analyticsOverview.projectGrowth >= 0 ? 'up' : 'down',
+                icon: FolderKanban,
+                color: 'blue'
+              },
+              {
+                title: 'Completed Tasks',
+                value: analyticsOverview.completedTasks.toString(),
+                change: analyticsOverview.taskCompletionRate - 100,
+                trend: analyticsOverview.taskCompletionRate >= 80 ? 'up' : 'down',
+                icon: CheckSquare,
+                color: 'purple'
+              },
+              {
+                title: 'Total Clients',
+                value: analyticsOverview.totalClients.toString(),
+                change: analyticsOverview.clientGrowth,
+                trend: analyticsOverview.clientGrowth >= 0 ? 'up' : 'down',
+                icon: Users,
+                color: 'orange'
+              }
+            ].map((metric, index) => {
+              const Icon = metric.icon;
+              const TrendIcon = metric.trend === 'up' ? ArrowUpRight : ArrowDownRight;
 
-            return (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-lg transition-shadow"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center bg-${metric.color}-100`}>
-                    <Icon className={`text-${metric.color}-600`} size={24} />
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-lg transition-shadow"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                      metric.color === 'green' ? 'bg-green-100' :
+                      metric.color === 'blue' ? 'bg-blue-100' :
+                      metric.color === 'purple' ? 'bg-purple-100' :
+                      'bg-orange-100'
+                    }`}>
+                      <Icon className={`${
+                        metric.color === 'green' ? 'text-green-600' :
+                        metric.color === 'blue' ? 'text-blue-600' :
+                        metric.color === 'purple' ? 'text-purple-600' :
+                        'text-orange-600'
+                      }`} size={24} />
+                    </div>
+                    {metric.change !== undefined && (
+                      <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                        metric.trend === 'up'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-red-100 text-red-700'
+                      }`}>
+                        <TrendIcon size={12} />
+                        <span>{Math.abs(metric.change).toFixed(1)}%</span>
+                      </div>
+                    )}
                   </div>
-                  <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                    metric.trend === 'up'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-red-100 text-red-700'
-                  }`}>
-                    <TrendIcon size={12} />
-                    <span>{Math.abs(metric.change)}%</span>
-                  </div>
-                </div>
-                <div className="text-2xl font-bold text-gray-900 mb-1">{metric.value}</div>
-                <div className="text-sm text-gray-500">{metric.title}</div>
-              </motion.div>
-            );
-          })}
-        </div>
+                  <div className="text-2xl font-bold text-gray-900 mb-1">{metric.value}</div>
+                  <div className="text-sm text-gray-500">{metric.title}</div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Main Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -576,7 +575,7 @@ export default function ReportsPage() {
           </motion.div>
         </div>
 
-        {/* Detailed Performance Table */}
+        {/* Recent Projects Table */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -586,75 +585,76 @@ export default function ReportsPage() {
           <div className="p-6 border-b border-gray-200">
             <h3 className="font-semibold text-gray-900 flex items-center gap-2">
               <BarChart3 size={20} className="text-orange-500" />
-              Top Performing Projects
+              Recent Projects
             </h3>
-            <p className="text-sm text-gray-500 mt-1">Projects ranked by revenue and completion rate</p>
+            <p className="text-sm text-gray-500 mt-1">Latest production projects sorted by date</p>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Project Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Client
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Revenue
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Completion
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {[
-                  { name: 'Tech Conference 2024', client: 'TechCorp Inc.', revenue: '$125,000', completion: 76, status: 'On Track' },
-                  { name: 'Product Launch Video', client: 'InnovateLabs', revenue: '$85,000', completion: 92, status: 'Ahead' },
-                  { name: 'Brand Refresh Campaign', client: 'StyleCo', revenue: '$65,000', completion: 45, status: 'On Track' },
-                  { name: 'Documentary Series', client: 'MediaGroup', revenue: '$180,000', completion: 28, status: 'At Risk' },
-                  { name: 'Corporate Training Videos', client: 'TechCorp Inc.', revenue: '$42,000', completion: 88, status: 'On Track' }
-                ].map((project, index) => (
-                  <tr key={index} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-gray-900">{project.name}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {project.client}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {project.revenue}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 w-24 bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-orange-500 h-2 rounded-full"
-                            style={{ width: `${project.completion}%` }}
-                          />
-                        </div>
-                        <span className="text-sm text-gray-600">{project.completion}%</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        project.status === 'Ahead'
-                          ? 'bg-green-100 text-green-700'
-                          : project.status === 'At Risk'
-                          ? 'bg-red-100 text-red-700'
-                          : 'bg-blue-100 text-blue-700'
-                      }`}>
-                        {project.status}
-                      </span>
-                    </td>
+            {projects.length === 0 ? (
+              <div className="p-12 text-center">
+                <FolderKanban className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No projects yet</h3>
+                <p className="text-sm text-gray-500">Create your first production project to see analytics</p>
+              </div>
+            ) : (
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Project Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Type
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Budget
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Start Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {projects.slice(0, 5).map((project) => {
+                    const statusConfig = {
+                      PLANNING: { label: 'Planning', color: 'bg-blue-100 text-blue-700' },
+                      ACTIVE: { label: 'Active', color: 'bg-green-100 text-green-700' },
+                      DONE: { label: 'Done', color: 'bg-gray-100 text-gray-700' },
+                      ON_HOLD: { label: 'On Hold', color: 'bg-yellow-100 text-yellow-700' },
+                    };
+
+                    return (
+                      <tr key={project.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="font-medium text-gray-900">{project.name}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {project.type}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {project.budget ? `₪${project.budget.toLocaleString()}` : 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {project.startDate ? new Date(project.startDate).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          }) : 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusConfig[project.status].color}`}>
+                            {statusConfig[project.status].label}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
           </div>
         </motion.div>
       </div>
