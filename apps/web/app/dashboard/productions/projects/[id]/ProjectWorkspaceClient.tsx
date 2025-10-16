@@ -1,11 +1,12 @@
 'use client';
 
 /**
- * Creative Productions - Project Workspace Client (Redesigned with Design System 2.0)
- * Tabbed interface with modern cards, tables, and forms
+ * Productions - Project Workspace Client
+ * Tabbed interface with Overview, Tasks, Budget, and Files
+ * Connected to ProductionProject backend via React Query
  */
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
   ArrowLeft,
@@ -14,14 +15,13 @@ import {
   CheckCircle2,
   Clock,
   FileText,
-  Film,
   AlertCircle,
-  Eye,
-  Palette,
-  Users,
-  Edit,
-  Download,
+  DollarSign,
+  Folder,
+  LayoutDashboard,
+  ListTodo,
 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 // Import unified components
 import {
@@ -30,7 +30,6 @@ import {
   CardBody,
   UniversalButton,
   UniversalBadge,
-  StatusBadge,
   FormModal,
   UniversalTable,
   UniversalTableHeader,
@@ -39,139 +38,82 @@ import {
   UniversalTableHead,
   UniversalTableCell,
   TableEmptyState,
-  CountBadge,
 } from '@/components/shared';
 
-type TabType = 'brief' | 'tasks' | 'assets' | 'reviews' | 'renders';
+// Import React Query hooks
+import {
+  useProject,
+  useUpdateProject,
+  useDeleteProject,
+  useTasks,
+  useCreateTask,
+  useUpdateTask,
+  useDeleteTask,
+  useBudget,
+  useCreateBudgetItem,
+  useUpdateBudgetItem,
+  useDeleteBudgetItem,
+  useFiles,
+  useUploadFile,
+  useDeleteFile,
+} from '@/hooks/useProductionsData';
 
-interface Project {
-  id: string;
-  name: string;
-  objective?: string | null;
-  targetAudience?: string | null;
-  channels: string[];
-  status: string;
-  dueDate?: string | null;
-  ownerUid: string;
-  createdAt: string;
-  updatedAt: string;
-  tasks: Task[];
-  assets: Asset[];
-  reviews: Review[];
-  renders: Render[];
-}
+import {
+  ProjectStatus,
+  ProjectType,
+  ProductionTaskStatus,
+  TaskDomain,
+  BudgetCategory,
+  type ProductionProject,
+  type ProductionTask,
+  type ProductionBudgetItem,
+  type ProductionFileAsset,
+} from '@/lib/api/productions';
 
-interface Task {
-  id: string;
-  type: string;
-  title: string;
-  status: string;
-  assigneeUid?: string | null;
-  priority: number;
-  dueAt?: string | null;
-  createdAt: string;
-}
+type TabType = 'overview' | 'tasks' | 'budget' | 'files';
 
-interface Asset {
-  id: string;
-  title: string;
-  type: string;
-  storageUrl: string;
-  size?: number | null;
-  tags: string[];
-  createdAt: string;
-}
+const STATUS_CONFIG: Record<ProjectStatus, { label: string; color: 'default' | 'primary' | 'success' | 'warning' }> = {
+  PLANNING: { label: 'Planning', color: 'default' },
+  ACTIVE: { label: 'Active', color: 'primary' },
+  DONE: { label: 'Done', color: 'success' },
+  ON_HOLD: { label: 'On Hold', color: 'warning' },
+};
 
-interface Review {
-  id: string;
-  reviewerUid: string;
-  status: string;
-  comments?: string | null;
-  requestedAt: string;
-  decidedAt?: string | null;
-}
-
-interface Render {
-  id: string;
-  format: string;
-  status: string;
-  outputUrl?: string | null;
-  createdAt: string;
-}
+const TASK_STATUS_CONFIG: Record<ProductionTaskStatus, { label: string; color: 'default' | 'primary' | 'success' | 'warning' }> = {
+  OPEN: { label: 'Open', color: 'default' },
+  IN_PROGRESS: { label: 'In Progress', color: 'primary' },
+  DONE: { label: 'Done', color: 'success' },
+  BLOCKED: { label: 'Blocked', color: 'warning' },
+};
 
 export default function ProjectWorkspaceClient() {
   const router = useRouter();
   const params = useParams();
   const projectId = params.id as string;
 
-  const [project, setProject] = useState<Project | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<TabType>('brief');
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+  const [showNewBudgetModal, setShowNewBudgetModal] = useState(false);
 
-  useEffect(() => {
-    if (projectId) {
-      fetchProject();
-    }
-  }, [projectId]);
+  // Fetch project data
+  const { data: project, isLoading, error, refetch } = useProject(projectId);
+  const updateProject = useUpdateProject();
+  const deleteProject = useDeleteProject();
 
-  const fetchProject = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/productions/projects/${projectId}`);
-      if (!res.ok) throw new Error('Failed to fetch project');
-
-      const data = await res.json();
-      setProject(data.project);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleStatusChange = async (newStatus: string) => {
-    if (!project) return;
-
-    try {
-      const res = await fetch(`/api/productions/projects/${projectId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-      });
-
-      if (!res.ok) throw new Error('Failed to update status');
-
-      setProject(prev => prev ? { ...prev, status: newStatus } : null);
-    } catch (err: any) {
-      console.error('Error updating status:', err);
-      alert('Failed to update status');
-    }
-  };
-
-  const getStatusType = (status: string): 'active' | 'pending' | 'completed' | 'cancelled' => {
-    switch (status) {
-      case 'DRAFT':
-        return 'pending';
-      case 'IN_PROGRESS':
-        return 'active';
-      case 'REVIEW':
-        return 'pending';
-      case 'APPROVED':
-      case 'DELIVERED':
-        return 'completed';
-      default:
-        return 'pending';
-    }
-  };
+  // Fetch tab data
+  const { data: tasks = [] } = useTasks({ projectId });
+  const { data: budgetItems = [] } = useBudget({ projectId });
+  const { data: files = [] } = useFiles({ projectId });
 
   // Loading State
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B] p-6">
-        <div className="max-w-7xl mx-auto animate-pulse space-y-6">
-          <div className="h-12 bg-gray-200 dark:bg-[#1A2F4B] rounded-lg w-64"></div>
-          <div className="h-96 bg-gray-200 dark:bg-[#1A2F4B] rounded-xl"></div>
+        <div className="max-w-[1400px] mx-auto">
+          <div className="animate-pulse space-y-6">
+            <div className="h-12 bg-gray-200 dark:bg-[#1A2F4B] rounded-lg w-64"></div>
+            <div className="h-[600px] bg-gray-200 dark:bg-[#1A2F4B] rounded-xl"></div>
+          </div>
         </div>
       </div>
     );
@@ -187,220 +129,246 @@ export default function ProjectWorkspaceClient() {
             {error ? 'Error Loading Project' : 'Project Not Found'}
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            {error || 'The project you are looking for does not exist.'}
+            {error instanceof Error ? error.message : 'This project may have been deleted or you may not have access.'}
           </p>
-          <UniversalButton
-            variant="primary"
-            onClick={() => router.push('/dashboard/productions/projects')}
-          >
-            Back to Projects
-          </UniversalButton>
+          <div className="flex gap-3 justify-center">
+            <UniversalButton variant="ghost" onClick={() => router.push('/dashboard/productions/projects')}>
+              Back to Projects
+            </UniversalButton>
+            {error && (
+              <UniversalButton variant="primary" onClick={() => refetch()}>
+                Retry
+              </UniversalButton>
+            )}
+          </div>
         </UniversalCard>
       </div>
     );
   }
 
+  const handleStatusChange = async (newStatus: ProjectStatus) => {
+    try {
+      await updateProject.mutateAsync({ id: projectId, data: { status: newStatus } });
+      toast.success('Project status updated');
+    } catch (err: any) {
+      toast.error('Failed to update status');
+    }
+  };
+
+  const handleDeleteProject = async () => {
+    if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await deleteProject.mutateAsync(projectId);
+      toast.success('Project deleted');
+      router.push('/dashboard/productions/projects');
+    } catch (err: any) {
+      toast.error('Failed to delete project');
+    }
+  };
+
   const tabs: { id: TabType; label: string; count?: number; icon: React.ReactNode }[] = [
-    { id: 'brief', label: 'Brief', icon: <FileText className="w-4 h-4" /> },
-    { id: 'tasks', label: 'Tasks', count: project.tasks.length, icon: <CheckCircle2 className="w-4 h-4" /> },
-    { id: 'assets', label: 'Assets', count: project.assets.length, icon: <Film className="w-4 h-4" /> },
-    { id: 'reviews', label: 'Reviews', count: project.reviews.length, icon: <Eye className="w-4 h-4" /> },
-    { id: 'renders', label: 'Renders', count: project.renders.length, icon: <Palette className="w-4 h-4" /> },
+    { id: 'overview', label: 'Overview', icon: <LayoutDashboard className="w-4 h-4" /> },
+    { id: 'tasks', label: 'Tasks', count: tasks.length, icon: <ListTodo className="w-4 h-4" /> },
+    { id: 'budget', label: 'Budget', count: budgetItems.length, icon: <DollarSign className="w-4 h-4" /> },
+    { id: 'files', label: 'Files', count: files.length, icon: <Folder className="w-4 h-4" /> },
   ];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B] p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="max-w-[1400px] mx-auto space-y-6">
         {/* Header */}
-        <div>
-          <UniversalButton
-            variant="ghost"
-            size="sm"
-            leftIcon={<ArrowLeft className="w-4 h-4" />}
-            onClick={() => router.push('/dashboard/productions/projects')}
-            className="mb-4"
-          >
-            Back to Projects
-          </UniversalButton>
-
-          <UniversalCard variant="elevated">
-            <div className="p-6">
-              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-                {/* Left: Project Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start gap-3 mb-3">
-                    <h1 className="text-heading-1 text-gray-900 dark:text-white">
-                      {project.name}
-                    </h1>
-                  </div>
-
-                  {project.objective && (
-                    <p className="text-body-base text-gray-600 dark:text-gray-400 mb-4">
-                      {project.objective}
-                    </p>
-                  )}
-
-                  <div className="flex flex-wrap gap-2">
-                    <StatusBadge status={getStatusType(project.status)} />
-                    {project.dueDate && (
-                      <UniversalBadge variant="outline" icon={<Calendar className="w-3 h-3" />}>
-                        Due {new Date(project.dueDate).toLocaleDateString()}
-                      </UniversalBadge>
-                    )}
-                  </div>
-                </div>
-
-                {/* Right: Status & Actions */}
-                <div className="flex flex-col gap-3 min-w-[240px]">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Project Status
-                    </label>
-                    <select
-                      value={project.status}
-                      onChange={(e) => handleStatusChange(e.target.value)}
-                      className="w-full px-4 py-2 bg-white dark:bg-[#0E1A2B] border border-gray-300 dark:border-[#2979FF]/20 rounded-lg text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#2979FF] focus:border-transparent"
-                    >
-                      <option value="DRAFT">Draft</option>
-                      <option value="IN_PROGRESS">In Progress</option>
-                      <option value="REVIEW">Review</option>
-                      <option value="APPROVED">Approved</option>
-                      <option value="DELIVERED">Delivered</option>
-                    </select>
-                  </div>
-
-                  {project.channels.length > 0 && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Target Channels
-                      </label>
-                      <div className="flex flex-wrap gap-1">
-                        {project.channels.map((channel, idx) => (
-                          <UniversalBadge key={idx} variant="primary" size="sm">
-                            {channel.replace('_', ' ')}
-                          </UniversalBadge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <UniversalButton variant="outline" size="sm" leftIcon={<Edit className="w-4 h-4" />}>
-                    Edit Project
-                  </UniversalButton>
-                </div>
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+          <div className="flex-1">
+            <UniversalButton
+              variant="ghost"
+              size="sm"
+              leftIcon={<ArrowLeft className="w-4 h-4" />}
+              onClick={() => router.push('/dashboard/productions/projects')}
+              className="mb-3"
+            >
+              Back to Projects
+            </UniversalButton>
+            <div className="flex items-start gap-4">
+              <div className="flex-1">
+                <h1 className="text-heading-1 text-gray-900 dark:text-white mb-2">{project.name}</h1>
+                {project.description && (
+                  <p className="text-body-base text-gray-600 dark:text-gray-400">{project.description}</p>
+                )}
               </div>
+              <UniversalBadge variant={STATUS_CONFIG[project.status].color}>
+                {STATUS_CONFIG[project.status].label}
+              </UniversalBadge>
             </div>
+          </div>
+          <div className="flex gap-2">
+            <UniversalButton
+              variant="ghost"
+              size="md"
+              onClick={handleDeleteProject}
+              disabled={deleteProject.isPending}
+            >
+              Delete Project
+            </UniversalButton>
+          </div>
+        </div>
 
-            {/* Tabs */}
-            <div className="border-t border-gray-200 dark:border-[#2979FF]/20 px-6">
-              <div className="flex gap-1 overflow-x-auto scrollbar-hide -mb-px">
-                {tabs.map(tab => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 px-4 py-3 font-medium text-sm whitespace-nowrap transition-all border-b-2 ${
-                      activeTab === tab.id
-                        ? 'text-[#2979FF] border-[#2979FF]'
-                        : 'text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900 dark:hover:text-white hover:border-gray-300 dark:hover:border-[#2979FF]/40'
-                    }`}
-                  >
-                    {tab.icon}
-                    <span>{tab.label}</span>
-                    {tab.count !== undefined && tab.count > 0 && (
-                      <CountBadge count={tab.count} variant="primary" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </UniversalCard>
+        {/* Tabs */}
+        <div className="border-b border-gray-200 dark:border-[#2979FF]/20">
+          <div className="flex gap-1 overflow-x-auto">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-3 font-medium text-sm transition-all whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'text-[#2979FF] border-b-2 border-[#2979FF]'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                }`}
+              >
+                {tab.icon}
+                <span>{tab.label}</span>
+                {tab.count !== undefined && (
+                  <span className="ml-1 px-2 py-0.5 text-xs bg-gray-100 dark:bg-[#1A2F4B] rounded-full">
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Tab Content */}
-        <div>
-          {activeTab === 'brief' && <BriefTab project={project} />}
-          {activeTab === 'tasks' && <TasksTab projectId={project.id} tasks={project.tasks} onRefresh={fetchProject} />}
-          {activeTab === 'assets' && <AssetsTab projectId={project.id} assets={project.assets} />}
-          {activeTab === 'reviews' && <ReviewsTab reviews={project.reviews} />}
-          {activeTab === 'renders' && <RendersTab renders={project.renders} />}
-        </div>
+        {activeTab === 'overview' && <OverviewTab project={project} onStatusChange={handleStatusChange} />}
+        {activeTab === 'tasks' && (
+          <TasksTab
+            projectId={projectId}
+            tasks={tasks}
+            onNewTask={() => setShowNewTaskModal(true)}
+          />
+        )}
+        {activeTab === 'budget' && (
+          <BudgetTab
+            projectId={projectId}
+            budgetItems={budgetItems}
+            onNewItem={() => setShowNewBudgetModal(true)}
+          />
+        )}
+        {activeTab === 'files' && <FilesTab projectId={projectId} files={files} />}
+
+        {/* Modals */}
+        {showNewTaskModal && (
+          <NewTaskModal
+            projectId={projectId}
+            onClose={() => setShowNewTaskModal(false)}
+            onSuccess={() => setShowNewTaskModal(false)}
+          />
+        )}
+
+        {showNewBudgetModal && (
+          <NewBudgetModal
+            projectId={projectId}
+            onClose={() => setShowNewBudgetModal(false)}
+            onSuccess={() => setShowNewBudgetModal(false)}
+          />
+        )}
       </div>
     </div>
   );
 }
 
-// Brief Tab Component
-function BriefTab({ project }: { project: Project }) {
+// ==================== Overview Tab ====================
+
+interface OverviewTabProps {
+  project: ProductionProject;
+  onStatusChange: (status: ProjectStatus) => void;
+}
+
+function OverviewTab({ project, onStatusChange }: OverviewTabProps) {
+  const projectTypes = {
+    CONFERENCE: 'Conference',
+    SHOW: 'Show',
+    FILMING: 'Filming',
+    OTHER: 'Other',
+  };
+
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Project Info */}
       <UniversalCard>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <FileText className="w-5 h-5 text-[#2979FF]" />
-            <h2 className="text-heading-3 text-gray-900 dark:text-white">Project Brief</h2>
-          </div>
-        </CardHeader>
+        <CardHeader title="Project Information" />
         <CardBody>
-          <div className="space-y-6">
+          <dl className="space-y-4">
             <div>
-              <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-                Project Name
-              </h3>
-              <p className="text-body-lg text-gray-900 dark:text-white">{project.name}</p>
+              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Type</dt>
+              <dd className="mt-1 text-base text-gray-900 dark:text-white">{projectTypes[project.type]}</dd>
             </div>
-
-            {project.objective && (
-              <div>
-                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-                  Objective
-                </h3>
-                <p className="text-body-base text-gray-900 dark:text-white whitespace-pre-wrap">
-                  {project.objective}
-                </p>
-              </div>
-            )}
-
-            {project.targetAudience && (
-              <div>
-                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-                  Target Audience
-                </h3>
-                <p className="text-body-base text-gray-900 dark:text-white">
-                  {project.targetAudience}
-                </p>
-              </div>
-            )}
-
-            {project.channels.length > 0 && (
-              <div>
-                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-                  Target Channels
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {project.channels.map((channel, idx) => (
-                    <UniversalBadge key={idx} variant="primary" size="md">
-                      {channel.replace('_', ' ')}
-                    </UniversalBadge>
+            <div>
+              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Status</dt>
+              <dd className="mt-1">
+                <select
+                  value={project.status}
+                  onChange={(e) => onStatusChange(e.target.value as ProjectStatus)}
+                  className="px-3 py-2 bg-white dark:bg-[#0E1A2B] border border-gray-300 dark:border-[#2979FF]/20 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF]"
+                >
+                  {Object.entries(STATUS_CONFIG).map(([value, config]) => (
+                    <option key={value} value={value}>
+                      {config.label}
+                    </option>
                   ))}
-                </div>
+                </select>
+              </dd>
+            </div>
+            {project.startDate && (
+              <div>
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Start Date</dt>
+                <dd className="mt-1 text-base text-gray-900 dark:text-white">
+                  {new Date(project.startDate).toLocaleDateString()}
+                </dd>
               </div>
             )}
-
-            <div className="pt-4 border-t border-gray-200 dark:border-[#2979FF]/20">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-600 dark:text-gray-400">Created</span>
-                  <p className="text-gray-900 dark:text-white mt-1">
-                    {new Date(project.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-gray-600 dark:text-gray-400">Last Updated</span>
-                  <p className="text-gray-900 dark:text-white mt-1">
-                    {new Date(project.updatedAt).toLocaleDateString()}
-                  </p>
-                </div>
+            {project.endDate && (
+              <div>
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">End Date</dt>
+                <dd className="mt-1 text-base text-gray-900 dark:text-white">
+                  {new Date(project.endDate).toLocaleDateString()}
+                </dd>
               </div>
+            )}
+            <div>
+              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Created</dt>
+              <dd className="mt-1 text-base text-gray-900 dark:text-white">
+                {new Date(project.createdAt).toLocaleDateString()}
+              </dd>
+            </div>
+          </dl>
+        </CardBody>
+      </UniversalCard>
+
+      {/* Quick Stats */}
+      <UniversalCard>
+        <CardHeader title="Quick Stats" />
+        <CardBody>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <p className="text-sm text-blue-600 dark:text-blue-400 mb-1">Tasks</p>
+              <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                {project._count?.tasks || 0}
+              </p>
+            </div>
+            <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+              <p className="text-sm text-green-600 dark:text-green-400 mb-1">Budget Items</p>
+              <p className="text-2xl font-bold text-green-900 dark:text-green-100">
+                {project._count?.budgetItems || 0}
+              </p>
+            </div>
+            <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+              <p className="text-sm text-purple-600 dark:text-purple-400 mb-1">Files</p>
+              <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
+                {project._count?.files || 0}
+              </p>
             </div>
           </div>
         </CardBody>
@@ -409,318 +377,318 @@ function BriefTab({ project }: { project: Project }) {
   );
 }
 
-// Tasks Tab Component
+// ==================== Tasks Tab ====================
+
 interface TasksTabProps {
   projectId: string;
-  tasks: Task[];
-  onRefresh: () => void;
+  tasks: ProductionTask[];
+  onNewTask: () => void;
 }
 
-function TasksTab({ projectId, tasks, onRefresh }: TasksTabProps) {
-  const [showNewTask, setShowNewTask] = useState(false);
+function TasksTab({ projectId, tasks, onNewTask }: TasksTabProps) {
+  const updateTask = useUpdateTask();
+  const deleteTask = useDeleteTask();
 
-  const tasksByStatus = {
-    TODO: tasks.filter(t => t.status === 'TODO'),
-    DOING: tasks.filter(t => t.status === 'DOING'),
-    REVIEW: tasks.filter(t => t.status === 'REVIEW'),
-    DONE: tasks.filter(t => t.status === 'DONE'),
+  const handleStatusChange = async (taskId: string, newStatus: ProductionTaskStatus) => {
+    try {
+      await updateTask.mutateAsync({ id: taskId, data: { status: newStatus } });
+      toast.success('Task updated');
+    } catch (err: any) {
+      toast.error('Failed to update task');
+    }
   };
 
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-heading-3 text-gray-900 dark:text-white">Tasks Board</h2>
-        <UniversalButton
-          variant="primary"
-          leftIcon={<Plus className="w-4 h-4" />}
-          onClick={() => setShowNewTask(true)}
-        >
-          Add Task
-        </UniversalButton>
-      </div>
+  const handleDelete = async (taskId: string) => {
+    if (!confirm('Delete this task?')) return;
 
-      {tasks.length === 0 ? (
+    try {
+      await deleteTask.mutateAsync(taskId);
+      toast.success('Task deleted');
+    } catch (err: any) {
+      toast.error('Failed to delete task');
+    }
+  };
+
+  if (tasks.length === 0) {
+    return (
+      <UniversalCard>
+        <CardBody>
+          <TableEmptyState
+            icon={<ListTodo className="w-16 h-16" />}
+            title="No tasks yet"
+            description="Create your first task to get started"
+            action={
+              <UniversalButton variant="primary" leftIcon={<Plus className="w-4 h-4" />} onClick={onNewTask}>
+                New Task
+              </UniversalButton>
+            }
+          />
+        </CardBody>
+      </UniversalCard>
+    );
+  }
+
+  return (
+    <UniversalCard>
+      <CardHeader
+        title="Tasks"
+        action={
+          <UniversalButton variant="primary" size="sm" leftIcon={<Plus className="w-4 h-4" />} onClick={onNewTask}>
+            New Task
+          </UniversalButton>
+        }
+      />
+      <CardBody>
+        <UniversalTable>
+          <UniversalTableHeader>
+            <UniversalTableRow>
+              <UniversalTableHead>Title</UniversalTableHead>
+              <UniversalTableHead>Domain</UniversalTableHead>
+              <UniversalTableHead>Status</UniversalTableHead>
+              <UniversalTableHead>Due Date</UniversalTableHead>
+              <UniversalTableHead>Actions</UniversalTableHead>
+            </UniversalTableRow>
+          </UniversalTableHeader>
+          <UniversalTableBody>
+            {tasks.map((task) => (
+              <UniversalTableRow key={task.id}>
+                <UniversalTableCell>{task.title}</UniversalTableCell>
+                <UniversalTableCell>
+                  <UniversalBadge variant="default">{task.domain}</UniversalBadge>
+                </UniversalTableCell>
+                <UniversalTableCell>
+                  <select
+                    value={task.status}
+                    onChange={(e) => handleStatusChange(task.id, e.target.value as ProductionTaskStatus)}
+                    className="px-2 py-1 bg-white dark:bg-[#0E1A2B] border border-gray-300 dark:border-[#2979FF]/20 rounded text-sm focus:outline-none focus:ring-1 focus:ring-[#2979FF]"
+                  >
+                    {Object.entries(TASK_STATUS_CONFIG).map(([value, config]) => (
+                      <option key={value} value={value}>
+                        {config.label}
+                      </option>
+                    ))}
+                  </select>
+                </UniversalTableCell>
+                <UniversalTableCell>
+                  {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-'}
+                </UniversalTableCell>
+                <UniversalTableCell>
+                  <UniversalButton
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDelete(task.id)}
+                    disabled={deleteTask.isPending}
+                  >
+                    Delete
+                  </UniversalButton>
+                </UniversalTableCell>
+              </UniversalTableRow>
+            ))}
+          </UniversalTableBody>
+        </UniversalTable>
+      </CardBody>
+    </UniversalCard>
+  );
+}
+
+// ==================== Budget Tab ====================
+
+interface BudgetTabProps {
+  projectId: string;
+  budgetItems: ProductionBudgetItem[];
+  onNewItem: () => void;
+}
+
+function BudgetTab({ projectId, budgetItems, onNewItem }: BudgetTabProps) {
+  const deleteBudgetItem = useDeleteBudgetItem();
+
+  const handleDelete = async (itemId: string) => {
+    if (!confirm('Delete this budget item?')) return;
+
+    try {
+      await deleteBudgetItem.mutateAsync(itemId);
+      toast.success('Budget item deleted');
+    } catch (err: any) {
+      toast.error('Failed to delete budget item');
+    }
+  };
+
+  const totalPlanned = budgetItems.reduce((sum, item) => sum + item.planned, 0);
+  const totalActual = budgetItems.reduce((sum, item) => sum + item.actual, 0);
+
+  if (budgetItems.length === 0) {
+    return (
+      <UniversalCard>
+        <CardBody>
+          <TableEmptyState
+            icon={<DollarSign className="w-16 h-16" />}
+            title="No budget items yet"
+            description="Add budget items to track your project expenses"
+            action={
+              <UniversalButton variant="primary" leftIcon={<Plus className="w-4 h-4" />} onClick={onNewItem}>
+                Add Budget Item
+              </UniversalButton>
+            }
+          />
+        </CardBody>
+      </UniversalCard>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Budget Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <UniversalCard>
           <CardBody>
-            <TableEmptyState
-              icon={<CheckCircle2 className="w-12 h-12" />}
-              title="No tasks yet"
-              description="Create your first task to start tracking project progress"
-              action={
-                <UniversalButton
-                  variant="primary"
-                  onClick={() => setShowNewTask(true)}
-                >
-                  Create First Task
-                </UniversalButton>
-              }
-            />
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Total Planned</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">₪{totalPlanned.toLocaleString()}</p>
           </CardBody>
         </UniversalCard>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {(['TODO', 'DOING', 'REVIEW', 'DONE'] as const).map(status => (
-            <UniversalCard key={status} variant="default">
-              <CardHeader className="border-b border-gray-200 dark:border-[#2979FF]/20">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-gray-900 dark:text-white">
-                    {status.replace('_', ' ')}
-                  </h3>
-                  <CountBadge count={tasksByStatus[status].length} />
-                </div>
-              </CardHeader>
-              <CardBody>
-                <div className="space-y-2">
-                  {tasksByStatus[status].map(task => (
-                    <UniversalCard key={task.id} variant="flat" hoverable className="p-3">
-                      <h4 className="font-medium text-sm text-gray-900 dark:text-white mb-1">
-                        {task.title}
-                      </h4>
-                      <div className="flex items-center gap-2">
-                        <UniversalBadge variant="outline" size="sm">
-                          {task.type}
-                        </UniversalBadge>
-                        {task.dueAt && (
-                          <span className="text-xs text-yellow-600 dark:text-yellow-400">
-                            Due {new Date(task.dueAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                          </span>
-                        )}
-                      </div>
-                    </UniversalCard>
-                  ))}
-                </div>
-              </CardBody>
-            </UniversalCard>
-          ))}
-        </div>
-      )}
+        <UniversalCard>
+          <CardBody>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Total Actual</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">₪{totalActual.toLocaleString()}</p>
+          </CardBody>
+        </UniversalCard>
+        <UniversalCard>
+          <CardBody>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Variance</p>
+            <p className={`text-2xl font-bold ${totalActual > totalPlanned ? 'text-red-600' : 'text-green-600'}`}>
+              {totalActual > totalPlanned ? '+' : ''}₪{(totalActual - totalPlanned).toLocaleString()}
+            </p>
+          </CardBody>
+        </UniversalCard>
+      </div>
 
-      {showNewTask && (
-        <NewTaskModal
-          projectId={projectId}
-          onClose={() => setShowNewTask(false)}
-          onSuccess={() => {
-            setShowNewTask(false);
-            onRefresh();
-          }}
+      {/* Budget Items Table */}
+      <UniversalCard>
+        <CardHeader
+          title="Budget Items"
+          action={
+            <UniversalButton variant="primary" size="sm" leftIcon={<Plus className="w-4 h-4" />} onClick={onNewItem}>
+              Add Item
+            </UniversalButton>
+          }
         />
-      )}
-    </div>
-  );
-}
-
-// Assets Tab Component
-function AssetsTab({ projectId, assets }: { projectId: string; assets: Asset[] }) {
-  const getAssetIcon = (type: string) => {
-    switch (type) {
-      case 'VIDEO':
-        return <Film className="w-8 h-8" />;
-      case 'IMAGE':
-        return <FileText className="w-8 h-8" />;
-      default:
-        return <FileText className="w-8 h-8" />;
-    }
-  };
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-heading-3 text-gray-900 dark:text-white">Assets Library</h2>
-        <UniversalButton variant="primary" leftIcon={<Plus className="w-4 h-4" />}>
-          Upload Asset
-        </UniversalButton>
-      </div>
-
-      {assets.length === 0 ? (
-        <UniversalCard>
-          <CardBody>
-            <TableEmptyState
-              icon={<Film className="w-12 h-12" />}
-              title="No assets uploaded"
-              description="Upload videos, images, or documents to this project"
-              action={
-                <UniversalButton variant="primary">
-                  Upload First Asset
-                </UniversalButton>
-              }
-            />
-          </CardBody>
-        </UniversalCard>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {assets.map(asset => (
-            <UniversalCard key={asset.id} hoverable>
-              <CardBody>
-                <div className="aspect-square bg-gray-100 dark:bg-[#0E1A2B] rounded-lg mb-3 flex items-center justify-center text-[#2979FF]">
-                  {getAssetIcon(asset.type)}
-                </div>
-                <h4 className="font-medium text-sm text-gray-900 dark:text-white truncate mb-1">
-                  {asset.title}
-                </h4>
-                <div className="flex items-center justify-between">
-                  <UniversalBadge variant="outline" size="sm">{asset.type}</UniversalBadge>
-                  {asset.size && (
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {(asset.size / 1024 / 1024).toFixed(1)} MB
-                    </span>
-                  )}
-                </div>
-              </CardBody>
-            </UniversalCard>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Reviews Tab Component
-function ReviewsTab({ reviews }: { reviews: Review[] }) {
-  const getReviewBadgeVariant = (status: string): 'success' | 'warning' | 'default' => {
-    switch (status) {
-      case 'APPROVED':
-        return 'success';
-      case 'CHANGES_REQUESTED':
-        return 'warning';
-      default:
-        return 'default';
-    }
-  };
-
-  return (
-    <div className="space-y-4">
-      <h2 className="text-heading-3 text-gray-900 dark:text-white">Review History</h2>
-
-      {reviews.length === 0 ? (
-        <UniversalCard>
-          <CardBody>
-            <TableEmptyState
-              icon={<Eye className="w-12 h-12" />}
-              title="No reviews yet"
-              description="Request reviews from team members or clients"
-            />
-          </CardBody>
-        </UniversalCard>
-      ) : (
-        <UniversalCard>
-          <CardBody>
-            <div className="space-y-3">
-              {reviews.map(review => (
-                <div
-                  key={review.id}
-                  className="p-4 bg-gray-50 dark:bg-[#0E1A2B] rounded-lg border border-gray-200 dark:border-[#2979FF]/20"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <UniversalBadge variant={getReviewBadgeVariant(review.status)}>
-                      {review.status.replace('_', ' ')}
-                    </UniversalBadge>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      {new Date(review.requestedAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                  {review.comments && (
-                    <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
-                      {review.comments}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </CardBody>
-        </UniversalCard>
-      )}
-    </div>
-  );
-}
-
-// Renders Tab Component
-function RendersTab({ renders }: { renders: Render[] }) {
-  const getRenderStatus = (status: string): 'active' | 'completed' | 'cancelled' | 'pending' => {
-    switch (status) {
-      case 'READY':
-        return 'completed';
-      case 'RENDERING':
-        return 'active';
-      case 'FAILED':
-        return 'cancelled';
-      default:
-        return 'pending';
-    }
-  };
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-heading-3 text-gray-900 dark:text-white">Renders</h2>
-        <UniversalButton variant="primary" leftIcon={<Plus className="w-4 h-4" />}>
-          New Render
-        </UniversalButton>
-      </div>
-
-      {renders.length === 0 ? (
-        <UniversalCard>
-          <CardBody>
-            <TableEmptyState
-              icon={<Palette className="w-12 h-12" />}
-              title="No renders created"
-              description="Create renders for different formats and platforms"
-              action={
-                <UniversalButton variant="primary">
-                  Create First Render
-                </UniversalButton>
-              }
-            />
-          </CardBody>
-        </UniversalCard>
-      ) : (
-        <UniversalCard>
+        <CardBody>
           <UniversalTable>
             <UniversalTableHeader>
               <UniversalTableRow>
-                <UniversalTableHead>Format</UniversalTableHead>
-                <UniversalTableHead>Status</UniversalTableHead>
-                <UniversalTableHead>Created</UniversalTableHead>
-                <UniversalTableHead></UniversalTableHead>
+                <UniversalTableHead>Category</UniversalTableHead>
+                <UniversalTableHead>Planned</UniversalTableHead>
+                <UniversalTableHead>Actual</UniversalTableHead>
+                <UniversalTableHead>Variance</UniversalTableHead>
+                <UniversalTableHead>Actions</UniversalTableHead>
               </UniversalTableRow>
             </UniversalTableHeader>
             <UniversalTableBody>
-              {renders.map(render => (
-                <UniversalTableRow key={render.id} hoverable>
-                  <UniversalTableCell>
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {render.format}
-                    </span>
-                  </UniversalTableCell>
-                  <UniversalTableCell>
-                    <StatusBadge status={getRenderStatus(render.status)} />
-                  </UniversalTableCell>
-                  <UniversalTableCell>
-                    <span className="text-gray-600 dark:text-gray-400">
-                      {new Date(render.createdAt).toLocaleDateString()}
-                    </span>
-                  </UniversalTableCell>
-                  <UniversalTableCell>
-                    {render.outputUrl && (
+              {budgetItems.map((item) => {
+                const variance = item.actual - item.planned;
+                return (
+                  <UniversalTableRow key={item.id}>
+                    <UniversalTableCell>
+                      <UniversalBadge variant="default">{item.category}</UniversalBadge>
+                    </UniversalTableCell>
+                    <UniversalTableCell>₪{item.planned.toLocaleString()}</UniversalTableCell>
+                    <UniversalTableCell>₪{item.actual.toLocaleString()}</UniversalTableCell>
+                    <UniversalTableCell>
+                      <span className={variance > 0 ? 'text-red-600' : 'text-green-600'}>
+                        {variance > 0 ? '+' : ''}₪{variance.toLocaleString()}
+                      </span>
+                    </UniversalTableCell>
+                    <UniversalTableCell>
                       <UniversalButton
                         variant="ghost"
                         size="sm"
-                        leftIcon={<Download className="w-4 h-4" />}
+                        onClick={() => handleDelete(item.id)}
+                        disabled={deleteBudgetItem.isPending}
                       >
-                        Download
+                        Delete
                       </UniversalButton>
-                    )}
-                  </UniversalTableCell>
-                </UniversalTableRow>
-              ))}
+                    </UniversalTableCell>
+                  </UniversalTableRow>
+                );
+              })}
             </UniversalTableBody>
           </UniversalTable>
-        </UniversalCard>
-      )}
+        </CardBody>
+      </UniversalCard>
     </div>
   );
 }
 
-// New Task Modal Component
+// ==================== Files Tab ====================
+
+interface FilesTabProps {
+  projectId: string;
+  files: ProductionFileAsset[];
+}
+
+function FilesTab({ projectId, files }: FilesTabProps) {
+  const deleteFile = useDeleteFile();
+
+  const handleDelete = async (fileId: string) => {
+    if (!confirm('Delete this file?')) return;
+
+    try {
+      await deleteFile.mutateAsync(fileId);
+      toast.success('File deleted');
+    } catch (err: any) {
+      toast.error('Failed to delete file');
+    }
+  };
+
+  if (files.length === 0) {
+    return (
+      <UniversalCard>
+        <CardBody>
+          <TableEmptyState
+            icon={<Folder className="w-16 h-16" />}
+            title="No files yet"
+            description="Upload files to share with your team"
+          />
+        </CardBody>
+      </UniversalCard>
+    );
+  }
+
+  return (
+    <UniversalCard>
+      <CardHeader title="Files" />
+      <CardBody>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {files.map((file) => (
+            <div
+              key={file.id}
+              className="p-4 bg-gray-50 dark:bg-[#1A2F4B] rounded-lg border border-gray-200 dark:border-[#2979FF]/20"
+            >
+              <div className="flex items-start justify-between mb-2">
+                <FileText className="w-8 h-8 text-[#2979FF]" />
+                <UniversalButton
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDelete(file.id)}
+                  disabled={deleteFile.isPending}
+                >
+                  Delete
+                </UniversalButton>
+              </div>
+              <h4 className="font-medium text-gray-900 dark:text-white mb-1 truncate">{file.name}</h4>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{file.folder}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                {new Date(file.createdAt).toLocaleDateString()}
+              </p>
+            </div>
+          ))}
+        </div>
+      </CardBody>
+    </UniversalCard>
+  );
+}
+
+// ==================== Modals ====================
+
 interface NewTaskModalProps {
   projectId: string;
   onClose: () => void;
@@ -728,31 +696,27 @@ interface NewTaskModalProps {
 }
 
 function NewTaskModal({ projectId, onClose, onSuccess }: NewTaskModalProps) {
+  const createTask = useCreateTask();
   const [formData, setFormData] = useState({
     title: '',
-    type: 'SCRIPT',
-    priority: 0,
+    description: '',
+    domain: 'LOGISTICS' as TaskDomain,
+    dueDate: '',
   });
-  const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    setSubmitting(true);
-
     try {
-      const res = await fetch('/api/productions/tasks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, projectId }),
+      await createTask.mutateAsync({
+        projectId,
+        title: formData.title,
+        description: formData.description || null,
+        domain: formData.domain,
+        dueDate: formData.dueDate || null,
       });
-
-      if (!res.ok) throw new Error('Failed to create task');
-
+      toast.success('Task created');
       onSuccess();
-    } catch (err) {
-      console.error(err);
-      alert('Failed to create task');
-    } finally {
-      setSubmitting(false);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to create task');
     }
   };
 
@@ -765,41 +729,145 @@ function NewTaskModal({ projectId, onClose, onSuccess }: NewTaskModalProps) {
       description="Create a new task for this project"
       submitText="Create Task"
       cancelText="Cancel"
-      loading={submitting}
-      size="md"
+      loading={createTask.isPending}
     >
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Task Title <span className="text-red-500">*</span>
+            Title <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             required
             value={formData.title}
-            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-            className="w-full px-4 py-3 bg-white dark:bg-[#0E1A2B] border border-gray-300 dark:border-[#2979FF]/20 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2979FF] focus:border-transparent"
-            placeholder="Write script for Scene 1"
+            onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+            className="w-full px-4 py-3 bg-white dark:bg-[#0E1A2B] border border-gray-300 dark:border-[#2979FF]/20 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF]"
+            placeholder="Task title"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Task Type
-          </label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
+          <textarea
+            value={formData.description}
+            onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+            rows={3}
+            className="w-full px-4 py-3 bg-white dark:bg-[#0E1A2B] border border-gray-300 dark:border-[#2979FF]/20 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] resize-none"
+            placeholder="Task description"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Domain</label>
           <select
-            value={formData.type}
-            onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
-            className="w-full px-4 py-3 bg-white dark:bg-[#0E1A2B] border border-gray-300 dark:border-[#2979FF]/20 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] focus:border-transparent"
+            value={formData.domain}
+            onChange={(e) => setFormData((prev) => ({ ...prev, domain: e.target.value as TaskDomain }))}
+            className="w-full px-4 py-3 bg-white dark:bg-[#0E1A2B] border border-gray-300 dark:border-[#2979FF]/20 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF]"
           >
-            <option value="SCRIPT">Script</option>
-            <option value="DESIGN">Design</option>
-            <option value="EDIT">Edit</option>
-            <option value="VOICEOVER">Voiceover</option>
-            <option value="SHOOT">Shoot</option>
-            <option value="CUTDOWN">Cutdown</option>
-            <option value="LOCALIZATION">Localization</option>
+            <option value="LOGISTICS">Logistics</option>
+            <option value="CONTENT">Content</option>
+            <option value="MARKETING">Marketing</option>
+            <option value="SUPPLIERS">Suppliers</option>
           </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Due Date</label>
+          <input
+            type="date"
+            value={formData.dueDate}
+            onChange={(e) => setFormData((prev) => ({ ...prev, dueDate: e.target.value }))}
+            className="w-full px-4 py-3 bg-white dark:bg-[#0E1A2B] border border-gray-300 dark:border-[#2979FF]/20 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF]"
+          />
+        </div>
+      </div>
+    </FormModal>
+  );
+}
+
+interface NewBudgetModalProps {
+  projectId: string;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+function NewBudgetModal({ projectId, onClose, onSuccess }: NewBudgetModalProps) {
+  const createBudgetItem = useCreateBudgetItem();
+  const [formData, setFormData] = useState({
+    category: 'OTHER' as BudgetCategory,
+    planned: '',
+    actual: '',
+  });
+
+  const handleSubmit = async () => {
+    try {
+      await createBudgetItem.mutateAsync({
+        projectId,
+        category: formData.category,
+        planned: parseFloat(formData.planned) || 0,
+        actual: parseFloat(formData.actual) || 0,
+      });
+      toast.success('Budget item added');
+      onSuccess();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to add budget item');
+    }
+  };
+
+  return (
+    <FormModal
+      isOpen={true}
+      onClose={onClose}
+      onSubmit={handleSubmit}
+      title="New Budget Item"
+      description="Add a budget item to track expenses"
+      submitText="Add Item"
+      cancelText="Cancel"
+      loading={createBudgetItem.isPending}
+    >
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
+          <select
+            value={formData.category}
+            onChange={(e) => setFormData((prev) => ({ ...prev, category: e.target.value as BudgetCategory }))}
+            className="w-full px-4 py-3 bg-white dark:bg-[#0E1A2B] border border-gray-300 dark:border-[#2979FF]/20 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF]"
+          >
+            <option value="STAGE">Stage</option>
+            <option value="LIGHTING">Lighting</option>
+            <option value="CATERING">Catering</option>
+            <option value="MARKETING">Marketing</option>
+            <option value="OTHER">Other</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Planned Amount <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="number"
+            required
+            value={formData.planned}
+            onChange={(e) => setFormData((prev) => ({ ...prev, planned: e.target.value }))}
+            className="w-full px-4 py-3 bg-white dark:bg-[#0E1A2B] border border-gray-300 dark:border-[#2979FF]/20 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF]"
+            placeholder="0"
+            min="0"
+            step="0.01"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Actual Amount</label>
+          <input
+            type="number"
+            value={formData.actual}
+            onChange={(e) => setFormData((prev) => ({ ...prev, actual: e.target.value }))}
+            className="w-full px-4 py-3 bg-white dark:bg-[#0E1A2B] border border-gray-300 dark:border-[#2979FF]/20 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF]"
+            placeholder="0"
+            min="0"
+            step="0.01"
+          />
         </div>
       </div>
     </FormModal>
