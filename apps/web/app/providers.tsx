@@ -5,6 +5,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '../lib/cache/queryClient';
 import { ThemeProvider } from '../lib/theme/ThemeProvider';
 import { LanguageProvider } from '../lib/language-context';
+import { CommandPalette } from '@/components/platform/CommandPalette';
 
 // Initialize Sentry on client side
 if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_SENTRY_DSN) {
@@ -36,6 +37,7 @@ export function Providers({ children, initialLang }: { children: React.ReactNode
       <LanguageProvider initialLang={initialLang}>
         <ThemeProvider>
           {children}
+          <CommandPalette />
         </ThemeProvider>
       </LanguageProvider>
     </QueryClientProvider>
