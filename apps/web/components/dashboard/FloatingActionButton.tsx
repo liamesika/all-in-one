@@ -57,10 +57,10 @@ export function FloatingActionButton({
       )}
 
       {/* Floating Action Button */}
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-6 left-6 z-50">
         {/* Action Menu */}
         {isOpen && (
-          <div className="absolute bottom-20 right-0 flex flex-col gap-3 mb-2">
+          <div className="absolute bottom-20 left-0 flex flex-col gap-3 mb-2">
             {actions.map((action, index) => (
               <button
                 key={action.id}
