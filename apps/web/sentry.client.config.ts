@@ -2,16 +2,10 @@ import * as Sentry from '@sentry/nextjs';
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-
-  // Replay and Performance
   tracesSampleRate: 1.0,
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
-
-  // Environment
   environment: process.env.VERCEL_ENV || process.env.NODE_ENV || 'development',
-
-  // Integrations
   integrations: [
     Sentry.replayIntegration({
       maskAllText: true,
@@ -19,8 +13,6 @@ Sentry.init({
     }),
     Sentry.browserTracingIntegration(),
   ],
-
-  // Filter sensitive data
   beforeSend(event) {
     if (event.request) {
       delete event.request.cookies;
@@ -31,8 +23,6 @@ Sentry.init({
     }
     return event;
   },
-
-  // Ignore common non-critical errors
   ignoreErrors: [
     'ResizeObserver loop limit exceeded',
     'Non-Error promise rejection',
