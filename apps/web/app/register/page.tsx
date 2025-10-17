@@ -364,21 +364,52 @@ function RegisterForm() {
             </div>
           )}
 
-          {/* Terms & Conditions */}
-          <label className="flex items-start gap-3">
-            <input
-              type="checkbox"
-              checked={formData.termsConsent}
-              onChange={e => updateField('termsConsent', e.target.checked)}
-              className="mt-0.5 text-blue-600 focus:ring-blue-500"
-            />
-            <span className="text-sm font-normal text-gray-700">
-              {language === 'he' 
-                ? 'אני מסכים לתנאי השימוש ומדיניות הפרטיות'
-                : 'I agree to the Terms of Service and Privacy Policy'} <span className="text-red-500">*</span>
-            </span>
-          </label>
-          {errors.termsConsent && <div className="text-xs font-normal text-red-600">{errors.termsConsent}</div>}
+          {/* Terms & Conditions with Legal Links */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <label className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                checked={formData.termsConsent}
+                onChange={e => updateField('termsConsent', e.target.checked)}
+                className="mt-0.5 text-blue-600 focus:ring-blue-500 flex-shrink-0"
+              />
+              <span className="text-sm font-normal text-gray-700">
+                {language === 'he' ? (
+                  <>
+                    אני מאשר שקראתי והסכמתי ל
+                    <a href="/legal/terms" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline mx-1">
+                      תנאי השימוש
+                    </a>
+                    ול
+                    <a href="/legal/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline mx-1">
+                      מדיניות הפרטיות
+                    </a>
+                    של Effinity.
+                    <span className="text-red-500">*</span>
+                  </>
+                ) : (
+                  <>
+                    I acknowledge that I have read and agree to the{' '}
+                    <a href="/legal/terms" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">
+                      Terms of Use
+                    </a>
+                    {' '}and{' '}
+                    <a href="/legal/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">
+                      Privacy Policy
+                    </a>
+                    .
+                    <span className="text-red-500">*</span>
+                  </>
+                )}
+              </span>
+            </label>
+            <p className="text-xs text-gray-600 mt-2 ml-7">
+              {language === 'he'
+                ? 'כל זכויות הקניין הרוחני שייכות באופן בלעדי לליה מסיקה (Effinity). הסכם זה כפוף לחוקי מדינת ישראל.'
+                : 'All intellectual property rights belong exclusively to Lia Mesika (Effinity). This agreement is governed by the laws of the State of Israel.'}
+            </p>
+            {errors.termsConsent && <div className="text-xs font-normal text-red-600 mt-2 ml-7">{errors.termsConsent}</div>}
+          </div>
 
           {/* Server Error */}
           {serverError && (
