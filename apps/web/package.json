@@ -50,6 +50,7 @@
     "bcryptjs": "^2.4.3",
     "canvg": "^4.0.3",
     "client-only": "^0.0.1",
+    "date-fns": "^4.1.0",
     "dompurify": "^3.2.7",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "firebase": "^12.2.1",
