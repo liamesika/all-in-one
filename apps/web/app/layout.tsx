@@ -6,6 +6,7 @@ import React from 'react';
 import { cookies, headers } from 'next/headers';
 import AppProviders from './providers';
 import { Inter } from 'next/font/google';
+import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -104,6 +105,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang={lang} dir={dir} suppressHydrationWarning>
       <head>
+        {/* Google Analytics */}
+        <GoogleAnalytics />
+
         {/* Preconnect to external domains for better performance */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
