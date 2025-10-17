@@ -17,6 +17,9 @@ importers:
       '@rollup/rollup-darwin-arm64':
         specifier: ^4.52.4
         version: 4.52.4
+      '@rollup/rollup-linux-x64-gnu':
+        specifier: ^4.52.4
+        version: 4.52.4
       firebase:
         specifier: ^12.2.1
         version: 12.4.0
@@ -6053,7 +6056,6 @@ packages:
     os: [linux]
     requiresBuild: true
     dev: false
-    optional: true
 
   /@rollup/rollup-linux-x64-musl@4.52.4:
     resolution: {integrity: sha512-dtBZYjDmCQ9hW+WgEkaffvRRCKm767wWhxsFW3Lw86VXz/uJRuD438/XvbZT//B96Vs8oTA8Q4A0AfHbrxP9zw==}
