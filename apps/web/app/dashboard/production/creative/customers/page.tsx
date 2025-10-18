@@ -112,38 +112,28 @@ export default function CustomersPage() {
   const fetchCustomers = async () => {
     try {
       setLoading(true);
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/creative-clients');
-      // const data = await response.json();
-      // setCustomers(data);
+      const { customersApi } = await import('@/lib/api/creative-productions');
+      const data = await customersApi.list();
 
-      // Mock data
-      setCustomers([
-        {
-          id: '1',
-          name: 'Sarah Cohen',
-          company: 'TechCorp Ltd',
-          emails: ['sarah@techcorp.com'],
-          phones: ['+972-50-1234567'],
-          tags: ['vip', 'enterprise'],
-          projectCount: 5,
-          lastActivity: '2025-01-15',
-          createdAt: '2024-12-01',
-        },
-        {
-          id: '2',
-          name: 'David Levi',
-          company: 'StartupXYZ',
-          emails: ['david@startupxyz.com'],
-          phones: ['+972-54-9876543'],
-          tags: ['startup', 'recurring'],
-          projectCount: 2,
-          lastActivity: '2025-01-10',
-          createdAt: '2025-01-05',
-        },
-      ]);
+      // Map API response to component interface
+      setCustomers(
+        data.map((client) => ({
+          id: client.id,
+          name: client.name,
+          company: client.company,
+          emails: client.emails,
+          phones: client.phones,
+          tags: client.tags,
+          notes: client.notes,
+          projectCount: client._count?.projects || 0,
+          lastActivity: client.updatedAt,
+          createdAt: client.createdAt,
+        }))
+      );
     } catch (error) {
       console.error('Failed to fetch customers:', error);
+      // Fallback to empty array on error
+      setCustomers([]);
     } finally {
       setLoading(false);
     }

@@ -86,50 +86,35 @@ export default function CalendarPage() {
   const fetchEvents = async () => {
     try {
       setLoading(true);
-      // TODO: Replace with actual API call
-      // const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-      // const endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-      // const response = await fetch(`/api/creative-calendar/events?startDate=${startDate}&endDate=${endDate}&eventTypes=${selectedEventTypes.join(',')}`);
-      // const data = await response.json();
-      // setEvents(data);
+      const { calendarApi } = await import('@/lib/api/creative-productions');
 
-      // Mock data
-      setEvents([
-        {
-          id: '1',
-          title: 'Summer Campaign 2025',
-          type: 'project_deadline',
-          date: new Date(2025, 0, 20),
-          status: 'IN_PROGRESS',
-          projectName: 'Summer Campaign 2025',
-        },
-        {
-          id: '2',
-          title: 'Review: Product Demo Video',
-          type: 'review_requested',
-          date: new Date(2025, 0, 18),
-          status: 'PENDING',
-          projectName: 'Product Demo Video',
-        },
-        {
-          id: '3',
-          title: 'Script Writing',
-          type: 'task_due',
-          date: new Date(2025, 0, 22),
-          status: 'TODO',
-          projectName: 'Summer Campaign 2025',
-        },
-        {
-          id: '4',
-          title: 'Render (MP4): Summer Campaign',
-          type: 'render_milestone',
-          date: new Date(2025, 0, 19),
-          status: 'QUEUED',
-          projectName: 'Summer Campaign 2025',
-        },
-      ]);
+      // Get first and last day of current month
+      const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+
+      const data = await calendarApi.getEvents({
+        startDate,
+        endDate,
+        eventTypes: selectedEventTypes,
+      });
+
+      // Map API response to component interface
+      setEvents(
+        data.map((event) => ({
+          id: event.id,
+          title: event.title,
+          type: event.type,
+          date: new Date(event.date), // Convert ISO string to Date
+          status: event.status,
+          projectId: event.projectId,
+          projectName: event.projectName,
+          metadata: event.metadata,
+        }))
+      );
     } catch (error) {
       console.error('Failed to fetch events:', error);
+      // Fallback to empty array on error
+      setEvents([]);
     } finally {
       setLoading(false);
     }
