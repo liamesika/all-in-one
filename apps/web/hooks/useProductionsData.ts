@@ -391,3 +391,89 @@ export function useTaskMetrics() {
     staleTime: 1000 * 60 * 15,
   });
 }
+
+// ============= Budget Hooks =============
+
+export function useBudget(params: { projectId: string }) {
+  return useQuery({
+    queryKey: productionsKeys.budget(params.projectId),
+    queryFn: () => budgetAPI.getAll(params.projectId),
+    enabled: !!params.projectId,
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
+export function useCreateBudgetItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ projectId, data }: { projectId: string; data: Partial<ProductionBudgetItem> }) =>
+      budgetAPI.create(projectId, data),
+    onSuccess: (_, { projectId }) => {
+      queryClient.invalidateQueries({ queryKey: productionsKeys.budget(projectId) });
+      queryClient.invalidateQueries({ queryKey: productionsKeys.project(projectId) });
+    },
+  });
+}
+
+export function useUpdateBudgetItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<ProductionBudgetItem> }) =>
+      budgetAPI.update(id, data),
+    onSuccess: (updatedItem) => {
+      if (updatedItem.projectId) {
+        queryClient.invalidateQueries({ queryKey: productionsKeys.budget(updatedItem.projectId) });
+      }
+    },
+  });
+}
+
+export function useDeleteBudgetItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, projectId }: { id: string; projectId: string }) =>
+      budgetAPI.delete(id),
+    onSuccess: (_, { projectId }) => {
+      queryClient.invalidateQueries({ queryKey: productionsKeys.budget(projectId) });
+      queryClient.invalidateQueries({ queryKey: productionsKeys.project(projectId) });
+    },
+  });
+}
+
+// ============= Files Hooks =============
+
+export function useFiles(params: { projectId: string }) {
+  return useQuery({
+    queryKey: productionsKeys.files(params.projectId),
+    queryFn: () => filesAPI.getAll(params.projectId),
+    enabled: !!params.projectId,
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
+export function useUploadFile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ projectId, file, data }: { projectId: string; file: File; data?: Partial<ProductionFileAsset> }) =>
+      filesAPI.upload(projectId, file, data),
+    onSuccess: (_, { projectId }) => {
+      queryClient.invalidateQueries({ queryKey: productionsKeys.files(projectId) });
+    },
+  });
+}
+
+export function useDeleteFile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, projectId }: { id: string; projectId: string }) =>
+      filesAPI.delete(id),
+    onSuccess: (_, { projectId }) => {
+      queryClient.invalidateQueries({ queryKey: productionsKeys.files(projectId) });
+    },
+  });
+}
