@@ -3,18 +3,18 @@
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
-  Scale,
+  Video,
   TrendingUp,
   Users,
   Zap,
-  FileText,
   Calendar,
-  Clock,
   DollarSign,
-  Briefcase,
-  Shield,
-  Search,
-  MessageSquare
+  Clock,
+  FileText,
+  CheckCircle,
+  Layers,
+  Target,
+  BarChart3
 } from 'lucide-react';
 import { MarketingNav } from '@/components/marketing/MarketingNav';
 import { MarketingFooter } from '@/components/marketing/MarketingFooter';
@@ -42,42 +42,42 @@ const staggerContainer = {
   }
 };
 
-export default function LawPage() {
+export default function ProductionsPage() {
   const capabilities = [
     {
-      icon: Briefcase,
-      title: 'Case & Matter Management',
-      description: 'Centralized case tracking with matter timelines, status updates, court deadlines, and collaborative task management for your entire legal team.',
-      color: 'teal'
-    },
-    {
-      icon: FileText,
-      title: 'Document Automation',
-      description: 'Template-based document generation, version control, e-signature integration, and secure client portals for document sharing.',
-      color: 'blue'
-    },
-    {
-      icon: Clock,
-      title: 'Time Tracking & Billing',
-      description: 'Automated time tracking, billable hours management, invoice generation, and detailed billing reports for transparent client communication.',
+      icon: Target,
+      title: 'Project & Task Management',
+      description: 'Centralized project tracking with Kanban boards, task assignments, dependencies, and real-time progress monitoring for your entire production team.',
       color: 'orange'
     },
     {
-      icon: Users,
-      title: 'Client Portal & Communication',
-      description: 'Secure client communication hub with document sharing, appointment scheduling, case updates, and encrypted messaging.',
-      color: 'purple'
+      icon: DollarSign,
+      title: 'Budget & Cost Tracking',
+      description: 'Real-time budget monitoring, expense tracking, purchase orders, and financial forecasting to keep projects profitable.',
+      color: 'blue'
     },
     {
       icon: Calendar,
-      title: 'Deadline & Calendar Management',
-      description: 'Court date tracking, statute of limitations alerts, automated deadline reminders, and integrated calendar sync with Outlook/Google.',
+      title: 'Timeline & Milestones',
+      description: 'Visual production schedules, deadline tracking, milestone management, and automated alerts to keep projects on schedule.',
+      color: 'purple'
+    },
+    {
+      icon: Layers,
+      title: 'Asset & File Delivery',
+      description: 'Centralized media library, version control, client review portals, and automated delivery workflows for final assets.',
       color: 'teal'
     },
     {
-      icon: Shield,
-      title: 'Compliance & Security',
-      description: 'GDPR compliance, data encryption, audit trails, role-based access control, and attorney-client privilege protection.',
+      icon: Users,
+      title: 'Team Collaboration',
+      description: 'Real-time messaging, file sharing, task comments, and integrated communication tools for seamless team coordination.',
+      color: 'orange'
+    },
+    {
+      icon: BarChart3,
+      title: 'Analytics & Reporting',
+      description: 'Project profitability analysis, team productivity metrics, budget vs. actual reporting, and custom dashboards.',
       color: 'blue'
     }
   ];
@@ -85,43 +85,43 @@ export default function LawPage() {
   const benefits = [
     {
       icon: Clock,
-      stat: '12 hours/week',
+      stat: '18 hours/week',
       label: 'Time Saved',
-      description: 'Automated document generation, time tracking, and client communication eliminate repetitive administrative work.'
+      description: 'Automated task tracking, file management, and client communication eliminate repetitive administrative overhead.'
     },
     {
       icon: TrendingUp,
-      stat: '40% more billable',
-      label: 'Hours Captured',
-      description: 'Automatic time tracking ensures no billable hour goes unrecorded. Capture every phone call, email, and document review.'
+      stat: '25% more projects',
+      label: 'Capacity',
+      description: 'Streamlined workflows and better resource allocation allow teams to handle more projects simultaneously.'
     },
     {
       icon: DollarSign,
-      stat: '30% faster',
-      label: 'Collections',
-      description: 'Automated invoicing, payment reminders, and online payment options accelerate cash flow and reduce outstanding balances.'
+      stat: '30% higher',
+      label: 'Profit Margins',
+      description: 'Real-time budget tracking and expense monitoring prevent cost overruns and improve project profitability.'
     },
     {
-      icon: Search,
-      stat: 'Instant',
-      label: 'Case Access',
-      description: 'Find any case, document, or client communication in seconds with powerful search and AI-powered document organization.'
+      icon: CheckCircle,
+      stat: '95% on-time',
+      label: 'Delivery',
+      description: 'Automated deadline tracking and milestone alerts ensure projects finish on schedule and clients stay happy.'
     }
   ];
 
   const features = [
-    'Case & matter tracking with timelines',
-    'Document templates & automation',
-    'Time tracking & billable hours',
-    'Invoice generation & payment tracking',
-    'Client portal with secure messaging',
-    'Court deadline & calendar management',
-    'Task management & team collaboration',
-    'Conflict checking & intake automation',
-    'Document version control & e-signatures',
-    'Trust accounting & IOLTA compliance',
-    'Reporting & analytics dashboard',
-    'Mobile app for attorneys on-the-go'
+    'Kanban board & task management',
+    'Budget tracking & expense management',
+    'Timeline & milestone planning',
+    'File storage & version control',
+    'Client review & approval workflows',
+    'Team collaboration & messaging',
+    'Resource allocation & scheduling',
+    'Invoice generation & time tracking',
+    'Custom project templates',
+    'Real-time analytics dashboard',
+    'Automated delivery workflows',
+    'Mobile app for on-set management'
   ];
 
   return (
@@ -129,7 +129,7 @@ export default function LawPage() {
       <MarketingNav />
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 bg-gradient-to-br from-teal-50 via-white to-teal-50">
+      <section className="pt-32 pb-20 bg-gradient-to-br from-orange-50 via-white to-orange-50">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial="hidden"
@@ -137,33 +137,33 @@ export default function LawPage() {
             variants={fadeInUp}
             className="text-center max-w-4xl mx-auto"
           >
-            <div className="inline-flex items-center gap-3 mb-6 px-4 py-2 bg-teal-100 rounded-full">
-              <Scale className="text-teal-700" size={20} />
-              <span className="text-sm font-semibold text-teal-700">Law Practice Management</span>
+            <div className="inline-flex items-center gap-3 mb-6 px-4 py-2 bg-orange-100 rounded-full">
+              <Video className="text-orange-700" size={20} />
+              <span className="text-sm font-semibold text-orange-700">Creative Productions Platform</span>
             </div>
 
             <h1 className="text-5xl sm:text-6xl font-semibold text-gray-900 mb-6 leading-tight">
-              Law Practice Management{' '}
-              <span className="bg-gradient-to-r from-teal-700 to-teal-500 bg-clip-text text-transparent">
-                Built for Modern Firms
+              Project Management for{' '}
+              <span className="bg-gradient-to-r from-orange-700 to-orange-500 bg-clip-text text-transparent">
+                Creative Studios
               </span>
             </h1>
 
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              From case intake to billing, manage your entire law practice with automation
-              that saves 12+ hours per week and captures 40% more billable hours.
+              From pre-production to delivery, manage your entire creative workflow with tools
+              that save 18+ hours per week and increase profit margins by 30%.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 href="/register"
-                className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5"
+                className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-white bg-orange-700 hover:bg-orange-800 rounded-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5"
               >
                 Start Free Trial
               </Link>
               <Link
                 href="/contact"
-                className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 rounded-lg transition-all duration-200"
+                className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-lg transition-all duration-200"
               >
                 Schedule Demo
               </Link>
@@ -186,8 +186,8 @@ export default function LawPage() {
               What You Save
             </h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Law firms using Effinity report significant time savings,
-              more captured billable hours, and faster collections.
+              Creative studios using Effinity report significant time savings,
+              higher project capacity, and better profit margins.
             </p>
           </motion.div>
 
@@ -206,10 +206,10 @@ export default function LawPage() {
                   variants={fadeInUp}
                   className="text-center p-6 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-200 hover:shadow-lg transition-shadow duration-300"
                 >
-                  <div className="w-14 h-14 bg-teal-100 rounded-xl flex items-center justify-center mx-auto mb-4">
-                    <Icon className="text-teal-700" size={28} />
+                  <div className="w-14 h-14 bg-orange-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <Icon className="text-orange-700" size={28} />
                   </div>
-                  <div className="text-3xl font-semibold text-teal-700 mb-2">
+                  <div className="text-3xl font-semibold text-orange-700 mb-2">
                     {benefit.stat}
                   </div>
                   <div className="text-sm font-semibold text-gray-900 mb-2">
@@ -239,8 +239,8 @@ export default function LawPage() {
               Complete System Capabilities
             </h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Everything you need to run a modern law practice —
-              from case management to billing, all in one unified platform.
+              Everything you need to run a modern creative studio —
+              from project kickoff to final delivery, all in one platform.
             </p>
           </motion.div>
 
@@ -289,7 +289,7 @@ export default function LawPage() {
               Full Feature Set
             </h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Everything included in your Law Practice Management subscription
+              Everything included in your Productions platform subscription
             </p>
           </motion.div>
 
@@ -304,9 +304,9 @@ export default function LawPage() {
               <motion.div
                 key={feature}
                 variants={fadeInUp}
-                className="flex items-start gap-3 p-4 rounded-xl bg-gray-50 hover:bg-teal-50 transition-colors duration-200"
+                className="flex items-start gap-3 p-4 rounded-xl bg-gray-50 hover:bg-orange-50 transition-colors duration-200"
               >
-                <Zap className="text-teal-700 flex-shrink-0 mt-0.5" size={18} />
+                <Zap className="text-orange-700 flex-shrink-0 mt-0.5" size={18} />
                 <span className="text-sm text-gray-900">{feature}</span>
               </motion.div>
             ))}
@@ -316,8 +316,8 @@ export default function LawPage() {
 
       {/* CTA Section */}
       <CTASection
-        headline="Ready to Transform Your Law Practice?"
-        subtext="Join hundreds of law firms that have automated their workflow and increased billable hours with Effinity."
+        headline="Ready to Streamline Your Creative Production?"
+        subtext="Join leading creative studios that have automated their workflows and increased profitability with Effinity."
         primaryCTA={{
           text: "Start Free Trial",
           href: "/register"

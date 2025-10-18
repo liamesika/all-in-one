@@ -63,7 +63,7 @@ const verticals = [
       'Timeline & milestones',
       'Asset & file delivery'
     ],
-    href: '/dashboard/production/dashboard'
+    href: '/industries/productions'
   },
   {
     id: 'law',
