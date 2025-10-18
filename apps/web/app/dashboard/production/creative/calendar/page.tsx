@@ -83,6 +83,13 @@ export default function CalendarPage() {
     fetchEvents();
   }, [currentDate, selectedEventTypes]);
 
+  // Track page view on initial load
+  useEffect(() => {
+    import('@/lib/analytics/ga4').then(({ calendarEvents }) => {
+      calendarEvents.viewed(viewMode, events.length);
+    });
+  }, [viewMode, events.length]);
+
   const fetchEvents = async () => {
     try {
       setLoading(true);
@@ -158,10 +165,23 @@ export default function CalendarPage() {
       newDate.setMonth(newDate.getMonth() + 1);
     }
     setCurrentDate(newDate);
+
+    // Track navigation
+    import('@/lib/analytics/ga4').then(({ calendarEvents }) => {
+      const monthStr = `${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}`;
+      calendarEvents.navigated(direction, monthStr);
+    });
   };
 
   const goToToday = () => {
     setCurrentDate(new Date());
+
+    // Track navigation to today
+    import('@/lib/analytics/ga4').then(({ calendarEvents }) => {
+      const now = new Date();
+      const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      calendarEvents.navigated('today', monthStr);
+    });
   };
 
   const handleOpenFilterDrawer = () => {
@@ -181,6 +201,14 @@ export default function CalendarPage() {
   const handleApplyFilters = () => {
     setSelectedEventTypes(tempSelectedEventTypes);
     setShowFilterDrawer(false);
+
+    // Track filter event
+    import('@/lib/analytics/ga4').then(({ calendarEvents }) => {
+      const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+      const dateRange = `${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`;
+      calendarEvents.filtered(tempSelectedEventTypes, dateRange);
+    });
   };
 
   const toggleEventType = (type: string) => {

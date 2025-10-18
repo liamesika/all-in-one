@@ -100,6 +100,11 @@ export default function CustomersPage() {
 
   useEffect(() => {
     fetchCustomers();
+
+    // Track page view
+    import('@/lib/analytics/ga4').then(({ pageViewed }) => {
+      pageViewed('customers', { page_type: 'list' });
+    });
   }, []);
 
   useEffect(() => {
@@ -151,6 +156,11 @@ export default function CustomersPage() {
           customer.company?.toLowerCase().includes(query) ||
           customer.emails.some((email) => email.toLowerCase().includes(query))
       );
+
+      // Track search event
+      import('@/lib/analytics/ga4').then(({ customerEvents }) => {
+        customerEvents.searched(searchQuery, filtered.length);
+      });
     }
 
     // Tags filter
@@ -158,6 +168,11 @@ export default function CustomersPage() {
       filtered = filtered.filter((customer) =>
         selectedTags.some((tag) => customer.tags.includes(tag))
       );
+
+      // Track filter event
+      import('@/lib/analytics/ga4').then(({ customerEvents }) => {
+        customerEvents.filtered(selectedTags);
+      });
     }
 
     setFilteredCustomers(filtered);
