@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 import { useLanguage } from '@/lib/language-context';
 import { TrendingUp, TrendingDown, Clock, DollarSign, Users, Target, BarChart3, Download } from 'lucide-react';
 import { ExportPDFButton } from '@/components/real-estate/reports/ExportPDFButton';
+import { ExportExcelButton } from '@/components/real-estate/reports/ExportExcelButton';
 import { LeadsOverTimeChart } from '@/components/real-estate/reports/charts/LeadsOverTimeChart';
 import { LeadsBySourceChart } from '@/components/real-estate/reports/charts/LeadsBySourceChart';
 import { LeadStatusChart } from '@/components/real-estate/reports/charts/LeadStatusChart';
@@ -173,11 +174,18 @@ export default function ReportsClient({ initialData }: ReportsClientProps) {
               {language === 'he' ? 'נתח את הביצועים שלך עם דוחות מקיפים' : 'Analyze your performance with comprehensive reports'}
             </p>
           </div>
-          <ExportPDFButton
-            reportData={reportData}
-            dateRange={dateRange}
-            language={language}
-          />
+          <div className="flex items-center gap-3">
+            <ExportExcelButton
+              reportData={reportData}
+              dateRange={dateRange}
+              language={language}
+            />
+            <ExportPDFButton
+              reportData={reportData}
+              dateRange={dateRange}
+              language={language}
+            />
+          </div>
         </div>
 
         {/* Date Range and Filters */}

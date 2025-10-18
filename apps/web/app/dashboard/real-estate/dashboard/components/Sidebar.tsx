@@ -13,64 +13,58 @@ export function Sidebar({ currentPath = 'dashboard' }: SidebarProps) {
 
   const navigationItems = [
     {
-      href: '/real-estate/dashboard',
+      href: '/dashboard/real-estate/dashboard',
       label: lang === 'he' ? 'דשבורד' : 'Dashboard',
       key: 'dashboard',
       icon: '📊'
     },
     {
-      href: '/real-estate/leads', 
-      label: lang === 'he' ? 'לידים' : 'Leads',
-      key: 'leads',
-      icon: '🎯'
-    },
-    {
-      href: '/real-estate/matters',
-      label: lang === 'he' ? 'תיקים' : 'Matters', 
-      key: 'matters',
-      icon: '📁'
-    },
-    {
-      href: '/real-estate/properties',
+      href: '/dashboard/real-estate/properties',
       label: lang === 'he' ? 'נכסים' : 'Properties',
       key: 'properties',
       icon: '🏠'
     },
     {
-      href: '/real-estate/campaigns',
-      label: lang === 'he' ? 'קמפיינים' : 'Campaigns',
-      key: 'campaigns',
-      icon: '📢'
+      href: '/dashboard/real-estate/leads',
+      label: lang === 'he' ? 'לידים' : 'Leads',
+      key: 'leads',
+      icon: '🎯'
     },
     {
-      href: '/real-estate/automations',
-      label: lang === 'he' ? 'אוטומציות' : 'Automations',
-      key: 'automations',
-      icon: '⚡'
-    },
-    {
-      href: '/real-estate/clients',
-      label: lang === 'he' ? 'לקוחות' : 'Clients',
-      key: 'clients',
+      href: '/dashboard/real-estate/customers',
+      label: lang === 'he' ? 'לקוחות' : 'Customers',
+      key: 'customers',
       icon: '👥'
     },
     {
-      href: '/real-estate/calendar',
+      href: '/dashboard/real-estate/calendar',
       label: lang === 'he' ? 'יומן' : 'Calendar',
       key: 'calendar',
       icon: '📅'
     },
     {
-      href: '/real-estate/documents',
-      label: lang === 'he' ? 'מסמכים' : 'Documents',
-      key: 'documents',
-      icon: '📄'
+      href: '/dashboard/real-estate/campaigns',
+      label: lang === 'he' ? 'קמפיינים' : 'Campaigns',
+      key: 'campaigns',
+      icon: '📢'
     },
     {
-      href: '/real-estate/reports',
+      href: '/dashboard/real-estate/reports',
       label: lang === 'he' ? 'דוחות' : 'Reports',
       key: 'reports',
       icon: '📈'
+    },
+    {
+      href: '/dashboard/real-estate/ai-searcher',
+      label: lang === 'he' ? 'חיפוש AI' : 'AI Search',
+      key: 'ai-searcher',
+      icon: '🔍'
+    },
+    {
+      href: '/dashboard/real-estate/automations',
+      label: lang === 'he' ? 'אוטומציות' : 'Automations',
+      key: 'automations',
+      icon: '⚡'
     },
     {
       href: '/dashboard/real-estate/integrations',

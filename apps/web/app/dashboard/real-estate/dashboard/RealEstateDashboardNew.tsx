@@ -38,6 +38,7 @@ import { ComplianceRiskSection } from './components/sections/ComplianceRiskSecti
 import { AutomationHealthSection } from './components/sections/AutomationHealthSection';
 import { useLang } from '@/components/i18n/LangProvider';
 import { LanguageProvider } from '@/lib/language-context';
+import { RealEstateFooter } from '@/components/real-estate/RealEstateFooter';
 
 // Mock data generator - replace with actual API data
 function generateMockData() {
@@ -423,6 +424,9 @@ function RealEstateDashboardContent() {
             </div>
           )}
         </div>
+
+        {/* Footer */}
+        <RealEstateFooter />
       </div>
     </div>
   );

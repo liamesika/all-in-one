@@ -1,6 +1,7 @@
 'use client';
 
 import { AIAdvisorBot } from '@/components/real-estate/AIAdvisorBot';
+import { RealEstateHeader } from '@/components/real-estate/RealEstateHeader';
 import { LanguageProvider } from '@/lib/language-context';
 import { usePathname } from 'next/navigation';
 
@@ -20,7 +21,8 @@ export default function RealEstateLayout({ children }: { children: React.ReactNo
 
   return (
     <LanguageProvider>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B]">
+        <RealEstateHeader />
         {children}
         <AIAdvisorBot
           pageContext={{
