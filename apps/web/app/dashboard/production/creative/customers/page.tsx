@@ -291,7 +291,7 @@ export default function CustomersPage() {
                   {
                     id: 'archive',
                     label: t.bulkArchive,
-                    icon: <Trash2 className="w-4 h-4" />,'
+                    icon: <Trash2 className="w-4 h-4" />,
                     variant: 'danger' as const,
                     onClick: () => console.log('Bulk archive'),
                   },
