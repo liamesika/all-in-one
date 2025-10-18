@@ -24,6 +24,12 @@ import { AuditModule } from './modules/audit/audit.module';
 import { ProductionModule } from './modules/production/production.module';
 import { CreativeProductionModule } from './modules/creative-production/creative-production.module';
 import { UsageTrackingModule } from './modules/usage-tracking/usage-tracking.module';
+import { LawCasesModule } from './modules/law-cases/law-cases.module';
+import { LawClientsModule } from './modules/law-clients/law-clients.module';
+import { LawDocumentsModule } from './modules/law-documents/law-documents.module';
+import { LawTasksModule } from './modules/law-tasks/law-tasks.module';
+import { LawEventsModule } from './modules/law-events/law-events.module';
+import { LawInvoicesModule } from './modules/law-invoices/law-invoices.module';
 import {
   CompressionMiddleware,
   CacheHeadersMiddleware,
@@ -60,6 +66,12 @@ import {
     ProductionModule,
     CreativeProductionModule,
     UsageTrackingModule,
+    LawCasesModule,
+    LawClientsModule,
+    LawDocumentsModule,
+    LawTasksModule,
+    LawEventsModule,
+    LawInvoicesModule,
   ],
   controllers: [ChatController, PingController],
   

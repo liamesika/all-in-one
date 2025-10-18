@@ -370,4 +370,189 @@ export class UsageTrackingService {
       this.logger.error(`Failed to track feature usage: ${error.message}`);
     }
   }
+
+  // ========= LAW VERTICAL TRACKING METHODS ========= //
+
+  async trackLawCaseCreated(ownerUid: string, organizationId: string, caseId: string, userId?: string): Promise<void> {
+    await this.trackEvent({
+      ownerUid,
+      organizationId,
+      userId,
+      eventType: 'LAW_CASE_CREATED',
+      category: 'PROJECTS',
+      vertical: 'LAW',
+      resourceType: 'LawCase',
+      resourceId: caseId,
+      quantity: 1,
+    });
+  }
+
+  async trackLawCaseUpdated(ownerUid: string, organizationId: string, caseId: string, userId?: string): Promise<void> {
+    await this.trackEvent({
+      ownerUid,
+      organizationId,
+      userId,
+      eventType: 'LAW_CASE_UPDATED',
+      category: 'FEATURES',
+      vertical: 'LAW',
+      resourceType: 'LawCase',
+      resourceId: caseId,
+      quantity: 1,
+    });
+  }
+
+  async trackLawCaseClosed(ownerUid: string, organizationId: string, caseId: string, userId?: string): Promise<void> {
+    await this.trackEvent({
+      ownerUid,
+      organizationId,
+      userId,
+      eventType: 'LAW_CASE_CLOSED',
+      category: 'FEATURES',
+      vertical: 'LAW',
+      resourceType: 'LawCase',
+      resourceId: caseId,
+      quantity: 1,
+    });
+  }
+
+  async trackLawClientCreated(ownerUid: string, organizationId: string, clientId: string, userId?: string): Promise<void> {
+    await this.trackEvent({
+      ownerUid,
+      organizationId,
+      userId,
+      eventType: 'LAW_CLIENT_CREATED',
+      category: 'PROJECTS',
+      vertical: 'LAW',
+      resourceType: 'LawClient',
+      resourceId: clientId,
+      quantity: 1,
+    });
+  }
+
+  async trackLawClientUpdated(ownerUid: string, organizationId: string, clientId: string, userId?: string): Promise<void> {
+    await this.trackEvent({
+      ownerUid,
+      organizationId,
+      userId,
+      eventType: 'LAW_CLIENT_UPDATED',
+      category: 'FEATURES',
+      vertical: 'LAW',
+      resourceType: 'LawClient',
+      resourceId: clientId,
+      quantity: 1,
+    });
+  }
+
+  async trackLawDocumentUploaded(ownerUid: string, organizationId: string, documentId: string, fileSize: number, userId?: string): Promise<void> {
+    await this.trackEvent({
+      ownerUid,
+      organizationId,
+      userId,
+      eventType: 'LAW_DOCUMENT_UPLOADED',
+      category: 'STORAGE',
+      vertical: 'LAW',
+      resourceType: 'LawDocument',
+      resourceId: documentId,
+      quantity: 1,
+      storageBytes: BigInt(fileSize),
+    });
+  }
+
+  async trackLawDocumentDownloaded(ownerUid: string, organizationId: string, documentId: string, userId?: string): Promise<void> {
+    await this.trackEvent({
+      ownerUid,
+      organizationId,
+      userId,
+      eventType: 'LAW_DOCUMENT_DOWNLOADED',
+      category: 'FEATURES',
+      vertical: 'LAW',
+      resourceType: 'LawDocument',
+      resourceId: documentId,
+      quantity: 1,
+    });
+  }
+
+  async trackLawTaskCreated(ownerUid: string, organizationId: string, taskId: string, userId?: string): Promise<void> {
+    await this.trackEvent({
+      ownerUid,
+      organizationId,
+      userId,
+      eventType: 'LAW_TASK_CREATED',
+      category: 'FEATURES',
+      vertical: 'LAW',
+      resourceType: 'LawTask',
+      resourceId: taskId,
+      quantity: 1,
+    });
+  }
+
+  async trackLawTaskCompleted(ownerUid: string, organizationId: string, taskId: string, userId?: string): Promise<void> {
+    await this.trackEvent({
+      ownerUid,
+      organizationId,
+      userId,
+      eventType: 'LAW_TASK_COMPLETED',
+      category: 'FEATURES',
+      vertical: 'LAW',
+      resourceType: 'LawTask',
+      resourceId: taskId,
+      quantity: 1,
+    });
+  }
+
+  async trackLawEventCreated(ownerUid: string, organizationId: string, eventId: string, userId?: string): Promise<void> {
+    await this.trackEvent({
+      ownerUid,
+      organizationId,
+      userId,
+      eventType: 'LAW_EVENT_CREATED',
+      category: 'FEATURES',
+      vertical: 'LAW',
+      resourceType: 'LawEvent',
+      resourceId: eventId,
+      quantity: 1,
+    });
+  }
+
+  async trackLawInvoiceCreated(ownerUid: string, organizationId: string, invoiceId: string, userId?: string): Promise<void> {
+    await this.trackEvent({
+      ownerUid,
+      organizationId,
+      userId,
+      eventType: 'LAW_INVOICE_CREATED',
+      category: 'FEATURES',
+      vertical: 'LAW',
+      resourceType: 'LawInvoice',
+      resourceId: invoiceId,
+      quantity: 1,
+    });
+  }
+
+  async trackLawInvoiceSent(ownerUid: string, organizationId: string, invoiceId: string, userId?: string): Promise<void> {
+    await this.trackEvent({
+      ownerUid,
+      organizationId,
+      userId,
+      eventType: 'LAW_INVOICE_SENT',
+      category: 'FEATURES',
+      vertical: 'LAW',
+      resourceType: 'LawInvoice',
+      resourceId: invoiceId,
+      quantity: 1,
+    });
+  }
+
+  async trackLawInvoicePaid(ownerUid: string, organizationId: string, invoiceId: string, userId?: string): Promise<void> {
+    await this.trackEvent({
+      ownerUid,
+      organizationId,
+      userId,
+      eventType: 'LAW_INVOICE_PAID',
+      category: 'FEATURES',
+      vertical: 'LAW',
+      resourceType: 'LawInvoice',
+      resourceId: invoiceId,
+      quantity: 1,
+    });
+  }
 }
