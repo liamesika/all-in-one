@@ -20,7 +20,10 @@ import {
 import { MarketingNav } from '@/components/marketing/MarketingNav';
 import { MarketingFooter } from '@/components/marketing/MarketingFooter';
 import { CTASection } from '@/components/marketing/CTASection';
-import { trackEvent } from '@/lib/analytics';
+import { trackEventWithConsent } from '@/lib/analytics/consent';
+import { PageHead } from '@/components/seo/PageHead';
+import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
+import { preserveUTMParams, appendUTMParams } from '@/lib/utils/utm';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -45,28 +48,41 @@ const staggerContainer = {
 };
 
 export default function EcommercePage() {
-  // Set page metadata
   useEffect(() => {
-    document.title = 'E-Commerce Management Platform | Effinity';
-    const metaDescription = document.querySelector('meta[name="description"]');
-    if (metaDescription) {
-      metaDescription.setAttribute('content', 'Complete e-commerce management with marketing automation. Save 20+ hours per week and grow revenue by 50%. Cart recovery, inventory tracking, and omnichannel selling.');
-    }
-
-    // Track page view
-    trackEvent('page_view', {
+    preserveUTMParams();
+    trackEventWithConsent('page_view', {
       page_title: 'E-Commerce Landing Page',
       page_path: '/industries/e-commerce',
+      profession: 'e-commerce',
     });
   }, []);
 
-  const handleCTAClick = (ctaType: 'primary' | 'secondary', location: 'hero' | 'bottom') => {
-    trackEvent('cta_click', {
+  const handleCTAClick = (ctaType: 'primary' | 'secondary', location: 'hero' | 'bottom', position: number) => {
+    trackEventWithConsent('cta_click', {
       cta_type: ctaType,
       cta_location: location,
+      cta_position: position,
       cta_text: ctaType === 'primary' ? 'Start Free Trial' : 'Schedule Demo',
       page: 'e-commerce',
+      profession: 'e-commerce',
     });
+  };
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: 'E-Commerce Management Platform',
+    description: 'Complete e-commerce management with marketing automation. Save 20+ hours per week and grow revenue by 50%.',
+    url: 'https://effinity.co.il/industries/e-commerce',
+    breadcrumb: {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://effinity.co.il' },
+        { '@type': 'ListItem', position: 2, name: 'Industries', item: 'https://effinity.co.il/industries' },
+        { '@type': 'ListItem', position: 3, name: 'E-Commerce' },
+      ],
+    },
+    provider: { '@type': 'Organization', name: 'Effinity', url: 'https://effinity.co.il' },
   };
 
   const capabilities = [
@@ -152,11 +168,26 @@ export default function EcommercePage() {
 
   return (
     <div className="min-h-screen bg-white">
+      <PageHead
+        title="E-Commerce Management Platform | Effinity"
+        description="Complete e-commerce management with marketing automation. Save 20+ hours per week and grow revenue by 50%. Cart recovery, inventory tracking, and omnichannel selling."
+        canonical="https://effinity.co.il/industries/e-commerce"
+        ogImage="https://effinity.co.il/og-e-commerce.jpg"
+        keywords="e-commerce platform, online store management, cart abandonment recovery, inventory management, marketing automation"
+        jsonLd={jsonLd}
+      />
       <MarketingNav />
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 bg-gradient-to-br from-purple-50 via-white to-purple-50">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Breadcrumbs
+            items={[
+              { label: 'Industries', href: '/industries' },
+              { label: 'E-Commerce' },
+            ]}
+            className="mb-8"
+          />
           <motion.div
             initial="hidden"
             animate="visible"
@@ -182,16 +213,16 @@ export default function EcommercePage() {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
-                href="/register"
-                onClick={() => handleCTAClick('primary', 'hero')}
+                href={appendUTMParams('/register')}
+                onClick={() => handleCTAClick('primary', 'hero', 1)}
                 className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-white bg-purple-700 hover:bg-purple-800 rounded-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5"
                 aria-label="Start your free trial of Effinity E-Commerce platform"
               >
                 Start Free Trial
               </Link>
               <Link
-                href="/contact"
-                onClick={() => handleCTAClick('secondary', 'hero')}
+                href={appendUTMParams('/contact')}
+                onClick={() => handleCTAClick('secondary', 'hero', 2)}
                 className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg transition-all duration-200"
                 aria-label="Schedule a demo of Effinity E-Commerce platform"
               >
@@ -350,13 +381,13 @@ export default function EcommercePage() {
         subtext="Join thousands of online stores that have increased revenue and reduced manual work with Effinity's automation platform."
         primaryCTA={{
           text: "Start Free Trial",
-          href: "/register",
-          onClick: () => handleCTAClick('primary', 'bottom')
+          href: appendUTMParams('/register'),
+          onClick: () => handleCTAClick('primary', 'bottom', 3)
         }}
         secondaryCTA={{
           text: "Contact Sales",
-          href: "/contact",
-          onClick: () => handleCTAClick('secondary', 'bottom')
+          href: appendUTMParams('/contact'),
+          onClick: () => handleCTAClick('secondary', 'bottom', 4)
         }}
       />
 

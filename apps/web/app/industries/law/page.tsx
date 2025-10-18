@@ -20,7 +20,10 @@ import {
 import { MarketingNav } from '@/components/marketing/MarketingNav';
 import { MarketingFooter } from '@/components/marketing/MarketingFooter';
 import { CTASection } from '@/components/marketing/CTASection';
-import { trackEvent } from '@/lib/analytics';
+import { trackEventWithConsent } from '@/lib/analytics/consent';
+import { PageHead } from '@/components/seo/PageHead';
+import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
+import { preserveUTMParams, appendUTMParams } from '@/lib/utils/utm';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -46,24 +49,40 @@ const staggerContainer = {
 
 export default function LawPage() {
   useEffect(() => {
-    document.title = 'Law Practice Management Platform | Effinity';
-    const metaDescription = document.querySelector('meta[name="description"]');
-    if (metaDescription) {
-      metaDescription.setAttribute('content', 'Complete law practice management with automation. Save 12+ hours per week and capture 40% more billable hours. Case tracking, document automation, time tracking, and billing.');
-    }
-    trackEvent('page_view', {
+    preserveUTMParams();
+    trackEventWithConsent('page_view', {
       page_title: 'Law Landing Page',
       page_path: '/industries/law',
+      profession: 'law',
     });
   }, []);
 
-  const handleCTAClick = (ctaType: 'primary' | 'secondary', location: 'hero' | 'bottom') => {
-    trackEvent('cta_click', {
+  const handleCTAClick = (ctaType: 'primary' | 'secondary', location: 'hero' | 'bottom', position: number) => {
+    trackEventWithConsent('cta_click', {
       cta_type: ctaType,
       cta_location: location,
+      cta_position: position,
       cta_text: ctaType === 'primary' ? 'Start Free Trial' : 'Schedule Demo',
       page: 'law',
+      profession: 'law',
     });
+  };
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: 'Law Practice Management Platform',
+    description: 'Complete law practice management with automation. Save 12+ hours per week and capture 40% more billable hours.',
+    url: 'https://effinity.co.il/industries/law',
+    breadcrumb: {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://effinity.co.il' },
+        { '@type': 'ListItem', position: 2, name: 'Industries', item: 'https://effinity.co.il/industries' },
+        { '@type': 'ListItem', position: 3, name: 'Law' },
+      ],
+    },
+    provider: { '@type': 'Organization', name: 'Effinity', url: 'https://effinity.co.il' },
   };
 
   const capabilities = [
@@ -149,11 +168,26 @@ export default function LawPage() {
 
   return (
     <div className="min-h-screen bg-white">
+      <PageHead
+        title="Law Practice Management Platform | Effinity"
+        description="Complete law practice management with automation. Save 12+ hours per week and capture 40% more billable hours. Case tracking, document automation, time tracking, and billing."
+        canonical="https://effinity.co.il/industries/law"
+        ogImage="https://effinity.co.il/og-law.jpg"
+        keywords="law practice management, legal case management, time tracking, billing software, document automation"
+        jsonLd={jsonLd}
+      />
       <MarketingNav />
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 bg-gradient-to-br from-teal-50 via-white to-teal-50">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Breadcrumbs
+            items={[
+              { label: 'Industries', href: '/industries' },
+              { label: 'Law' },
+            ]}
+            className="mb-8"
+          />
           <motion.div
             initial="hidden"
             animate="visible"
@@ -179,16 +213,16 @@ export default function LawPage() {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
-                href="/register"
-                onClick={() => handleCTAClick('primary', 'hero')}
+                href={appendUTMParams('/register')}
+                onClick={() => handleCTAClick('primary', 'hero', 1)}
                 className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5"
                 aria-label="Start your free trial of Effinity Law Practice Management platform"
               >
                 Start Free Trial
               </Link>
               <Link
-                href="/contact"
-                onClick={() => handleCTAClick('secondary', 'hero')}
+                href={appendUTMParams('/contact')}
+                onClick={() => handleCTAClick('secondary', 'hero', 2)}
                 className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 rounded-lg transition-all duration-200"
                 aria-label="Schedule a demo of Effinity Law Practice Management platform"
               >
@@ -347,13 +381,13 @@ export default function LawPage() {
         subtext="Join hundreds of law firms that have automated their workflow and increased billable hours with Effinity."
         primaryCTA={{
           text: "Start Free Trial",
-          href: "/register",
-          onClick: () => handleCTAClick('primary', 'bottom')
+          href: appendUTMParams('/register'),
+          onClick: () => handleCTAClick('primary', 'bottom', 3)
         }}
         secondaryCTA={{
           text: "Contact Sales",
-          href: "/contact",
-          onClick: () => handleCTAClick('secondary', 'bottom')
+          href: appendUTMParams('/contact'),
+          onClick: () => handleCTAClick('secondary', 'bottom', 4)
         }}
       />
 
