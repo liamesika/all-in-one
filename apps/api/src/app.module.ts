@@ -21,6 +21,8 @@ import { InsightsModule } from './modules/insights/insights.module';
 import { PlatformJobsModule } from './modules/platform-jobs/platform-jobs.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { ProductionModule } from './modules/production/production.module';
+import { CreativeProductionModule } from './modules/creative-production/creative-production.module';
+import { UsageTrackingModule } from './modules/usage-tracking/usage-tracking.module';
 import {
   CompressionMiddleware,
   CacheHeadersMiddleware,
@@ -54,6 +56,8 @@ import {
     PlatformJobsModule,
     AuditModule,
     ProductionModule,
+    CreativeProductionModule,
+    UsageTrackingModule,
   ],
   controllers: [ChatController, PingController],
   
