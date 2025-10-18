@@ -632,6 +632,7 @@ model Organization {
   CreativeProject  CreativeProject[]
   CreativeAsset    CreativeAsset[]
   CreativeTemplate CreativeTemplate[]
+  CreativeClient   CreativeClient[]
 
   // Usage tracking relations
   storageQuota StorageQuota?
@@ -2251,6 +2252,11 @@ model CreativeProject {
   status         CreativeProjectStatus @default(DRAFT)
   dueDate        DateTime?
   ownerUid       String // Creator/owner
+
+  // Client relationship (optional - link project to customer)
+  clientId       String?
+  client         CreativeClient?       @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
   createdAt      DateTime              @default(now())
   updatedAt      DateTime              @updatedAt
 
@@ -2265,6 +2271,7 @@ model CreativeProject {
   @@index([orgId, status])
   @@index([ownerUid, status])
   @@index([dueDate])
+  @@index([clientId])
 }
 
 // Creative Task - Workflow tasks within a creative project
@@ -2337,6 +2344,36 @@ model CreativeTemplate {
   @@index([orgId])
   @@index([kind])
   @@index([orgId, kind])
+}
+
+// Creative Client - CRM-lite for Productions vertical (customer management)
+model CreativeClient {
+  id             String            @id @default(cuid())
+  orgId          String
+  organization   Organization      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  ownerUid       String
+
+  // Contact information
+  name           String
+  company        String?
+  emails         String[] // Array of email addresses
+  phones         String[] // Array of phone numbers
+
+  // Metadata
+  tags           String[] // e.g., ["vip", "long-term", "enterprise"]
+  notes          String? // Internal notes about the client
+
+  // Relationships
+  projects       CreativeProject[] // Projects linked to this client
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([orgId])
+  @@index([ownerUid])
+  @@index([orgId, ownerUid])
+  @@index([name])
+  @@index([company])
 }
 
 // Creative Review - Approval workflow for creative assets
