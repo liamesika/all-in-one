@@ -594,6 +594,11 @@ model User {
   productionTasks ProductionTask[]
   productionFiles ProductionFileAsset[]
 
+  // Law vertical relations
+  assignedCases      LawCase[]     @relation("LawCaseAssignee")
+  uploadedDocuments  LawDocument[] @relation("LawDocumentUploader")
+  assignedLawTasks   LawTask[]     @relation("LawTaskAssignee")
+
   @@index([email])
 }
 
@@ -2583,4 +2588,225 @@ model FeatureUsage {
   @@index([vertical])
   @@index([featureName])
   @@index([lastUsedAt])
+}
+
+// ========= LAW VERTICAL MODELS ========= //
+
+// Law Case Management
+model LawCase {
+  id             String   @id @default(cuid())
+  caseNumber     String   // Auto-generated (e.g., "LAW-2025-001")
+  title          String
+  description    String?
+  clientId       String
+  client         LawClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  // Case details
+  caseType       String   // "civil", "criminal", "corporate", "family", "immigration", "other"
+  status         String   // "active", "pending", "closed", "archived"
+  priority       String   // "low", "medium", "high", "urgent"
+  assignedToId   String?  // Attorney ID
+  assignedTo     User?    @relation("LawCaseAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  // Dates
+  filingDate      DateTime?
+  closingDate     DateTime?
+  nextHearingDate DateTime?
+
+  // Relationships
+  documents      LawDocument[]
+  tasks          LawTask[]
+  events         LawEvent[]
+  invoices       LawInvoice[]
+
+  // Multi-tenant
+  organizationId String
+  ownerUid       String
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([ownerUid])
+  @@index([organizationId])
+  @@index([clientId])
+  @@index([status])
+  @@index([caseType])
+  @@index([assignedToId])
+}
+
+// Law Client Management
+model LawClient {
+  id             String   @id @default(cuid())
+  name           String
+  email          String
+  phone          String?
+  company        String?
+
+  // Contact details
+  address        String?
+  city           String?
+  country        String?
+
+  // Classification
+  clientType     String   // "individual", "corporate"
+  tags           String[] @default([])
+  notes          String?
+
+  // Relationships
+  cases          LawCase[]
+
+  // Multi-tenant
+  organizationId String
+  ownerUid       String
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([ownerUid])
+  @@index([organizationId])
+  @@index([email])
+}
+
+// Law Document Management
+model LawDocument {
+  id             String   @id @default(cuid())
+  fileName       String
+  fileUrl        String   // Storage URL (S3/Firebase)
+  fileType       String   // "pdf", "docx", "xlsx", "txt"
+  fileSize       Int      // Bytes
+
+  // Metadata
+  documentType   String   // "contract", "brief", "evidence", "correspondence", "other"
+  description    String?
+  tags           String[] @default([])
+
+  // Relationships
+  caseId         String?
+  case           LawCase? @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  uploadedById   String
+  uploadedBy     User     @relation("LawDocumentUploader", fields: [uploadedById], references: [id], onDelete: Cascade)
+
+  // Version control (future enhancement)
+  version        Int      @default(1)
+
+  // Multi-tenant
+  organizationId String
+  ownerUid       String
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([ownerUid])
+  @@index([organizationId])
+  @@index([caseId])
+  @@index([uploadedById])
+}
+
+// Law Task Management
+model LawTask {
+  id             String   @id @default(cuid())
+  title          String
+  description    String?
+
+  // Task details
+  priority       String   // "low", "medium", "high", "urgent"
+  status         String   // "todo", "in_progress", "review", "completed", "cancelled"
+  dueDate        DateTime?
+  completedDate  DateTime?
+
+  // Relationships
+  caseId         String?
+  case           LawCase? @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  assignedToId   String?
+  assignedTo     User?    @relation("LawTaskAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  // Kanban board position
+  boardColumn    String   @default("todo") // "todo", "in_progress", "review", "done"
+  boardOrder     Int      @default(0)
+
+  // Multi-tenant
+  organizationId String
+  ownerUid       String
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([ownerUid])
+  @@index([organizationId])
+  @@index([caseId])
+  @@index([assignedToId])
+  @@index([status])
+}
+
+// Law Event/Calendar Management
+model LawEvent {
+  id             String   @id @default(cuid())
+  title          String
+  description    String?
+
+  // Event details
+  eventType      String   // "hearing", "meeting", "deadline", "submission", "consultation"
+  eventDate      DateTime
+  duration       Int?     // Minutes
+  location       String?
+
+  // Relationships
+  caseId         String?
+  case           LawCase? @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  attendeeIds    String[] @default([])
+
+  // Status
+  status         String   // "scheduled", "completed", "cancelled", "rescheduled"
+
+  // Multi-tenant
+  organizationId String
+  ownerUid       String
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([ownerUid])
+  @@index([organizationId])
+  @@index([caseId])
+  @@index([eventDate])
+}
+
+// Law Invoice/Billing Management
+model LawInvoice {
+  id             String   @id @default(cuid())
+  invoiceNumber  String   // Auto-generated (e.g., "INV-2025-001")
+
+  // Invoice details
+  clientName     String
+  caseId         String?
+  case           LawCase? @relation(fields: [caseId], references: [id], onDelete: SetNull)
+
+  // Amounts
+  amount         Float
+  currency       String   @default("USD")
+  taxRate        Float?
+  totalAmount    Float
+
+  // Billing
+  billableHours  Float?
+  hourlyRate     Float?
+  description    String?
+
+  // Status
+  status         String   // "draft", "sent", "paid", "overdue", "cancelled"
+  issueDate      DateTime @default(now())
+  dueDate        DateTime?
+  paidDate       DateTime?
+
+  // Multi-tenant
+  organizationId String
+  ownerUid       String
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([ownerUid])
+  @@index([organizationId])
+  @@index([caseId])
+  @@index([status])
 }
