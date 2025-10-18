@@ -11,6 +11,7 @@ export function MarketingNav() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navLinks = [
+    { label: 'Industries', href: '/industries' },
     { label: 'Features', href: '/features' },
     { label: 'Pricing', href: '/pricing' },
     { label: 'About', href: '/about' },

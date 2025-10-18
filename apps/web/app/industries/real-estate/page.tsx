@@ -20,7 +20,10 @@ import {
 import { MarketingNav } from '@/components/marketing/MarketingNav';
 import { MarketingFooter } from '@/components/marketing/MarketingFooter';
 import { CTASection } from '@/components/marketing/CTASection';
-import { trackEvent } from '@/lib/analytics';
+import { trackEventWithConsent } from '@/lib/analytics/consent';
+import { PageHead } from '@/components/seo/PageHead';
+import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
+import { preserveUTMParams, appendUTMParams } from '@/lib/utils/utm';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -45,28 +48,64 @@ const staggerContainer = {
 };
 
 export default function RealEstatePage() {
-  // Set page metadata
+  // Preserve UTM parameters on mount
   useEffect(() => {
-    document.title = 'Real Estate Management Platform | Effinity';
-    const metaDescription = document.querySelector('meta[name="description"]');
-    if (metaDescription) {
-      metaDescription.setAttribute('content', 'Complete real estate management with AI-powered automation. Save 15+ hours per week and increase conversions by 40%.');
-    }
+    preserveUTMParams();
 
-    // Track page view
-    trackEvent('page_view', {
+    // Track page view with consent check
+    trackEventWithConsent('page_view', {
       page_title: 'Real Estate Landing Page',
       page_path: '/industries/real-estate',
+      profession: 'real-estate',
     });
   }, []);
 
-  const handleCTAClick = (ctaType: 'primary' | 'secondary', location: 'hero' | 'bottom') => {
-    trackEvent('cta_click', {
+  const handleCTAClick = (ctaType: 'primary' | 'secondary', location: 'hero' | 'bottom', position: number) => {
+    trackEventWithConsent('cta_click', {
       cta_type: ctaType,
       cta_location: location,
+      cta_position: position,
       cta_text: ctaType === 'primary' ? 'Start Free Trial' : 'Schedule Demo',
       page: 'real-estate',
+      profession: 'real-estate',
     });
+  };
+
+  // JSON-LD structured data
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: 'Real Estate Management Platform',
+    description:
+      'Complete real estate management with AI-powered automation. Save 15+ hours per week and increase conversions by 40%.',
+    url: 'https://effinity.co.il/industries/real-estate',
+    breadcrumb: {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Home',
+          item: 'https://effinity.co.il',
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'Industries',
+          item: 'https://effinity.co.il/industries',
+        },
+        {
+          '@type': 'ListItem',
+          position: 3,
+          name: 'Real Estate',
+        },
+      ],
+    },
+    provider: {
+      '@type': 'Organization',
+      name: 'Effinity',
+      url: 'https://effinity.co.il',
+    },
   };
 
   const capabilities = [
@@ -152,11 +191,29 @@ export default function RealEstatePage() {
 
   return (
     <div className="min-h-screen bg-white">
+      <PageHead
+        title="Real Estate Management Platform | Effinity"
+        description="Complete real estate management with AI-powered automation. Save 15+ hours per week and increase conversions by 40%. Property listings, lead management, campaign attribution, and automated follow-ups."
+        canonical="https://effinity.co.il/industries/real-estate"
+        ogImage="https://effinity.co.il/og-real-estate.jpg"
+        keywords="real estate management, property management software, real estate CRM, lead management, AI property search, campaign attribution"
+        jsonLd={jsonLd}
+      />
+
       <MarketingNav />
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 bg-gradient-to-br from-blue-50 via-white to-blue-50">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Breadcrumbs */}
+          <Breadcrumbs
+            items={[
+              { label: 'Industries', href: '/industries' },
+              { label: 'Real Estate' },
+            ]}
+            className="mb-8"
+          />
+
           <motion.div
             initial="hidden"
             animate="visible"
@@ -182,16 +239,16 @@ export default function RealEstatePage() {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
-                href="/register"
-                onClick={() => handleCTAClick('primary', 'hero')}
+                href={appendUTMParams('/register')}
+                onClick={() => handleCTAClick('primary', 'hero', 1)}
                 className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-white bg-blue-700 hover:bg-blue-800 rounded-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5"
                 aria-label="Start your free trial of Effinity Real Estate platform"
               >
                 Start Free Trial
               </Link>
               <Link
-                href="/contact"
-                onClick={() => handleCTAClick('secondary', 'hero')}
+                href={appendUTMParams('/contact')}
+                onClick={() => handleCTAClick('secondary', 'hero', 2)}
                 className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-all duration-200"
                 aria-label="Schedule a demo of Effinity Real Estate platform"
               >
@@ -350,13 +407,13 @@ export default function RealEstatePage() {
         subtext="Join hundreds of agents and brokerages who have automated their workflow and increased conversions with Effinity."
         primaryCTA={{
           text: "Start Free Trial",
-          href: "/register",
-          onClick: () => handleCTAClick('primary', 'bottom')
+          href: appendUTMParams('/register'),
+          onClick: () => handleCTAClick('primary', 'bottom', 3)
         }}
         secondaryCTA={{
           text: "Contact Sales",
-          href: "/contact",
-          onClick: () => handleCTAClick('secondary', 'bottom')
+          href: appendUTMParams('/contact'),
+          onClick: () => handleCTAClick('secondary', 'bottom', 4)
         }}
       />
 
