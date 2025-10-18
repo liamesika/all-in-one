@@ -92,62 +92,49 @@ export default function CalendarPage() {
       const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
       const endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 
-      // TODO: Replace with actual API call when backend is ready
-      // const response = await fetch(`/api/real-estate/calendar?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`);
-      // const data = await response.json();
+      // Build query parameters
+      const params = new URLSearchParams({
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0],
+      });
 
-      // Mock data for demonstration
-      const mockEvents: CalendarEvent[] = [
-        {
-          id: '1',
-          title: 'Property Viewing - Luxury Penthouse',
-          type: 'property_viewing',
-          date: new Date(currentDate.getFullYear(), currentDate.getMonth(), 15, 14, 0),
-          status: 'Scheduled',
-          propertyName: 'Luxury Penthouse - Tel Aviv',
-          leadName: 'David Cohen',
-        },
-        {
-          id: '2',
-          title: 'Follow up with lead',
-          type: 'follow_up',
-          date: new Date(currentDate.getFullYear(), currentDate.getMonth(), 18, 10, 0),
-          status: 'Pending',
-          leadName: 'Sarah Levi',
-        },
-        {
-          id: '3',
-          title: 'Property listing deadline',
-          type: 'deadline',
-          date: new Date(currentDate.getFullYear(), currentDate.getMonth(), 20, 17, 0),
-          status: 'Urgent',
-          propertyName: 'Garden House - Herzliya',
-        },
-        {
-          id: '4',
-          title: 'Complete property photos',
-          type: 'task_due',
-          date: new Date(currentDate.getFullYear(), currentDate.getMonth(), 22, 12, 0),
-          status: 'In Progress',
-        },
-      ];
+      // Add event types filter if not all selected
+      if (selectedEventTypes.length > 0 && selectedEventTypes.length < 4) {
+        params.set('eventTypes', selectedEventTypes.join(','));
+      }
 
-      // Filter by selected event types
-      const filtered = mockEvents.filter(event =>
-        selectedEventTypes.includes(event.type)
-      );
+      // Call real API
+      const response = await fetch(`/api/real-estate/calendar/events?${params.toString()}`);
 
-      setEvents(filtered.map((event) => ({
-        ...event,
+      if (!response.ok) {
+        throw new Error('Failed to fetch calendar events');
+      }
+
+      const data = await response.json();
+
+      // Transform API response to component format
+      const transformedEvents: CalendarEvent[] = data.map((event: any) => ({
+        id: event.id,
+        title: event.title,
+        type: event.type,
         date: new Date(event.date),
-      })));
+        status: event.status,
+        propertyId: event.propertyId,
+        propertyName: event.propertyName,
+        leadName: event.leadName,
+        metadata: event,
+      }));
+
+      setEvents(transformedEvents);
     } catch (error) {
       console.error('Failed to fetch events:', error);
+      // Fallback to empty array on error
       setEvents([]);
     } finally {
       setLoading(false);
     }
   };
+
 
   const getEventIcon = (type: string) => {
     switch (type) {

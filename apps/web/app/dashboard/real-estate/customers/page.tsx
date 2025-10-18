@@ -111,50 +111,33 @@ export default function CustomersPage() {
     try {
       setLoading(true);
 
-      // TODO: Replace with actual API call when backend is ready
-      // const response = await fetch('/api/real-estate/leads?includeProperties=true');
-      // const data = await response.json();
+      // Call real API with property count
+      const response = await fetch('/api/real-estate/leads?includePropertyCount=true');
 
-      // Mock data for demonstration - mapping leads to customers
-      const mockCustomers: Customer[] = [
-        {
-          id: '1',
-          name: 'David Cohen',
-          email: 'david.cohen@example.com',
-          phone: '+972-50-123-4567',
-          linkedProperties: 2,
-          tags: ['vip', 'hot-lead'],
-          notes: 'Interested in luxury properties',
-          lastContact: new Date(Date.now() - 86400000 * 2).toISOString(),
-          createdAt: new Date(Date.now() - 86400000 * 30).toISOString(),
-        },
-        {
-          id: '2',
-          name: 'Sarah Levi',
-          email: 'sarah.levi@example.com',
-          phone: '+972-54-987-6543',
-          linkedProperties: 1,
-          tags: ['qualified', 'nurture'],
-          notes: 'Looking for family apartment',
-          lastContact: new Date(Date.now() - 86400000 * 5).toISOString(),
-          createdAt: new Date(Date.now() - 86400000 * 45).toISOString(),
-        },
-        {
-          id: '3',
-          name: 'Michael Green',
-          email: 'michael.green@example.com',
-          phone: '+972-52-555-1234',
-          linkedProperties: 0,
-          tags: ['cold-lead'],
-          lastContact: new Date(Date.now() - 86400000 * 15).toISOString(),
-          createdAt: new Date(Date.now() - 86400000 * 60).toISOString(),
-        },
-      ];
+      if (!response.ok) {
+        throw new Error('Failed to fetch customers');
+      }
 
-      setCustomers(mockCustomers);
-      setFilteredCustomers(mockCustomers);
+      const data = await response.json();
+
+      // Transform leads to customer format
+      const transformedCustomers: Customer[] = data.map((lead: any) => ({
+        id: lead.id,
+        name: lead.name,
+        email: lead.email,
+        phone: lead.phone,
+        linkedProperties: lead._count?.properties || 0,
+        tags: lead.tags || [],
+        notes: lead.notes,
+        lastContact: lead.updatedAt,
+        createdAt: lead.createdAt,
+      }));
+
+      setCustomers(transformedCustomers);
+      setFilteredCustomers(transformedCustomers);
     } catch (error) {
       console.error('Failed to fetch customers:', error);
+      // Fallback to empty array on error
       setCustomers([]);
       setFilteredCustomers([]);
     } finally {

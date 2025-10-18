@@ -3,34 +3,65 @@ import { prisma } from '../../../../../packages/server/db/client';
 // טיפוס מקומי כדי לא להסתבך עם גרסאות enum של Prisma
 type REStatus = 'NEW' | 'CONTACTED' | 'MEETING' | 'OFFER' | 'DEAL';
 
-type ListArgs = { orgId: string; q?: string; status?: string; limit: number };
+type ListArgs = {
+  orgId: string;
+  q?: string;
+  status?: string;
+  limit: number;
+  includePropertyCount?: boolean;
+};
 
 @Injectable()
 export class RealEstateLeadsService {
-  async list({ orgId, q, status, limit }: ListArgs) {
+  async list({ orgId, q, status, limit, includePropertyCount }: ListArgs) {
     // עוקפים שגיאות טיפוס בינתיים אם ה-client לא מעודכן
     const db = prisma as any;
 
     // Prisma ישן? אין mode: 'insensitive' → מסירים אותו
     const orFilter = q
       ? [
-          { clientName: { contains: q } },
-          { city: { contains: q } },
-          { propertyType: { contains: q } },
+          { fullName: { contains: q } },
           { email: { contains: q } },
           { phone: { contains: q } },
+          { message: { contains: q } },
         ]
       : undefined;
 
-    return db.realEstateLead.findMany({
+    // Build query options
+    const queryOptions: any = {
       where: {
         ownerUid: orgId,
-        ...(status ? { status: status as REStatus } : {}),
         ...(orFilter ? { OR: orFilter } : {}),
       },
       orderBy: { createdAt: 'desc' },
       take: Math.max(1, Math.min(1000, limit)),
-    });
+    };
+
+    // Add property relation if includePropertyCount is true
+    if (includePropertyCount) {
+      queryOptions.include = {
+        property: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      };
+    }
+
+    const leads = await db.realEstateLead.findMany(queryOptions);
+
+    // If includePropertyCount is requested, add _count field
+    if (includePropertyCount) {
+      return leads.map((lead: any) => ({
+        ...lead,
+        _count: {
+          properties: lead.propertyId ? 1 : 0, // Each lead can be linked to 0 or 1 property
+        },
+      }));
+    }
+
+    return leads;
   }
 
   async getOne(id: string) {

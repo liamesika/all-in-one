@@ -13,11 +13,18 @@ export class RealEstateLeadsController {
     @Query('q') q?: string,
     @Query('status') status?: string,
     @Query('limit') limit = '100',
+    @Query('includePropertyCount') includePropertyCount?: string,
   ) {
     if (!orgId) {
       throw new BadRequestException('Organization ID is required');
     }
-    return this.svc.list({ orgId, q, status, limit: Number(limit) });
+    return this.svc.list({
+      orgId,
+      q,
+      status,
+      limit: Number(limit),
+      includePropertyCount: includePropertyCount === 'true',
+    });
   }
 
   @Get(':id')

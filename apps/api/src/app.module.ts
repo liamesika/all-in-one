@@ -15,6 +15,7 @@ import { PingController } from './ping.controller';
 import { RealEstateLeadsModule } from './modules/real-estate-leads/real-estate-leads.module';
 import { RealEstatePropertiesModule } from './modules/real-estate-properties/real-estate-properties.module';
 import { RealEstateResearchModule } from './modules/real-estate-research/real-estate-research.module';
+import { RealEstateCalendarModule } from './modules/real-estate-calendar/real-estate-calendar.module';
 import { CampaignsModule } from './modules/campaigns/campaigns.module';
 import { ConnectionsModule } from './modules/connections/connections.module';
 import { InsightsModule } from './modules/insights/insights.module';
@@ -50,6 +51,7 @@ import {
     RealEstateLeadsModule,
     RealEstatePropertiesModule,
     RealEstateResearchModule,
+    RealEstateCalendarModule,
     CampaignsModule,
     ConnectionsModule,
     InsightsModule,
