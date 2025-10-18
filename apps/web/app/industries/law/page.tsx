@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
@@ -19,6 +20,7 @@ import {
 import { MarketingNav } from '@/components/marketing/MarketingNav';
 import { MarketingFooter } from '@/components/marketing/MarketingFooter';
 import { CTASection } from '@/components/marketing/CTASection';
+import { trackEvent } from '@/lib/analytics';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -43,6 +45,27 @@ const staggerContainer = {
 };
 
 export default function LawPage() {
+  useEffect(() => {
+    document.title = 'Law Practice Management Platform | Effinity';
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'Complete law practice management with automation. Save 12+ hours per week and capture 40% more billable hours. Case tracking, document automation, time tracking, and billing.');
+    }
+    trackEvent('page_view', {
+      page_title: 'Law Landing Page',
+      page_path: '/industries/law',
+    });
+  }, []);
+
+  const handleCTAClick = (ctaType: 'primary' | 'secondary', location: 'hero' | 'bottom') => {
+    trackEvent('cta_click', {
+      cta_type: ctaType,
+      cta_location: location,
+      cta_text: ctaType === 'primary' ? 'Start Free Trial' : 'Schedule Demo',
+      page: 'law',
+    });
+  };
+
   const capabilities = [
     {
       icon: Briefcase,
@@ -157,13 +180,17 @@ export default function LawPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 href="/register"
+                onClick={() => handleCTAClick('primary', 'hero')}
                 className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5"
+                aria-label="Start your free trial of Effinity Law Practice Management platform"
               >
                 Start Free Trial
               </Link>
               <Link
                 href="/contact"
+                onClick={() => handleCTAClick('secondary', 'hero')}
                 className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 rounded-lg transition-all duration-200"
+                aria-label="Schedule a demo of Effinity Law Practice Management platform"
               >
                 Schedule Demo
               </Link>
@@ -320,11 +347,13 @@ export default function LawPage() {
         subtext="Join hundreds of law firms that have automated their workflow and increased billable hours with Effinity."
         primaryCTA={{
           text: "Start Free Trial",
-          href: "/register"
+          href: "/register",
+          onClick: () => handleCTAClick('primary', 'bottom')
         }}
         secondaryCTA={{
           text: "Contact Sales",
-          href: "/contact"
+          href: "/contact",
+          onClick: () => handleCTAClick('secondary', 'bottom')
         }}
       />
 

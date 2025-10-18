@@ -8,10 +8,12 @@ interface CTASectionProps {
   primaryCTA: {
     text: string;
     href: string;
+    onClick?: () => void;
   };
   secondaryCTA?: {
     text: string;
     href: string;
+    onClick?: () => void;
   };
 }
 
@@ -40,6 +42,7 @@ export function CTASection({
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href={primaryCTA.href}
+              onClick={primaryCTA.onClick}
               className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-blue-700 bg-white hover:bg-gray-50 rounded-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5"
             >
               {primaryCTA.text}
@@ -47,6 +50,7 @@ export function CTASection({
             {secondaryCTA && (
               <Link
                 href={secondaryCTA.href}
+                onClick={secondaryCTA.onClick}
                 className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg transition-all duration-200"
               >
                 {secondaryCTA.text}

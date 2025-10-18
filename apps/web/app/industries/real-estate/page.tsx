@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
@@ -19,6 +20,7 @@ import {
 import { MarketingNav } from '@/components/marketing/MarketingNav';
 import { MarketingFooter } from '@/components/marketing/MarketingFooter';
 import { CTASection } from '@/components/marketing/CTASection';
+import { trackEvent } from '@/lib/analytics';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -43,6 +45,30 @@ const staggerContainer = {
 };
 
 export default function RealEstatePage() {
+  // Set page metadata
+  useEffect(() => {
+    document.title = 'Real Estate Management Platform | Effinity';
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'Complete real estate management with AI-powered automation. Save 15+ hours per week and increase conversions by 40%.');
+    }
+
+    // Track page view
+    trackEvent('page_view', {
+      page_title: 'Real Estate Landing Page',
+      page_path: '/industries/real-estate',
+    });
+  }, []);
+
+  const handleCTAClick = (ctaType: 'primary' | 'secondary', location: 'hero' | 'bottom') => {
+    trackEvent('cta_click', {
+      cta_type: ctaType,
+      cta_location: location,
+      cta_text: ctaType === 'primary' ? 'Start Free Trial' : 'Schedule Demo',
+      page: 'real-estate',
+    });
+  };
+
   const capabilities = [
     {
       icon: Home,
@@ -157,13 +183,17 @@ export default function RealEstatePage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 href="/register"
+                onClick={() => handleCTAClick('primary', 'hero')}
                 className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-white bg-blue-700 hover:bg-blue-800 rounded-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5"
+                aria-label="Start your free trial of Effinity Real Estate platform"
               >
                 Start Free Trial
               </Link>
               <Link
                 href="/contact"
+                onClick={() => handleCTAClick('secondary', 'hero')}
                 className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-all duration-200"
+                aria-label="Schedule a demo of Effinity Real Estate platform"
               >
                 Schedule Demo
               </Link>
@@ -320,11 +350,13 @@ export default function RealEstatePage() {
         subtext="Join hundreds of agents and brokerages who have automated their workflow and increased conversions with Effinity."
         primaryCTA={{
           text: "Start Free Trial",
-          href: "/register"
+          href: "/register",
+          onClick: () => handleCTAClick('primary', 'bottom')
         }}
         secondaryCTA={{
           text: "Contact Sales",
-          href: "/contact"
+          href: "/contact",
+          onClick: () => handleCTAClick('secondary', 'bottom')
         }}
       />
 

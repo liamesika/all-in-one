@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
@@ -19,6 +20,7 @@ import {
 import { MarketingNav } from '@/components/marketing/MarketingNav';
 import { MarketingFooter } from '@/components/marketing/MarketingFooter';
 import { CTASection } from '@/components/marketing/CTASection';
+import { trackEvent } from '@/lib/analytics';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -43,6 +45,27 @@ const staggerContainer = {
 };
 
 export default function ProductionsPage() {
+  useEffect(() => {
+    document.title = 'Creative Productions Management Platform | Effinity';
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'Project management for creative studios with automation. Save 18+ hours per week and increase margins by 30%. Budget tracking, timeline management, and asset delivery.');
+    }
+    trackEvent('page_view', {
+      page_title: 'Productions Landing Page',
+      page_path: '/industries/productions',
+    });
+  }, []);
+
+  const handleCTAClick = (ctaType: 'primary' | 'secondary', location: 'hero' | 'bottom') => {
+    trackEvent('cta_click', {
+      cta_type: ctaType,
+      cta_location: location,
+      cta_text: ctaType === 'primary' ? 'Start Free Trial' : 'Schedule Demo',
+      page: 'productions',
+    });
+  };
+
   const capabilities = [
     {
       icon: Target,
@@ -157,13 +180,17 @@ export default function ProductionsPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 href="/register"
+                onClick={() => handleCTAClick('primary', 'hero')}
                 className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-white bg-orange-700 hover:bg-orange-800 rounded-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5"
+                aria-label="Start your free trial of Effinity Productions platform"
               >
                 Start Free Trial
               </Link>
               <Link
                 href="/contact"
+                onClick={() => handleCTAClick('secondary', 'hero')}
                 className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-lg transition-all duration-200"
+                aria-label="Schedule a demo of Effinity Productions platform"
               >
                 Schedule Demo
               </Link>
@@ -320,11 +347,13 @@ export default function ProductionsPage() {
         subtext="Join leading creative studios that have automated their workflows and increased profitability with Effinity."
         primaryCTA={{
           text: "Start Free Trial",
-          href: "/register"
+          href: "/register",
+          onClick: () => handleCTAClick('primary', 'bottom')
         }}
         secondaryCTA={{
           text: "Contact Sales",
-          href: "/contact"
+          href: "/contact",
+          onClick: () => handleCTAClick('secondary', 'bottom')
         }}
       />
 
