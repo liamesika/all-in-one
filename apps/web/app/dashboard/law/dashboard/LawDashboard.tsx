@@ -97,7 +97,7 @@ function LawDashboardContent({
       }
     });
 
-    const newUrl = `/law/dashboard?${params.toString()}`;
+    const newUrl = `/dashboard/law/dashboard?${params.toString()}`;
     if (newUrl !== window.location.pathname + window.location.search) {
       router.replace(newUrl, { scroll: false });
     }
@@ -522,49 +522,49 @@ function LawSidebar({ currentPath = 'dashboard' }: { currentPath?: string }) {
 
   const navigationItems = [
     {
-      href: '/law/dashboard',
+      href: '/dashboard/law/dashboard',
       label: lang === 'he' ? 'דשבורד' : 'Dashboard',
       key: 'dashboard',
       icon: '📊'
     },
     {
-      href: '/law/matters',
+      href: '/dashboard/law/matters',
       label: lang === 'he' ? 'תיקים' : 'Matters',
       key: 'matters',
       icon: '📁'
     },
     {
-      href: '/law/clients',
+      href: '/dashboard/law/clients',
       label: lang === 'he' ? 'לקוחות' : 'Clients',
       key: 'clients',
       icon: '👥'
     },
     {
-      href: '/law/calendar',
+      href: '/dashboard/law/calendar',
       label: lang === 'he' ? 'יומן' : 'Calendar',
       key: 'calendar',
       icon: '📅'
     },
     {
-      href: '/law/documents',
+      href: '/dashboard/law/documents',
       label: lang === 'he' ? 'מסמכים' : 'Documents',
       key: 'documents',
       icon: '📄'
     },
     {
-      href: '/law/time-tracking',
+      href: '/dashboard/law/time-tracking',
       label: lang === 'he' ? 'רישום זמן' : 'Time Tracking',
       key: 'time-tracking',
       icon: '⏱️'
     },
     {
-      href: '/law/billing',
+      href: '/dashboard/law/billing',
       label: lang === 'he' ? 'חיוב' : 'Billing',
       key: 'billing',
       icon: '💳'
     },
     {
-      href: '/law/reports',
+      href: '/dashboard/law/reports',
       label: lang === 'he' ? 'דוחות' : 'Reports',
       key: 'reports',
       icon: '📈'
