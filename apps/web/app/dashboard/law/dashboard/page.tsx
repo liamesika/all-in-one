@@ -1,5 +1,5 @@
-import { NewLawDashboard } from './NewLawDashboard';
-import type { DashboardData } from './NewLawDashboard';
+import { PolishedLawDashboard } from './PolishedLawDashboard';
+import type { DashboardData } from './PolishedLawDashboard';
 
 export const dynamic = 'force-dynamic';
 
@@ -95,5 +95,5 @@ const getMockData = (): DashboardData => ({
 export default function LawDashboardPage() {
   const data = getMockData();
 
-  return <NewLawDashboard initialData={data} />;
+  return <PolishedLawDashboard initialData={data} />;
 }
