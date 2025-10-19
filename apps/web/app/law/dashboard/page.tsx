@@ -13,14 +13,17 @@ interface SearchParams {
   lang?: string;
 }
 
-export default function LawDashboardRedirect({
+export default async function LawDashboardRedirect({
   searchParams,
 }: {
-  searchParams: SearchParams;
+  searchParams: Promise<SearchParams>;
 }) {
+  // Await searchParams in Next.js 15
+  const params = await searchParams;
+
   // Build query string from searchParams
   const queryParams = new URLSearchParams();
-  Object.entries(searchParams).forEach(([key, value]) => {
+  Object.entries(params).forEach(([key, value]) => {
     if (value) queryParams.set(key, value);
   });
 
