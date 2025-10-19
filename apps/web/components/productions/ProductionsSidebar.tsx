@@ -102,9 +102,9 @@ export function ProductionsSidebar() {
                 className="flex items-center gap-2"
               >
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-sm">
-                  <span className="text-white font-semibold text-sm">P</span>
+                  <span className="text-white font-semibold text-sm">E</span>
                 </div>
-                <span className="text-lg font-semibold text-gray-900">Productions</span>
+                <span className="text-lg font-semibold text-gray-900">Effinity</span>
               </motion.div>
             ) : (
               <motion.div
@@ -114,8 +114,10 @@ export function ProductionsSidebar() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
                 className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-sm mx-auto"
+                aria-label="Effinity Productions"
+                title="Effinity"
               >
-                <span className="text-white font-semibold text-sm">P</span>
+                <span className="text-white font-semibold text-sm">E</span>
               </motion.div>
             )}
           </AnimatePresence>
