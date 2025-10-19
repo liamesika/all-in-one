@@ -1,6 +1,7 @@
 'use client';
 
 // Root homepage - Multi-vertical Effinity platform
+import { useRef } from 'react';
 import { MultiVerticalHero } from '@/components/marketing/MultiVerticalHero';
 import { PlatformOverview } from '@/components/marketing/PlatformOverview';
 import { CoreCapabilities } from '@/components/marketing/CoreCapabilities';
@@ -9,11 +10,13 @@ import { MultiVerticalTestimonials } from '@/components/marketing/MultiVerticalT
 import { IntegrationGrid } from '@/components/marketing/IntegrationGrid';
 import { FAQ } from '@/components/marketing/FAQ';
 import { CTASection } from '@/components/marketing/CTASection';
+import { StickyHeader } from '@/components/marketing/StickyHeader';
 
 // Note: Metadata must be exported from layout.tsx when page is a client component
 // See apps/web/app/layout.tsx for metadata configuration
 
 export default function HomePage() {
+  const heroRef = useRef<HTMLElement>(null);
   const faqItems = [
     {
       question: 'Can I use multiple verticals in one account?',
@@ -59,8 +62,11 @@ export default function HomePage() {
 
   return (
     <>
+      {/* Sticky Header - appears on scroll */}
+      <StickyHeader heroRef={heroRef} />
+
       {/* Hero Section - Multi-Vertical */}
-      <MultiVerticalHero />
+      <MultiVerticalHero ref={heroRef} />
 
       {/* Platform Overview - 4 Verticals */}
       <PlatformOverview />

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, forwardRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
@@ -67,11 +67,11 @@ const verticals: Vertical[] = [
   }
 ];
 
-export function MultiVerticalHero() {
+export const MultiVerticalHero = forwardRef<HTMLElement>((props, ref) => {
   const [hoveredVertical, setHoveredVertical] = useState<string | null>(null);
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-[#0E1A2B] via-[#1A2F4B] to-[#0E1A2B] text-white">
+    <section ref={ref} className="relative overflow-hidden bg-gradient-to-br from-[#0E1A2B] via-[#1A2F4B] to-[#0E1A2B] text-white">
       {/* Animated Background */}
       <div className="absolute inset-0 opacity-20">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500 rounded-full filter blur-3xl animate-pulse"></div>
@@ -236,4 +236,6 @@ export function MultiVerticalHero() {
       </div>
     </section>
   );
-}
+});
+
+MultiVerticalHero.displayName = 'MultiVerticalHero';
