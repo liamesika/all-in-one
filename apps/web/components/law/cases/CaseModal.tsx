@@ -13,7 +13,6 @@
 
 import { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -47,8 +46,8 @@ export function CaseModal({ isOpen, onClose, caseToEdit }: CaseModalProps) {
     formState: { errors, isSubmitting },
     reset,
     setValue,
+    setError,
   } = useForm<CreateCaseInput>({
-    resolver: zodResolver(createCaseSchema),
     defaultValues: {
       status: 'pending',
       priority: 'medium',
@@ -92,6 +91,22 @@ export function CaseModal({ isOpen, onClose, caseToEdit }: CaseModalProps) {
   }, [isOpen]);
 
   const onSubmit = async (data: CreateCaseInput) => {
+    // Manual validation (no zodResolver due to Zod v3 compatibility)
+    if (!data.title || data.title.trim().length < 3) {
+      setError('title', { message: 'Title must be at least 3 characters' });
+      return;
+    }
+
+    if (!data.clientName || data.clientName.trim().length < 2) {
+      setError('clientName', { message: 'Client name is required' });
+      return;
+    }
+
+    if (!data.assignedAttorneyId) {
+      setError('assignedAttorneyId', { message: 'Assigned attorney is required' });
+      return;
+    }
+
     try {
       if (isEditMode && caseToEdit) {
         await updateMutation.mutateAsync({ ...data, id: caseToEdit.id });
