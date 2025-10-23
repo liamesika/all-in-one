@@ -2,6 +2,7 @@
 import './globals';
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import '../styles/themes/law.theme.css';
 import React from 'react';
 import { cookies, headers } from 'next/headers';
 import AppProviders from './providers';
