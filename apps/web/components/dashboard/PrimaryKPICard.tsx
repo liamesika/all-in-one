@@ -41,7 +41,7 @@ export function PrimaryKPICard({
   return (
     <button
       onClick={handleClick}
-      className="group relative w-full bg-white dark:bg-[#1A2F4B] rounded-xl p-6 border border-gray-200 dark:border-[#2979FF]/20 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] hover:border-[#2979FF] cursor-pointer text-left min-h-[140px]"
+      className="group relative w-full bg-white dark:bg-[#1A2F4B] rounded-xl p-5 sm:p-6 border border-gray-200 dark:border-[#2979FF]/20 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] hover:border-[#2979FF] cursor-pointer text-left min-h-[44px] sm:min-h-[140px]"
       style={{
         boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
       }}
@@ -61,23 +61,23 @@ export function PrimaryKPICard({
         </div>
       </div>
 
-      <div className="flex items-start justify-between mb-4">
+      <div className="flex items-start justify-between mb-3 sm:mb-4">
         <div className="flex-1">
-          <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+          <p className="text-base sm:text-sm font-medium text-gray-600 dark:text-gray-400 mb-1 sm:mb-2">
             {label}
           </p>
-          <p className="text-4xl font-bold text-gray-900 dark:text-white tabular-nums">
+          <p className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white tabular-nums">
             {value}
           </p>
         </div>
-        <div className="ml-4 p-3 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-[#2979FF]/10 dark:to-[#2979FF]/5 group-hover:from-blue-100 group-hover:to-blue-200 dark:group-hover:from-[#2979FF]/20 dark:group-hover:to-[#2979FF]/10 transition-colors">
+        <div className="ml-3 sm:ml-4 p-2 sm:p-3 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-[#2979FF]/10 dark:to-[#2979FF]/5 group-hover:from-blue-100 group-hover:to-blue-200 dark:group-hover:from-[#2979FF]/20 dark:group-hover:to-[#2979FF]/10 transition-colors flex-shrink-0">
           <div className="text-[#2979FF]">{icon}</div>
         </div>
       </div>
 
       {change && (
         <p
-          className="text-sm font-medium mt-2"
+          className="text-base sm:text-sm font-medium mt-2"
           style={{ color: trendColor }}
         >
           {change}

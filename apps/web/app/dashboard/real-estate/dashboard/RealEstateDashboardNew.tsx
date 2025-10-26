@@ -264,7 +264,7 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B]">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B] overflow-x-hidden">
       {/* Fixed Header */}
       <RealEstateHeader />
 
@@ -281,8 +281,9 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
         onAddCampaign={() => console.log('Create Campaign')}
       />
 
-      {/* Main Content - Add padding-top to account for fixed header + extra spacing */}
-      <div className="pt-20 pb-20">
+      {/* Main Content - Mobile-optimized with centered layout */}
+      <div className="pt-20 pb-20 max-w-full mx-auto">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
         {/* Greeting */}
         <DashboardGreeting
           firstName={userProfile?.displayName || userProfile?.firstName}
@@ -290,8 +291,8 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
         />
 
         {/* Primary KPI Cards - Emphasized */}
-        <div className="px-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             <PrimaryKPICard
               icon={<Users size={28} />}
               label="Total Leads"
@@ -332,7 +333,7 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
         </div>
 
         {/* Filter Bar */}
-        <div className="px-6 mt-6 mb-6">
+        <div className="mt-6 mb-6">
           <FilterBar
             dateRange={filters.dateRange}
             onDateRangeChange={(value) => updateFilter('dateRange', value)}
@@ -350,7 +351,7 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
         </div>
 
         {/* Dashboard Navigation Tabs */}
-        <div className="px-6">
+        <div>
           <DashboardNavigation
             defaultTab={activeView}
             onTabChange={(tabId) => setActiveView(tabId as typeof activeView)}
@@ -358,8 +359,8 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
         </div>
 
         {/* KPI Grid - Updated with Unified KPICard Component */}
-        <div className="px-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             <KPICard
               icon={<Users className="w-6 h-6" />}
               label={lang === 'he' ? 'סה"כ לידים' : 'Total Leads'}
@@ -388,7 +389,7 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
         </div>
 
         {/* Main Dashboard Sections - Conditionally rendered based on active view */}
-        <div className="px-6 space-y-8 pb-12">
+        <div className="space-y-6 sm:space-y-8 pb-12">
           {shouldShowSection('leads') && (
             <div className="animate-fade-in">
               <LeadsMarketingSection data={data.leads} />
@@ -440,6 +441,7 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
 
         {/* Footer */}
         <RealEstateFooter />
+        </div>
       </div>
     </div>
   );

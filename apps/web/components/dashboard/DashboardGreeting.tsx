@@ -18,8 +18,8 @@ export function DashboardGreeting({ firstName, vertical }: DashboardGreetingProp
   const name = firstName || 'User';
 
   return (
-    <div className="px-6 pt-6 pb-4">
-      <h1 className="text-2xl md:text-3xl font-semibold text-gray-900 dark:text-white">
+    <div className="pt-6 pb-4">
+      <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 dark:text-white leading-tight">
         Good {timeOfDay}, {name} — here's your {vertical} overview.
       </h1>
     </div>
