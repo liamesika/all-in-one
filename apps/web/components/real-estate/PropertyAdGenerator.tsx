@@ -23,6 +23,7 @@ export function PropertyAdGenerator({ property, onClose }: PropertyAdGeneratorPr
   const [loading, setLoading] = useState(false);
   const [generated, setGenerated] = useState<any>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [adLanguage, setAdLanguage] = useState<'english' | 'hebrew'>('english');
 
   const generateAd = async () => {
     setLoading(true);
@@ -163,42 +164,64 @@ export function PropertyAdGenerator({ property, onClose }: PropertyAdGeneratorPr
           <div className="space-y-6">
             {/* Marketing Description */}
             <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+              <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center justify-between">
                 <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                   <Globe className="w-5 h-5 text-blue-600" />
                   {language === 'he' ? 'תיאור שיווקי' : 'Marketing Description'}
                 </h3>
-              </div>
 
-              {/* English Version */}
-              <div className="p-4 border-b border-gray-200">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-600">English</span>
+                {/* Language Toggle */}
+                <div className="flex items-center gap-1 bg-white rounded-lg p-1 border border-gray-200">
                   <button
-                    onClick={() => copyToClipboard(generated.generatedDescription?.english || '', 'english')}
-                    className="inline-flex items-center gap-1 px-2 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                    onClick={() => setAdLanguage('english')}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                      adLanguage === 'english'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
                   >
-                    {copiedField === 'english' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                    {copiedField === 'english' ? 'Copied!' : 'Copy'}
+                    EN
+                  </button>
+                  <button
+                    onClick={() => setAdLanguage('hebrew')}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                      adLanguage === 'hebrew'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    HE
                   </button>
                 </div>
-                <p className="text-gray-700 whitespace-pre-wrap">{generated.generatedDescription?.english}</p>
               </div>
 
-              {/* Hebrew Version */}
+              {/* Display Selected Language */}
               <div className="p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-600">עברית</span>
+                  <span className="text-sm font-medium text-gray-600">
+                    {adLanguage === 'english' ? 'English' : 'עברית'}
+                  </span>
                   <button
-                    onClick={() => copyToClipboard(generated.generatedDescription?.hebrew || '', 'hebrew')}
+                    onClick={() => copyToClipboard(
+                      generated.generatedDescription?.[adLanguage] || '',
+                      adLanguage
+                    )}
                     className="inline-flex items-center gap-1 px-2 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors"
                   >
-                    {copiedField === 'hebrew' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                    {copiedField === 'hebrew' ? 'הועתק!' : 'העתק'}
+                    {copiedField === adLanguage ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    {copiedField === adLanguage
+                      ? (adLanguage === 'hebrew' ? 'הועתק!' : 'Copied!')
+                      : (adLanguage === 'hebrew' ? 'העתק' : 'Copy')
+                    }
                   </button>
                 </div>
-                <p className="text-gray-700 whitespace-pre-wrap text-right" dir="rtl">
-                  {generated.generatedDescription?.hebrew}
+                <p
+                  className={`text-gray-700 whitespace-pre-wrap ${
+                    adLanguage === 'hebrew' ? 'text-right' : 'text-left'
+                  }`}
+                  dir={adLanguage === 'hebrew' ? 'rtl' : 'ltr'}
+                >
+                  {generated.generatedDescription?.[adLanguage]}
                 </p>
               </div>
             </div>
