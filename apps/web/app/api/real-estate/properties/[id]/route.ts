@@ -1,30 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, getOwnerUid } from '@/lib/apiAuth';
-
-// Mock database - same as in route.ts parent
-// In production, this would be shared Prisma instance
-const getMockProperties = () => {
-  // This is a simplified mock - in production use Prisma
-  return [
-    {
-      id: '1',
-      name: 'Luxury Penthouse - Tel Aviv',
-      city: 'Tel Aviv',
-      address: 'Rothschild Blvd 10',
-      price: 4500000,
-      rooms: 5,
-      size: 180,
-      status: 'LISTED',
-      description: 'Stunning luxury penthouse in the heart of Tel Aviv.',
-      amenities: 'Parking (2 spaces), Storage, Elevator, Gym, Pool',
-      publishedAt: new Date().toISOString(),
-      createdAt: new Date(Date.now() - 86400000 * 30).toISOString(),
-      slug: 'luxury-penthouse-tel-aviv',
-      images: [],
-      ownerUid: 'demo-user',
-    },
-  ];
-};
+import prisma from '@/lib/prisma';
 
 // GET - Get single property
 export const GET = withAuth(async (request, { user, params }) => {
@@ -32,13 +8,29 @@ export const GET = withAuth(async (request, { user, params }) => {
     const { id } = await params;
     const ownerUid = getOwnerUid(user);
 
-    // TODO: Replace with Prisma query
-    // const property = await prisma.property.findFirst({
-    //   where: { id, ownerUid }
-    // });
-
-    const mockProps = getMockProperties();
-    const property = mockProps.find(p => p.id === id && p.ownerUid === ownerUid);
+    const property = await prisma.property.findFirst({
+      where: {
+        id,
+        ownerUid
+      },
+      include: {
+        photos: {
+          orderBy: { sortIndex: 'asc' }
+        },
+        organization: {
+          include: {
+            memberships: {
+              where: { status: 'ACTIVE' },
+              include: {
+                user: {
+                  select: { id: true, email: true, displayName: true }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
 
     if (!property) {
       return NextResponse.json(
@@ -47,7 +39,16 @@ export const GET = withAuth(async (request, { user, params }) => {
       );
     }
 
-    return NextResponse.json(property);
+    // Transform to match frontend expectations
+    const transformedProperty = {
+      ...property,
+      images: property.photos.map(photo => photo.url),
+      assignedAgentName: property.assignedAgentId
+        ? property.organization?.memberships.find(m => m.userId === property.assignedAgentId)?.user.displayName || null
+        : null
+    };
+
+    return NextResponse.json(transformedProperty);
   } catch (error) {
     console.error('Error fetching property:', error);
     return NextResponse.json(
@@ -64,29 +65,32 @@ export const PUT = withAuth(async (request, { user, params }) => {
     const ownerUid = getOwnerUid(user);
     const body = await request.json();
 
-    // TODO: Replace with Prisma update
-    // const property = await prisma.property.update({
-    //   where: { id, ownerUid },
-    //   data: {
-    //     ...body,
-    //     updatedAt: new Date(),
-    //   }
-    // });
+    // Verify ownership
+    const existingProperty = await prisma.property.findFirst({
+      where: {
+        id,
+        ownerUid
+      }
+    });
 
-    // Mock update
-    const mockProps = getMockProperties();
-    const propertyIndex = mockProps.findIndex(p => p.id === id && p.ownerUid === ownerUid);
-
-    if (propertyIndex === -1) {
+    if (!existingProperty) {
       return NextResponse.json(
         { error: 'Property not found' },
         { status: 404 }
       );
     }
 
-    // Update slug if status changed to LISTED
-    let slug = mockProps[propertyIndex].slug;
-    if (body.status === 'LISTED' && !slug && body.name) {
+    // Validate required fields
+    if (!body.name || !body.address || !body.city || !body.price) {
+      return NextResponse.json(
+        { error: 'Missing required fields: name, address, city, price' },
+        { status: 400 }
+      );
+    }
+
+    // Generate slug if status changed to LISTED and no slug exists
+    let slug = existingProperty.slug;
+    if (body.status === 'LISTED' && !slug) {
       slug = body.name
         .toLowerCase()
         .replace(/[^\w\s-]/g, '')
@@ -95,21 +99,65 @@ export const PUT = withAuth(async (request, { user, params }) => {
         .substring(0, 60) + '-' + Date.now().toString(36);
     }
 
-    const updatedProperty = {
-      ...mockProps[propertyIndex],
-      ...body,
-      slug,
-      publishedAt: body.status === 'LISTED' && !mockProps[propertyIndex].publishedAt
-        ? new Date().toISOString()
-        : mockProps[propertyIndex].publishedAt,
-      updatedAt: new Date().toISOString(),
+    // Delete existing photos
+    await prisma.propertyPhoto.deleteMany({
+      where: { propertyId: id }
+    });
+
+    // Update property with new photos
+    const property = await prisma.property.update({
+      where: { id },
+      data: {
+        name: body.name,
+        address: body.address,
+        city: body.city,
+        price: body.price,
+        rooms: body.rooms,
+        size: body.size,
+        status: body.status || 'DRAFT',
+        description: body.description,
+        amenities: body.amenities,
+        slug,
+        publishedAt: body.status === 'LISTED' && !existingProperty.publishedAt ? new Date() : existingProperty.publishedAt,
+        updatedAt: new Date(),
+        photos: {
+          create: (body.images || []).map((url: string, index: number) => ({
+            url,
+            sortIndex: index
+          }))
+        }
+      },
+      include: {
+        photos: {
+          orderBy: { sortIndex: 'asc' }
+        },
+        organization: {
+          include: {
+            memberships: {
+              where: { status: 'ACTIVE' },
+              include: {
+                user: {
+                  select: { id: true, email: true, displayName: true }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    console.log('[Properties API] Updated property:', property.id);
+
+    // Transform to match frontend expectations
+    const transformedProperty = {
+      ...property,
+      images: property.photos.map(photo => photo.url),
+      assignedAgentName: property.assignedAgentId
+        ? property.organization?.memberships.find(m => m.userId === property.assignedAgentId)?.user.displayName || null
+        : null
     };
 
-    mockProps[propertyIndex] = updatedProperty;
-
-    console.log('[Properties API] Updated property:', id);
-
-    return NextResponse.json(updatedProperty);
+    return NextResponse.json(transformedProperty);
   } catch (error) {
     console.error('Error updating property:', error);
     return NextResponse.json(
@@ -119,38 +167,39 @@ export const PUT = withAuth(async (request, { user, params }) => {
   }
 });
 
-// DELETE - Archive/Delete property
+// DELETE - Delete property
 export const DELETE = withAuth(async (request, { user, params }) => {
   try {
     const { id } = await params;
     const ownerUid = getOwnerUid(user);
 
-    // TODO: Replace with Prisma soft delete
-    // const property = await prisma.property.update({
-    //   where: { id, ownerUid },
-    //   data: { archived: true, archivedAt: new Date() }
-    // });
+    // Verify ownership
+    const property = await prisma.property.findFirst({
+      where: {
+        id,
+        ownerUid
+      }
+    });
 
-    // Mock delete
-    const mockProps = getMockProperties();
-    const propertyIndex = mockProps.findIndex(p => p.id === id && p.ownerUid === ownerUid);
-
-    if (propertyIndex === -1) {
+    if (!property) {
       return NextResponse.json(
         { error: 'Property not found' },
         { status: 404 }
       );
     }
 
-    mockProps.splice(propertyIndex, 1);
+    // Delete property (photos will cascade delete)
+    await prisma.property.delete({
+      where: { id }
+    });
 
-    console.log('[Properties API] Archived property:', id);
+    console.log('[Properties API] Deleted property:', id);
 
-    return NextResponse.json({ success: true, message: 'Property archived' });
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error archiving property:', error);
+    console.error('Error deleting property:', error);
     return NextResponse.json(
-      { error: 'Failed to archive property' },
+      { error: 'Failed to delete property' },
       { status: 500 }
     );
   }
