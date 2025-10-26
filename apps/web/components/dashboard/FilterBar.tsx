@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { X, SlidersHorizontal } from 'lucide-react';
 
 interface FilterOption {
   value: string;
@@ -10,164 +11,425 @@ interface FilterOption {
 interface FilterBarProps {
   dateRange?: string;
   onDateRangeChange?: (value: string) => void;
-  location?: string;
-  onLocationChange?: (value: string) => void;
   agent?: string;
   onAgentChange?: (value: string) => void;
+  dealType?: string;
+  onDealTypeChange?: (value: string) => void;
+  status?: string;
+  onStatusChange?: (value: string) => void;
+  source?: string;
+  onSourceChange?: (value: string) => void;
+  search?: string;
+  onSearchChange?: (value: string) => void;
   dateRangeOptions?: FilterOption[];
-  locationOptions?: FilterOption[];
   agentOptions?: FilterOption[];
+  statusOptions?: FilterOption[];
+  sourceOptions?: FilterOption[];
 }
 
 export function FilterBar({
   dateRange = '30d',
   onDateRangeChange,
-  location = 'all',
-  onLocationChange,
   agent = 'all',
   onAgentChange,
+  dealType = 'all',
+  onDealTypeChange,
+  status = 'all',
+  onStatusChange,
+  source = 'all',
+  onSourceChange,
+  search = '',
+  onSearchChange,
   dateRangeOptions = [
     { value: '7d', label: 'Last 7 Days' },
     { value: '30d', label: 'Last 30 Days' },
     { value: '90d', label: 'Last 90 Days' },
     { value: 'ytd', label: 'This Year' },
-    { value: 'custom', label: 'Custom Range' },
-  ],
-  locationOptions = [
-    { value: 'all', label: 'All Locations' },
-    { value: 'tel-aviv', label: 'Tel Aviv' },
-    { value: 'jerusalem', label: 'Jerusalem' },
-    { value: 'haifa', label: 'Haifa' },
   ],
   agentOptions = [
     { value: 'all', label: 'All Agents' },
-    { value: 'agent1', label: 'Sarah Cohen' },
-    { value: 'agent2', label: 'David Levi' },
-    { value: 'agent3', label: 'Rachel Gold' },
+  ],
+  statusOptions = [
+    { value: 'all', label: 'All Statuses' },
+    { value: 'new', label: 'New' },
+    { value: 'contacted', label: 'Contacted' },
+    { value: 'qualified', label: 'Qualified' },
+    { value: 'viewing', label: 'Viewing Scheduled' },
+    { value: 'negotiating', label: 'Negotiating' },
+    { value: 'closed', label: 'Closed' },
+    { value: 'lost', label: 'Lost' },
+  ],
+  sourceOptions = [
+    { value: 'all', label: 'All Sources' },
+    { value: 'website', label: 'Website' },
+    { value: 'yad2', label: 'Yad2' },
+    { value: 'madlan', label: 'Madlan' },
+    { value: 'facebook', label: 'Facebook' },
+    { value: 'referral', label: 'Referral' },
+    { value: 'direct', label: 'Direct' },
   ],
 }: FilterBarProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [marketType, setMarketType] = useState('all');
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+  const activeFilterCount = [
+    dateRange !== '30d',
+    agent !== 'all',
+    dealType !== 'all',
+    status !== 'all',
+    source !== 'all',
+    search !== '',
+  ].filter(Boolean).length;
 
   return (
-    <div
-      className="rounded-xl p-6 mb-6 border"
-      style={{
-        background: '#FFFFFF',
-        border: '1px solid #E5E7EB',
-        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
-      }}
-    >
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        {/* Date Range Picker - Clean, no icons */}
-        <div>
-          <label className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
-            Date Range
-          </label>
-          <select
-            value={dateRange}
-            onChange={(e) => onDateRangeChange?.(e.target.value)}
-            className="w-full px-4 py-3 rounded-lg hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 cursor-pointer"
-            style={{
-              background: '#F9FAFB',
-              border: '1px solid #D1D5DB',
-              color: '#111827',
-            }}
-          >
-            {dateRangeOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
+    <>
+      {/* Desktop Filter Bar */}
+      <div
+        className="hidden lg:block rounded-xl p-6 mb-6 border"
+        style={{
+          background: '#FFFFFF',
+          border: '1px solid #E5E7EB',
+          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+        }}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+          {/* Date Range */}
+          <div>
+            <label className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
+              Date Range
+            </label>
+            <select
+              value={dateRange}
+              onChange={(e) => onDateRangeChange?.(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 cursor-pointer"
+              style={{
+                background: '#F9FAFB',
+                border: '1px solid #D1D5DB',
+                color: '#111827',
+              }}
+            >
+              {dateRangeOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        {/* Market Type - Clean, no icons */}
-        <div>
-          <label className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
-            Market Type
-          </label>
-          <select
-            value={marketType}
-            onChange={(e) => setMarketType(e.target.value)}
-            className="w-full px-4 py-3 rounded-lg hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 cursor-pointer"
-            style={{
-              background: '#F9FAFB',
-              border: '1px solid #D1D5DB',
-              color: '#111827',
-            }}
-          >
-            <option value="all">All Markets</option>
-            <option value="sale">For Sale</option>
-            <option value="rent">For Rent</option>
-          </select>
-        </div>
+          {/* Deal Type */}
+          <div>
+            <label className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
+              Deal Type
+            </label>
+            <select
+              value={dealType}
+              onChange={(e) => onDealTypeChange?.(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 cursor-pointer"
+              style={{
+                background: '#F9FAFB',
+                border: '1px solid #D1D5DB',
+                color: '#111827',
+              }}
+            >
+              <option value="all">All Types</option>
+              <option value="sale">For Sale</option>
+              <option value="rent">For Rent</option>
+            </select>
+          </div>
 
-        {/* Agent Filter - Clean, no icons */}
-        <div>
-          <label className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
-            Agent
-          </label>
-          <select
-            value={agent}
-            onChange={(e) => onAgentChange?.(e.target.value)}
-            className="w-full px-4 py-3 rounded-lg hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 cursor-pointer"
-            style={{
-              background: '#F9FAFB',
-              border: '1px solid #D1D5DB',
-              color: '#111827',
-            }}
-          >
-            {agentOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
+          {/* Status */}
+          <div>
+            <label className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
+              Status
+            </label>
+            <select
+              value={status}
+              onChange={(e) => onStatusChange?.(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 cursor-pointer"
+              style={{
+                background: '#F9FAFB',
+                border: '1px solid #D1D5DB',
+                color: '#111827',
+              }}
+            >
+              {statusOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        {/* Location Filter - Clean, no icons */}
-        <div>
-          <label className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
-            Location
-          </label>
-          <select
-            value={location}
-            onChange={(e) => onLocationChange?.(e.target.value)}
-            className="w-full px-4 py-3 rounded-lg hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 cursor-pointer"
-            style={{
-              background: '#F9FAFB',
-              border: '1px solid #D1D5DB',
-              color: '#111827',
-            }}
-          >
-            {locationOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
+          {/* Source */}
+          <div>
+            <label className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
+              Source
+            </label>
+            <select
+              value={source}
+              onChange={(e) => onSourceChange?.(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 cursor-pointer"
+              style={{
+                background: '#F9FAFB',
+                border: '1px solid #D1D5DB',
+                color: '#111827',
+              }}
+            >
+              {sourceOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        {/* Search - Clean, no icons */}
-        <div>
-          <label className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
-            Search
-          </label>
-          <input
-            type="text"
-            placeholder="Properties, leads..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-3 rounded-lg placeholder-gray-400 hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
-            style={{
-              background: '#F9FAFB',
-              border: '1px solid #D1D5DB',
-              color: '#111827',
-            }}
-          />
+          {/* Agent */}
+          <div>
+            <label className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
+              Agent
+            </label>
+            <select
+              value={agent}
+              onChange={(e) => onAgentChange?.(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 cursor-pointer"
+              style={{
+                background: '#F9FAFB',
+                border: '1px solid #D1D5DB',
+                color: '#111827',
+              }}
+            >
+              {agentOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Search */}
+          <div>
+            <label className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
+              Search
+            </label>
+            <input
+              type="text"
+              placeholder="Properties, leads..."
+              value={search}
+              onChange={(e) => onSearchChange?.(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg placeholder-gray-400 hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+              style={{
+                background: '#F9FAFB',
+                border: '1px solid #D1D5DB',
+                color: '#111827',
+              }}
+            />
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Mobile Filter Button */}
+      <div className="lg:hidden mb-6">
+        <button
+          onClick={() => setMobileFiltersOpen(true)}
+          className="w-full flex items-center justify-between px-4 py-3 rounded-lg"
+          style={{
+            background: '#FFFFFF',
+            border: '1px solid #E5E7EB',
+            color: '#111827',
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <SlidersHorizontal size={20} style={{ color: '#6B7280' }} />
+            <span className="font-medium">Filters</span>
+            {activeFilterCount > 0 && (
+              <span
+                className="px-2 py-0.5 rounded-full text-xs font-medium"
+                style={{
+                  background: '#3B82F6',
+                  color: '#FFFFFF',
+                }}
+              >
+                {activeFilterCount}
+              </span>
+            )}
+          </div>
+        </button>
+      </div>
+
+      {/* Mobile Filter Sheet */}
+      {mobileFiltersOpen && (
+        <div
+          className="fixed inset-0 z-50 lg:hidden"
+          style={{ background: 'rgba(0, 0, 0, 0.5)' }}
+          onClick={() => setMobileFiltersOpen(false)}
+        >
+          <div
+            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl p-6 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              boxShadow: '0 -4px 6px -1px rgba(0, 0, 0, 0.1)',
+            }}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold" style={{ color: '#111827' }}>
+                Filters
+              </h3>
+              <button
+                onClick={() => setMobileFiltersOpen(false)}
+                className="p-2 rounded-lg hover:bg-gray-100"
+              >
+                <X size={20} style={{ color: '#6B7280' }} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Date Range */}
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: '#6B7280' }}>
+                  Date Range
+                </label>
+                <select
+                  value={dateRange}
+                  onChange={(e) => onDateRangeChange?.(e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{
+                    background: '#F9FAFB',
+                    border: '1px solid #D1D5DB',
+                    color: '#111827',
+                  }}
+                >
+                  {dateRangeOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Deal Type */}
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: '#6B7280' }}>
+                  Deal Type
+                </label>
+                <select
+                  value={dealType}
+                  onChange={(e) => onDealTypeChange?.(e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{
+                    background: '#F9FAFB',
+                    border: '1px solid #D1D5DB',
+                    color: '#111827',
+                  }}
+                >
+                  <option value="all">All Types</option>
+                  <option value="sale">For Sale</option>
+                  <option value="rent">For Rent</option>
+                </select>
+              </div>
+
+              {/* Status */}
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: '#6B7280' }}>
+                  Status
+                </label>
+                <select
+                  value={status}
+                  onChange={(e) => onStatusChange?.(e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{
+                    background: '#F9FAFB',
+                    border: '1px solid #D1D5DB',
+                    color: '#111827',
+                  }}
+                >
+                  {statusOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Source */}
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: '#6B7280' }}>
+                  Source
+                </label>
+                <select
+                  value={source}
+                  onChange={(e) => onSourceChange?.(e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{
+                    background: '#F9FAFB',
+                    border: '1px solid #D1D5DB',
+                    color: '#111827',
+                  }}
+                >
+                  {sourceOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Agent */}
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: '#6B7280' }}>
+                  Agent
+                </label>
+                <select
+                  value={agent}
+                  onChange={(e) => onAgentChange?.(e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{
+                    background: '#F9FAFB',
+                    border: '1px solid #D1D5DB',
+                    color: '#111827',
+                  }}
+                >
+                  {agentOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Search */}
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: '#6B7280' }}>
+                  Search
+                </label>
+                <input
+                  type="text"
+                  placeholder="Properties, leads..."
+                  value={search}
+                  onChange={(e) => onSearchChange?.(e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{
+                    background: '#F9FAFB',
+                    border: '1px solid #D1D5DB',
+                    color: '#111827',
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <button
+                onClick={() => setMobileFiltersOpen(false)}
+                className="w-full px-4 py-3 rounded-lg font-medium"
+                style={{
+                  background: '#3B82F6',
+                  color: '#FFFFFF',
+                }}
+              >
+                Apply Filters
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

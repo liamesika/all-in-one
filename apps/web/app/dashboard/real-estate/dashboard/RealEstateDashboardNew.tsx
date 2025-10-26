@@ -39,6 +39,7 @@ import { AutomationHealthSection } from './components/sections/AutomationHealthS
 import { useLang } from '@/components/i18n/LangProvider';
 import { LanguageProvider } from '@/lib/language-context';
 import { RealEstateFooter } from '@/components/real-estate/RealEstateFooter';
+import { useFilters } from '@/hooks/useFilters';
 
 // Mock data generator - replace with actual API data
 function generateMockData() {
@@ -235,11 +236,9 @@ function generateMockData() {
   };
 }
 
-function RealEstateDashboardContent() {
+function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }) {
   const { lang } = useLang();
-  const [dateRange, setDateRange] = useState('30d');
-  const [location, setLocation] = useState('all');
-  const [agent, setAgent] = useState('all');
+  const { filters, updateFilter } = useFilters(initialFilters);
   const [activeView, setActiveView] = useState<'all' | 'leads' | 'listings' | 'deals' | 'operations'>('all');
 
   const data = generateMockData();
@@ -327,12 +326,18 @@ function RealEstateDashboardContent() {
         {/* Filter Bar */}
         <div className="px-6 mt-6 mb-6">
           <FilterBar
-            dateRange={dateRange}
-            onDateRangeChange={setDateRange}
-            location={location}
-            onLocationChange={setLocation}
-            agent={agent}
-            onAgentChange={setAgent}
+            dateRange={filters.dateRange}
+            onDateRangeChange={(value) => updateFilter('dateRange', value)}
+            dealType={filters.dealType}
+            onDealTypeChange={(value) => updateFilter('dealType', value)}
+            status={filters.status}
+            onStatusChange={(value) => updateFilter('status', value)}
+            source={filters.source}
+            onSourceChange={(value) => updateFilter('source', value)}
+            agent={filters.agent}
+            onAgentChange={(value) => updateFilter('agent', value)}
+            search={filters.search}
+            onSearchChange={(value) => updateFilter('search', value)}
           />
         </div>
 
@@ -435,7 +440,7 @@ function RealEstateDashboardContent() {
 export function RealEstateDashboardNewComponent({ data, initialFilters }: { data?: any; initialFilters?: any }) {
   return (
     <LanguageProvider>
-      <RealEstateDashboardContent />
+      <RealEstateDashboardContent initialFilters={initialFilters} />
     </LanguageProvider>
   );
 }

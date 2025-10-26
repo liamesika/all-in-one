@@ -6,13 +6,10 @@ export const dynamic = 'force-dynamic';
 
 interface SearchParams {
   dateRange?: string;
-  startDate?: string;
-  endDate?: string;
-  attorneyId?: string;
-  practiceArea?: string;
-  matterType?: string;
-  matterStatus?: string;
-  leadSource?: string;
+  agent?: string;
+  dealType?: string;
+  status?: string;
+  source?: string;
   search?: string;
   lang?: string;
 }
