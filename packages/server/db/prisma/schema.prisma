@@ -2838,3 +2838,274 @@ model LawInvoice {
   @@index([caseId])
   @@index([status])
 }
+// ========= E-COMMERCE VERTICAL ========= //
+
+// Tutorial progress tracking
+model EcomTutorialProgress {
+  id          String   @id @default(cuid())
+  ownerUid    String
+  orgId       String?
+  tutorialId  String // Tutorial identifier
+  title       String
+  stepIndex   Int      @default(0) // Current step
+  totalSteps  Int
+  completed   Boolean  @default(false)
+  progress    Json? // { steps: [{ index, title, completed, timestamp }] }
+  lastViewedAt DateTime @default(now())
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([ownerUid])
+  @@index([orgId])
+  @@index([ownerUid, tutorialId])
+  @@index([ownerUid, completed])
+}
+
+// CSV product session for batch uploads
+model EcomCSVSession {
+  id              String   @id @default(cuid())
+  ownerUid        String
+  orgId           String?
+  status          String   @default("DRAFT") // DRAFT, PROCESSING, COMPLETED, ERROR
+
+  // Source data
+  sourceType      String // MANUAL_UPLOAD, ALIEXPRESS_IMPORT
+  sourceUrl       String?
+  uploadedImages  Json? // Array of S3 URLs
+
+  // AI generation settings
+  targetLanguage  String   @default("en") // en, he, both
+  aiPrompt        String?
+  generatedData   Json? // Array of generated products
+
+  // Pricing rules
+  pricingRules    Json // { type: 'fixed'|'percent'|'multiplier', value, rounding: '.90'|'.99'|'none' }
+
+  // CSV data
+  csvData         Json? // Editable table data
+  validatedData   Json? // Shopify-validated products
+  exportedCsvUrl  String?
+
+  // Shopify push (optional)
+  shopifyStoreUrl String?
+  shopifyPushed   Boolean  @default(false)
+  shopifyPushedAt DateTime?
+
+  // Metadata
+  productCount    Int      @default(0)
+  errorCount      Int      @default(0)
+  errors          Json? // Array of validation errors
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([ownerUid])
+  @@index([orgId])
+  @@index([ownerUid, status])
+  @@index([createdAt])
+}
+
+// Store structure - collections and menus
+model EcomStructure {
+  id          String   @id @default(cuid())
+  ownerUid    String
+  orgId       String?
+  type        String // COLLECTION, MENU
+
+  // Collection data
+  name        String?
+  handle      String?
+  description String?
+  rules       Json? // For automatic collections
+  products    Json? // Manual product IDs
+
+  // Menu data
+  menuItems   Json? // Nested menu structure
+  menuJson    String? // Export-ready JSON
+
+  // Shopify sync
+  shopifyId   String?
+  synced      Boolean  @default(false)
+  syncedAt    DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([ownerUid])
+  @@index([orgId])
+  @@index([ownerUid, type])
+}
+
+// Layout blueprint presets
+model EcomLayoutBlueprint {
+  id          String   @id @default(cuid())
+  ownerUid    String
+  orgId       String?
+  name        String
+  isPreset    Boolean  @default(false) // System preset or user custom
+
+  // Section order
+  sections    Json // Array of { id, type, settings, order }
+  jsonExport  String? // Shopify-compatible JSON
+
+  // Status
+  active      Boolean  @default(false) // Currently applied
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([ownerUid])
+  @@index([orgId])
+  @@index([ownerUid, active])
+  @@index([isPreset])
+}
+
+// AI image generation jobs
+model EcomImageJob {
+  id            String   @id @default(cuid())
+  ownerUid      String
+  orgId         String?
+  status        String   @default("QUEUED") // QUEUED, PROCESSING, COMPLETED, ERROR
+
+  // Input
+  prompt        String
+  preset        String? // PRODUCT_PHOTO, LIFESTYLE, BANNER, AD
+  count         Int      @default(1)
+  size          String   @default("1024x1024")
+
+  // Output
+  generatedUrls Json? // Array of S3 URLs
+  s3Keys        Json? // S3 object keys for cleanup
+
+  // Processing
+  aiProvider    String   @default("openai") // openai, midjourney, stable-diffusion
+  tokensUsed    Int      @default(0)
+  cost          Float    @default(0)
+
+  // Error handling
+  errorMessage  String?
+  retryCount    Int      @default(0)
+
+  createdAt     DateTime @default(now())
+  completedAt   DateTime?
+  updatedAt     DateTime @updatedAt
+
+  @@index([ownerUid])
+  @@index([orgId])
+  @@index([ownerUid, status])
+  @@index([createdAt])
+}
+
+// Campaign assistant briefs
+model EcomCampaignBrief {
+  id              String   @id @default(cuid())
+  ownerUid        String
+  orgId           String?
+  name            String
+
+  // Campaign goals
+  objective       String // TRAFFIC, CONVERSIONS, AWARENESS, ENGAGEMENT
+  budget          Float
+  region          String
+  targetAudience  String
+
+  // AI-generated content
+  audiences       Json? // Array of { name, description, targeting }
+  adCopies        Json? // Array of { primaryText, headline, description }
+
+  // Exports
+  exportedJson    String?
+  exportedCsv     String?
+
+  // Versioning
+  version         Int      @default(1)
+  parentId        String?
+
+  // Status
+  status          String   @default("DRAFT") // DRAFT, READY, ACTIVE, PAUSED, COMPLETED
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([ownerUid])
+  @@index([orgId])
+  @@index([ownerUid, status])
+  @@index([parentId])
+}
+
+// Performance audit reports
+model EcomPerfReport {
+  id              String   @id @default(cuid())
+  ownerUid        String
+  orgId           String?
+  storeDomain     String
+
+  // Audit results
+  status          String   @default("QUEUED") // QUEUED, RUNNING, COMPLETED, ERROR
+  auditData       Json? // Full Lighthouse/PSI data
+
+  // Key metrics
+  ttfb            Float?
+  lcp             Float?
+  cls             Float?
+  fid             Float?
+  performanceScore Int?
+  seoScore        Int?
+
+  // Recommendations
+  recommendations Json? // Array of { category, issue, solution, priority }
+
+  // Exports
+  pdfUrl          String?
+  jsonExport      String?
+
+  // Metadata
+  errorMessage    String?
+  auditDuration   Int? // milliseconds
+
+  createdAt       DateTime @default(now())
+  completedAt     DateTime?
+  updatedAt       DateTime @updatedAt
+
+  @@index([ownerUid])
+  @@index([orgId])
+  @@index([ownerUid, createdAt])
+  @@index([storeDomain])
+}
+
+// E-Commerce KPIs and stats
+model EcomStats {
+  id                    String   @id @default(cuid())
+  ownerUid              String   @unique
+  orgId                 String?
+
+  // Tutorial stats
+  tutorialsCompleted    Int      @default(0)
+  totalTutorials        Int      @default(10)
+
+  // Product stats
+  productsUploaded      Int      @default(0)
+  csvSessionsCompleted  Int      @default(0)
+
+  // Image stats
+  aiImagesGenerated     Int      @default(0)
+  totalImageCost        Float    @default(0)
+
+  // Campaign stats
+  campaignBriefsCreated Int      @default(0)
+  activeCampaigns       Int      @default(0)
+
+  // Performance stats
+  lastPerformanceScore  Int?
+  perfReportsGenerated  Int      @default(0)
+
+  // Shopify integration
+  shopifyConnected      Boolean  @default(false)
+  shopifyStoreUrl       String?
+
+  updatedAt             DateTime @updatedAt
+
+  @@index([ownerUid])
+  @@index([orgId])
+}
