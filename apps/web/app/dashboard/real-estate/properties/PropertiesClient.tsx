@@ -214,27 +214,71 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
               {language === 'he' ? 'נהל את תיק הנכסים שלך' : 'Manage your property portfolio'}
             </p>
           </div>
-
-          <div className="flex items-center gap-3">
-            <UniversalButton
-              variant="outline"
-              size="md"
-              leftIcon={<Upload className="w-5 h-5" />}
-              onClick={() => setShowImportModal(true)}
-            >
-              {language === 'he' ? 'ייבוא CSV' : 'Import CSV'}
-            </UniversalButton>
-
-            <UniversalButton
-              variant="primary"
-              size="md"
-              leftIcon={<Plus className="w-5 h-5" />}
-              onClick={handleCreateProperty}
-            >
-              {language === 'he' ? 'נכס חדש' : 'New Property'}
-            </UniversalButton>
-          </div>
         </div>
+
+        {/* Actions Bar */}
+        <UniversalCard variant="default">
+          <CardBody className="p-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              {/* Left Actions */}
+              <div className="flex flex-wrap items-center gap-3">
+                <UniversalButton
+                  variant="outline"
+                  size="md"
+                  leftIcon={<Upload className="w-4 h-4" />}
+                  onClick={() => setShowImportModal(true)}
+                >
+                  {language === 'he' ? 'ייבוא CSV' : 'Import CSV'}
+                </UniversalButton>
+
+                <UniversalButton
+                  variant="outline"
+                  size="md"
+                  leftIcon={<Download className="w-4 h-4" />}
+                  onClick={handleBulkExport}
+                >
+                  {language === 'he' ? 'ייצוא CSV' : 'Export CSV'}
+                </UniversalButton>
+
+                <UniversalButton
+                  variant="primary"
+                  size="md"
+                  leftIcon={<Plus className="w-4 h-4" />}
+                  onClick={handleCreateProperty}
+                >
+                  {language === 'he' ? 'נכס חדש' : 'New Property'}
+                </UniversalButton>
+              </div>
+
+              {/* Bulk Actions Menu */}
+              <BulkActionsMenu
+                selectedCount={selectedProperties.size}
+                title={`${selectedProperties.size} ${t.selected}`}
+                actions={[
+                  {
+                    id: 'export',
+                    label: t.bulkExport,
+                    icon: <Download className="w-4 h-4" />,
+                    onClick: handleBulkExport,
+                  },
+                  {
+                    id: 'share',
+                    label: t.bulkShare,
+                    icon: <Share2 className="w-4 h-4" />,
+                    onClick: handleBulkShare,
+                  },
+                  {
+                    id: 'archive',
+                    label: t.archive,
+                    icon: <Trash2 className="w-4 h-4" />,
+                    variant: 'danger' as const,
+                    onClick: handleBulkArchive,
+                  },
+                ]}
+              />
+            </div>
+          </CardBody>
+        </UniversalCard>
 
         {/* Filters */}
         <UniversalCard variant="default">
@@ -294,38 +338,6 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
                     </span>
                   )}
                 </UniversalButton>
-              </div>
-
-              {/* Bulk Actions Menu */}
-              <BulkActionsMenu
-                selectedCount={selectedProperties.size}
-                title={`${selectedProperties.size} ${t.selected}`}
-                actions={[
-                  {
-                    id: 'export',
-                    label: t.bulkExport,
-                    icon: <Download className="w-4 h-4" />,
-                    onClick: handleBulkExport,
-                  },
-                  {
-                    id: 'share',
-                    label: t.bulkShare,
-                    icon: <Share2 className="w-4 h-4" />,
-                    onClick: handleBulkShare,
-                  },
-                  {
-                    id: 'archive',
-                    label: t.archive,
-                    icon: <Trash2 className="w-4 h-4" />,
-                    variant: 'danger' as const,
-                    onClick: handleBulkArchive,
-                  },
-                ]}
-              />
-
-              {/* Properties Count */}
-              <div className="ml-auto text-body-sm text-gray-600 dark:text-gray-400">
-                {filteredProperties.length} {language === 'he' ? 'נכסים' : 'properties'}
               </div>
             </div>
           </CardBody>
