@@ -129,6 +129,18 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
         ? { ...p, assignedAgentId: agentId, assignedAgentName: agentName }
         : p
     ));
+
+    // Show success toast
+    const message = agentId
+      ? `Agent ${agentName} assigned successfully`
+      : 'Agent unassigned successfully';
+
+    // Create toast notification (simple implementation)
+    const toast = document.createElement('div');
+    toast.className = 'fixed top-4 right-4 z-50 px-6 py-3 bg-green-500 text-white rounded-lg shadow-lg';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
   };
 
   const handleShareProperty = (property: any) => {
