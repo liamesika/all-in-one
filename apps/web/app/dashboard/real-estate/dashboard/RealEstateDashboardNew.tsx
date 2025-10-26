@@ -290,8 +290,8 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
       />
 
       {/* Main Content - Mobile-optimized with centered layout */}
-      <div className="pt-20 pb-20 max-w-full mx-auto">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
+      <div className="pt-20 pb-16 max-w-full mx-auto">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Greeting */}
         <DashboardGreeting
           firstName={userProfile?.displayName || userProfile?.firstName}
@@ -299,10 +299,10 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
         />
 
         {/* Primary KPI Cards - Emphasized */}
-        <div className="mb-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="mb-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
             <PrimaryKPICard
-              icon={<Users size={28} />}
+              icon={<Users size={32} />}
               label="Total Leads"
               value={data.kpis.totalLeads}
               change="+12% from last month"
@@ -311,7 +311,7 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
               href="/dashboard/real-estate/leads"
             />
             <PrimaryKPICard
-              icon={<Building2 size={28} />}
+              icon={<Building2 size={32} />}
               label="Active Properties"
               value={data.kpis.activeListings}
               change="+5 this week"
@@ -320,7 +320,7 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
               href="/dashboard/real-estate/properties"
             />
             <PrimaryKPICard
-              icon={<BarChart3 size={28} />}
+              icon={<BarChart3 size={32} />}
               label="Active Campaigns"
               value={24}
               change="3 scheduled"
@@ -329,7 +329,7 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
               href="/dashboard/real-estate/campaigns"
             />
             <PrimaryKPICard
-              icon={<Zap size={28} />}
+              icon={<Zap size={32} />}
               label="Active Automations"
               value={data.kpis.automatedTasks}
               change="98% success rate"
@@ -341,7 +341,7 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
         </div>
 
         {/* Filter Bar */}
-        <div className="mt-6 mb-6">
+        <div className="mb-8">
           <FilterBar
             dateRange={filters.dateRange}
             onDateRangeChange={(value) => updateFilter('dateRange', value)}
@@ -359,7 +359,7 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
         </div>
 
         {/* Dashboard Navigation Tabs */}
-        <div>
+        <div className="mb-8">
           <DashboardNavigation
             defaultTab={activeView}
             onTabChange={(tabId) => setActiveView(tabId as typeof activeView)}
@@ -397,7 +397,7 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
         </div>
 
         {/* Main Dashboard Sections - Conditionally rendered based on active view */}
-        <div className="space-y-6 sm:space-y-8 pb-12">
+        <div className="space-y-7 sm:space-y-8 pb-16">
           {data.isEmpty ? (
             <EmptyState
               icon={<Building2 size={32} />}

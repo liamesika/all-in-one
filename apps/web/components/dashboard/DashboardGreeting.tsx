@@ -18,10 +18,13 @@ export function DashboardGreeting({ firstName, vertical }: DashboardGreetingProp
   const name = firstName || 'User';
 
   return (
-    <div className="pt-6 pb-4">
-      <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 dark:text-white leading-tight">
-        Good {timeOfDay}, {name} — here's your {vertical} overview.
+    <div className="py-8 sm:py-10 text-center sm:text-left">
+      <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white leading-tight tracking-tight">
+        Good {timeOfDay}, <span className="text-[#2979FF]">{name}</span>
       </h1>
+      <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 mt-2 font-normal">
+        Here's your {vertical} overview
+      </p>
     </div>
   );
 }
