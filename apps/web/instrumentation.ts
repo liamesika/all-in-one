@@ -7,3 +7,9 @@ export async function register() {
     await import('./sentry.edge.config');
   }
 }
+
+export async function onRequestError() {
+  if (process.env.NEXT_RUNTIME === 'edge' || process.env.NEXT_RUNTIME === 'nodejs') {
+    await import('./instrumentation-client');
+  }
+}

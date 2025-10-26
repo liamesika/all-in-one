@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, getOwnerUid } from '@/lib/apiAuth';
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma.server';
 
 // GET - List all properties for user
 export const GET = withAuth(async (request, { user }) => {
