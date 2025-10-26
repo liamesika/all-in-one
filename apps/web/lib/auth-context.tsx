@@ -13,6 +13,7 @@ export interface UserProfile {
   firstName?: string;
   lastName?: string;
   avatarUrl?: string;
+  displayName?: string;
   mustChangePassword?: boolean;
   emailVerified: boolean;
   createdAt: string;
@@ -29,6 +30,7 @@ interface AuthContextType {
   mustChangePassword: boolean;
   logout: () => Promise<void>;
   refreshProfile: KeyedMutator<UserProfile>;
+  updateProfile: (displayName: string, avatarUrl: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -41,6 +43,7 @@ const AuthContext = createContext<AuthContextType>({
   mustChangePassword: false,
   logout: async () => {},
   refreshProfile: async () => undefined,
+  updateProfile: async () => {},
 });
 
 export const useAuth = () => {
@@ -131,6 +134,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return await getIdToken();
   };
 
+  const updateProfile = async (displayName: string, avatarUrl: string) => {
+    // Store in localStorage for immediate persistence
+    if (typeof window !== 'undefined' && userProfile) {
+      const updatedProfile = { ...userProfile, displayName, avatarUrl };
+      localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
+
+      // Optimistically update SWR cache
+      await refreshProfile(updatedProfile, { revalidate: false });
+    }
+  };
+
   const value = {
     user,
     userProfile: userProfile || null,
@@ -141,6 +155,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     mustChangePassword: userProfile?.mustChangePassword || false,
     logout,
     refreshProfile,
+    updateProfile,
   };
 
   return (
