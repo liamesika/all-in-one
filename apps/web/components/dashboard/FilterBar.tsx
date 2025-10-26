@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, SlidersHorizontal } from 'lucide-react';
 import { analytics } from '@/lib/analytics';
 
@@ -71,6 +71,7 @@ export function FilterBar({
   ],
 }: FilterBarProps) {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [announcement, setAnnouncement] = useState('');
 
   const activeFilterCount = [
     dateRange !== '30d',
@@ -81,8 +82,21 @@ export function FilterBar({
     search !== '',
   ].filter(Boolean).length;
 
+  // Announce filter changes to screen readers
+  useEffect(() => {
+    if (activeFilterCount > 0) {
+      setAnnouncement(`${activeFilterCount} filter${activeFilterCount === 1 ? '' : 's'} applied`);
+      const timer = setTimeout(() => setAnnouncement(''), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [activeFilterCount]);
+
   return (
     <>
+      {/* Screen reader announcements */}
+      <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {announcement}
+      </div>
       {/* Desktop Filter Bar */}
       <div
         className="hidden lg:block rounded-xl p-6 mb-6 border"
@@ -95,7 +109,7 @@ export function FilterBar({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
           {/* Date Range */}
           <div>
-            <label className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
+            <label htmlFor="filter-dateRange" className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
               Date Range
             </label>
             <select
@@ -110,6 +124,8 @@ export function FilterBar({
                 border: '1px solid #D1D5DB',
                 color: '#111827',
               }}
+              aria-label="Filter by date range"
+              id="filter-dateRange"
             >
               {dateRangeOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -121,7 +137,7 @@ export function FilterBar({
 
           {/* Deal Type */}
           <div>
-            <label className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
+            <label htmlFor="filter-dealType" className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
               Deal Type
             </label>
             <select
@@ -136,6 +152,8 @@ export function FilterBar({
                 border: '1px solid #D1D5DB',
                 color: '#111827',
               }}
+              aria-label="Filter by deal type"
+              id="filter-dealType"
             >
               <option value="all">All Types</option>
               <option value="sale">For Sale</option>
@@ -145,7 +163,7 @@ export function FilterBar({
 
           {/* Status */}
           <div>
-            <label className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
+            <label htmlFor="filter-status" className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
               Status
             </label>
             <select
@@ -160,6 +178,8 @@ export function FilterBar({
                 border: '1px solid #D1D5DB',
                 color: '#111827',
               }}
+              aria-label="Filter by status"
+              id="filter-status"
             >
               {statusOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -171,7 +191,7 @@ export function FilterBar({
 
           {/* Source */}
           <div>
-            <label className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
+            <label htmlFor="filter-source" className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
               Source
             </label>
             <select
@@ -186,6 +206,8 @@ export function FilterBar({
                 border: '1px solid #D1D5DB',
                 color: '#111827',
               }}
+              aria-label="Filter by source"
+              id="filter-source"
             >
               {sourceOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -197,7 +219,7 @@ export function FilterBar({
 
           {/* Agent */}
           <div>
-            <label className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
+            <label htmlFor="filter-agent" className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
               Agent
             </label>
             <select
@@ -212,6 +234,8 @@ export function FilterBar({
                 border: '1px solid #D1D5DB',
                 color: '#111827',
               }}
+              aria-label="Filter by agent"
+              id="filter-agent"
             >
               {agentOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -223,7 +247,7 @@ export function FilterBar({
 
           {/* Search */}
           <div>
-            <label className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
+            <label htmlFor="filter-search" className="block text-xs font-medium mb-2" style={{ color: '#6B7280' }}>
               Search
             </label>
             <input
@@ -240,6 +264,8 @@ export function FilterBar({
                 border: '1px solid #D1D5DB',
                 color: '#111827',
               }}
+              aria-label="Search properties and leads"
+              id="filter-search"
             />
           </div>
         </div>
@@ -255,6 +281,8 @@ export function FilterBar({
             border: '1px solid #E5E7EB',
             color: '#111827',
           }}
+          aria-label="Open filters"
+          aria-expanded={mobileFiltersOpen}
         >
           <div className="flex items-center gap-2">
             <SlidersHorizontal size={20} style={{ color: '#6B7280' }} />
@@ -280,6 +308,9 @@ export function FilterBar({
           className="fixed inset-0 z-50 lg:hidden"
           style={{ background: 'rgba(0, 0, 0, 0.5)' }}
           onClick={() => setMobileFiltersOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="mobile-filters-title"
         >
           <div
             className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl p-6 max-h-[90vh] overflow-y-auto"
@@ -289,12 +320,13 @@ export function FilterBar({
             }}
           >
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold" style={{ color: '#111827' }}>
+              <h3 id="mobile-filters-title" className="text-lg font-semibold" style={{ color: '#111827' }}>
                 Filters
               </h3>
               <button
                 onClick={() => setMobileFiltersOpen(false)}
                 className="p-2 rounded-lg hover:bg-gray-100"
+                aria-label="Close filters"
               >
                 <X size={20} style={{ color: '#6B7280' }} />
               </button>
