@@ -18,7 +18,6 @@ import {
   Copy,
   Check,
   ArrowLeft,
-  Globe,
 } from 'lucide-react';
 import { PropertyAdGenerator } from '@/components/real-estate/PropertyAdGenerator';
 import { ScoreBadge } from '@/components/real-estate/ScoreBadge';
@@ -47,47 +46,11 @@ interface PropertyDetailProps {
   property: Property;
 }
 
-interface LandingPage {
-  id: string;
-  slug: string;
-  variant: string;
-  language: 'en' | 'he';
-  createdAt: string;
-}
-
 export function PropertyDetail({ property }: PropertyDetailProps) {
   const { language } = useLanguage();
   const router = useRouter();
   const [showAdGenerator, setShowAdGenerator] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [copiedLandingPage, setCopiedLandingPage] = useState<string | null>(null);
-
-  // Mock landing pages - in real app, fetch from API
-  const landingPages: LandingPage[] = property.slug
-    ? [
-        {
-          id: '1',
-          slug: property.slug,
-          variant: 'Default',
-          language: 'en',
-          createdAt: property.publishedAt || property.createdAt || new Date().toISOString(),
-        },
-        {
-          id: '2',
-          slug: `${property.slug}-he`,
-          variant: 'Hebrew',
-          language: 'he',
-          createdAt: property.publishedAt || property.createdAt || new Date().toISOString(),
-        },
-        {
-          id: '3',
-          slug: `${property.slug}-premium`,
-          variant: 'Premium Campaign',
-          language: 'en',
-          createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
-        },
-      ]
-    : [];
 
   const handleCopyUrl = () => {
     const url = property.slug
@@ -96,13 +59,6 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleCopyLandingPageUrl = (slug: string) => {
-    const url = `${window.location.origin}/real-estate/${slug}`;
-    navigator.clipboard.writeText(url);
-    setCopiedLandingPage(slug);
-    setTimeout(() => setCopiedLandingPage(null), 2000);
   };
 
   const handleArchive = async () => {
@@ -274,85 +230,6 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
                   {language === 'he' ? 'שירותים ומתקנים' : 'Amenities'}
                 </h2>
                 <p className="text-gray-700 leading-relaxed">{property.amenities}</p>
-              </div>
-            )}
-
-            {/* Landing Pages */}
-            {landingPages.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <Globe className="w-6 h-6 text-blue-600" />
-                  <h2 className="text-xl font-bold text-gray-900">
-                    {language === 'he' ? 'דפי נחיתה' : 'Landing Pages'}
-                  </h2>
-                  <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
-                    {landingPages.length}
-                  </span>
-                </div>
-
-                <div className="space-y-3">
-                  {landingPages.map((page) => (
-                    <div
-                      key={page.id}
-                      className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors group"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-1">
-                          <span className="font-semibold text-gray-900">{page.variant}</span>
-                          <span
-                            className={`px-2 py-0.5 text-xs font-medium rounded ${
-                              page.language === 'he'
-                                ? 'bg-purple-100 text-purple-700'
-                                : 'bg-green-100 text-green-700'
-                            }`}
-                          >
-                            {page.language === 'he' ? 'עברית' : 'English'}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <span className="truncate">
-                            {window.location.origin}/real-estate/{page.slug}
-                          </span>
-                          <span>•</span>
-                          <span>
-                            {new Date(page.createdAt).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 ml-4">
-                        <a
-                          href={`/real-estate/${page.slug}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title={language === 'he' ? 'פתח בכרטיסייה חדשה' : 'Open in new tab'}
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
-                        <button
-                          onClick={() => handleCopyLandingPageUrl(page.slug)}
-                          className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                          title={language === 'he' ? 'העתק קישור' : 'Copy link'}
-                        >
-                          {copiedLandingPage === page.slug ? (
-                            <Check className="w-4 h-4 text-green-600" />
-                          ) : (
-                            <Copy className="w-4 h-4" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-sm text-blue-800">
-                    {language === 'he'
-                      ? '💡 כל דף נחיתה מותאם לקמפיין ושפה ספציפיים. שתף קישורים שונים עם קהלים שונים למעקב מדויק יותר.'
-                      : '💡 Each landing page is optimized for specific campaigns and languages. Share different links with different audiences for better tracking.'}
-                  </p>
-                </div>
               </div>
             )}
           </div>
