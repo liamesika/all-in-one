@@ -3,6 +3,7 @@
 import { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
+import { analytics } from '@/lib/analytics';
 
 interface EmptyStateProps {
   icon: ReactNode;
@@ -33,7 +34,10 @@ export function EmptyState({
         {description}
       </p>
       <button
-        onClick={() => router.push(actionHref)}
+        onClick={() => {
+          analytics.emptyStateCTAClicked(actionLabel, actionHref);
+          router.push(actionHref);
+        }}
         className="inline-flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors min-h-[44px]"
       >
         <Plus size={20} />

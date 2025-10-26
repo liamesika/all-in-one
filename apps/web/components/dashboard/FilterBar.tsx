@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { X, SlidersHorizontal } from 'lucide-react';
+import { analytics } from '@/lib/analytics';
 
 interface FilterOption {
   value: string;
@@ -99,7 +100,10 @@ export function FilterBar({
             </label>
             <select
               value={dateRange}
-              onChange={(e) => onDateRangeChange?.(e.target.value)}
+              onChange={(e) => {
+                analytics.filterChanged('dateRange', e.target.value);
+                onDateRangeChange?.(e.target.value);
+              }}
               className="w-full px-4 py-3 rounded-lg hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 cursor-pointer"
               style={{
                 background: '#F9FAFB',
@@ -122,7 +126,10 @@ export function FilterBar({
             </label>
             <select
               value={dealType}
-              onChange={(e) => onDealTypeChange?.(e.target.value)}
+              onChange={(e) => {
+                analytics.filterChanged('dealType', e.target.value);
+                onDealTypeChange?.(e.target.value);
+              }}
               className="w-full px-4 py-3 rounded-lg hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 cursor-pointer"
               style={{
                 background: '#F9FAFB',
@@ -143,7 +150,10 @@ export function FilterBar({
             </label>
             <select
               value={status}
-              onChange={(e) => onStatusChange?.(e.target.value)}
+              onChange={(e) => {
+                analytics.filterChanged('status', e.target.value);
+                onStatusChange?.(e.target.value);
+              }}
               className="w-full px-4 py-3 rounded-lg hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 cursor-pointer"
               style={{
                 background: '#F9FAFB',
@@ -166,7 +176,10 @@ export function FilterBar({
             </label>
             <select
               value={source}
-              onChange={(e) => onSourceChange?.(e.target.value)}
+              onChange={(e) => {
+                analytics.filterChanged('source', e.target.value);
+                onSourceChange?.(e.target.value);
+              }}
               className="w-full px-4 py-3 rounded-lg hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 cursor-pointer"
               style={{
                 background: '#F9FAFB',
@@ -189,7 +202,10 @@ export function FilterBar({
             </label>
             <select
               value={agent}
-              onChange={(e) => onAgentChange?.(e.target.value)}
+              onChange={(e) => {
+                analytics.filterChanged('agent', e.target.value);
+                onAgentChange?.(e.target.value);
+              }}
               className="w-full px-4 py-3 rounded-lg hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 cursor-pointer"
               style={{
                 background: '#F9FAFB',
@@ -214,7 +230,10 @@ export function FilterBar({
               type="text"
               placeholder="Properties, leads..."
               value={search}
-              onChange={(e) => onSearchChange?.(e.target.value)}
+              onChange={(e) => {
+                analytics.filterChanged('search', e.target.value);
+                onSearchChange?.(e.target.value);
+              }}
               className="w-full px-4 py-3 rounded-lg placeholder-gray-400 hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
               style={{
                 background: '#F9FAFB',
@@ -289,7 +308,10 @@ export function FilterBar({
                 </label>
                 <select
                   value={dateRange}
-                  onChange={(e) => onDateRangeChange?.(e.target.value)}
+                  onChange={(e) => {
+                    analytics.filterChanged('dateRange', e.target.value);
+                    onDateRangeChange?.(e.target.value);
+                  }}
                   className="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   style={{
                     background: '#F9FAFB',
@@ -312,7 +334,10 @@ export function FilterBar({
                 </label>
                 <select
                   value={dealType}
-                  onChange={(e) => onDealTypeChange?.(e.target.value)}
+                  onChange={(e) => {
+                    analytics.filterChanged('dealType', e.target.value);
+                    onDealTypeChange?.(e.target.value);
+                  }}
                   className="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   style={{
                     background: '#F9FAFB',
@@ -333,7 +358,10 @@ export function FilterBar({
                 </label>
                 <select
                   value={status}
-                  onChange={(e) => onStatusChange?.(e.target.value)}
+                  onChange={(e) => {
+                    analytics.filterChanged('status', e.target.value);
+                    onStatusChange?.(e.target.value);
+                  }}
                   className="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   style={{
                     background: '#F9FAFB',
@@ -356,7 +384,10 @@ export function FilterBar({
                 </label>
                 <select
                   value={source}
-                  onChange={(e) => onSourceChange?.(e.target.value)}
+                  onChange={(e) => {
+                    analytics.filterChanged('source', e.target.value);
+                    onSourceChange?.(e.target.value);
+                  }}
                   className="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   style={{
                     background: '#F9FAFB',
@@ -379,7 +410,10 @@ export function FilterBar({
                 </label>
                 <select
                   value={agent}
-                  onChange={(e) => onAgentChange?.(e.target.value)}
+                  onChange={(e) => {
+                    analytics.filterChanged('agent', e.target.value);
+                    onAgentChange?.(e.target.value);
+                  }}
                   className="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   style={{
                     background: '#F9FAFB',
@@ -404,7 +438,10 @@ export function FilterBar({
                   type="text"
                   placeholder="Properties, leads..."
                   value={search}
-                  onChange={(e) => onSearchChange?.(e.target.value)}
+                  onChange={(e) => {
+                    analytics.filterChanged('search', e.target.value);
+                    onSearchChange?.(e.target.value);
+                  }}
                   className="w-full px-4 py-3 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   style={{
                     background: '#F9FAFB',

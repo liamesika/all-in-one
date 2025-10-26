@@ -3,6 +3,7 @@
 import { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { HelpCircle } from 'lucide-react';
+import { analytics } from '@/lib/analytics';
 
 interface PrimaryKPICardProps {
   icon: ReactNode;
@@ -28,6 +29,10 @@ export function PrimaryKPICard({
   const router = useRouter();
 
   const handleClick = () => {
+    if (href) {
+      analytics.kpiCardClicked(label, href);
+    }
+
     if (onClick) {
       onClick();
     } else if (href) {

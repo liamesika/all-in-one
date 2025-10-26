@@ -6,6 +6,7 @@
  */
 
 import { useState } from 'react';
+import * as React from 'react';
 import {
   TrendingUp,
   Home,
@@ -45,6 +46,7 @@ import { PrimaryKPICard } from '@/components/dashboard/PrimaryKPICard';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import { EmptyState } from '@/components/dashboard/EmptyState';
+import { analytics } from '@/lib/analytics';
 
 // Mock data generator - replace with actual API data
 function generateMockData() {
@@ -249,6 +251,11 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
   const [activeView, setActiveView] = useState<'all' | 'leads' | 'listings' | 'deals' | 'operations'>('all');
 
   const data = generateMockData();
+
+  // Track dashboard view on mount
+  React.useEffect(() => {
+    analytics.dashboardViewed(null, !data.isEmpty);
+  }, [data.isEmpty]);
 
   // Determine which sections to show based on active view
   const shouldShowSection = (sectionId: string) => {
