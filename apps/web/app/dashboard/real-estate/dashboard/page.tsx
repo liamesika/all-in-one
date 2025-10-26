@@ -14,19 +14,20 @@ interface SearchParams {
   lang?: string;
 }
 
-async function getDashboardData(params: SearchParams) {
+async function getDashboardData(params: SearchParams, orgId?: string) {
   const apiBase = process.env.API_BASE ?? "http://localhost:4000";
-  
+
   const searchParams = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
     if (value) searchParams.set(key, value);
   });
-  
+
   try {
     const res = await fetch(`${apiBase}/api/real-estate/dashboard?${searchParams}`, {
       cache: 'no-store',
       headers: {
-        'x-org-id': 'demo'
+        'x-org-id': orgId || 'demo',
+        'x-user-id': 'current-user'
       }
     });
     
@@ -40,65 +41,24 @@ async function getDashboardData(params: SearchParams) {
     console.error('Dashboard API error:', error);
     return {
       kpis: {
-        newLeads: { 
-          value: 45, 
-          delta: '+12%', 
-          trend: [38, 41, 45],
-          hotWarmCold: { hot: 8, warm: 23, cold: 14 }
-        },
-        conversionRates: { 
-          value: '28%', 
-          delta: '+3%',
-          qualified: '65%',
-          viewing: '42%',
-          offer: '28%',
-          deal: '18%'
-        },
-        timeToContact: { 
-          value: 2.3, 
-          delta: '-0.5h',
-          slaMetRate: '89%'
-        },
-        scheduledViewings: { 
-          value: 34, 
-          delta: '+8%',
-          noShowRate: '12%'
-        },
-        offersCreated: { 
-          value: 12, 
-          delta: '+4',
-          acceptanceRate: '75%'
-        },
-        avgDOM: { 
-          value: 28, 
-          delta: '-5d',
-          listToSoldRatio: '94%'
-        },
-        roasCAC: { 
-          value: '4.2x', 
-          delta: '+0.3x',
-          roas: '4.2x',
-          cac: 1250
-        },
-        pipelineValue: { 
-          value: 2800000, 
-          delta: '+18%',
-          expectedCommissions: 84000
-        }
+        totalLeads: 0,
+        activeListings: 0,
+        dealsClosed: 0,
+        revenue: 0,
+        conversionRate: 0,
+        avgDOM: 0,
+        satisfaction: 0,
+        automatedTasks: 0,
       },
-      widgets: {
-        leadsQuality: [],
-        listingsPerformance: [],
-        comps: [],
-        openHouse: [],
-        autoMarketing: [],
-        neighborhoodGuides: [],
-        revenue: [],
-        operations: {
-          alerts: [],
-          tasks: []
-        }
-      }
+      leads: {
+        leadsToday: 0,
+        qualified: 0,
+        cpl: 0,
+        convRate: 0,
+        leadsTrend: [],
+        leadsBySource: [],
+      },
+      isEmpty: true,
     };
   }
 }

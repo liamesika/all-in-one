@@ -44,6 +44,7 @@ import { DashboardGreeting } from '@/components/dashboard/DashboardGreeting';
 import { PrimaryKPICard } from '@/components/dashboard/PrimaryKPICard';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
+import { EmptyState } from '@/components/dashboard/EmptyState';
 
 // Mock data generator - replace with actual API data
 function generateMockData() {
@@ -390,6 +391,16 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
 
         {/* Main Dashboard Sections - Conditionally rendered based on active view */}
         <div className="space-y-6 sm:space-y-8 pb-12">
+          {data.isEmpty ? (
+            <EmptyState
+              icon={<Building2 size={32} />}
+              title="Welcome to your Real Estate Dashboard"
+              description="Start by adding your first property or lead to see your data come to life"
+              actionLabel="Add Your First Property"
+              actionHref="/dashboard/real-estate/properties/new"
+            />
+          ) : (
+            <>
           {shouldShowSection('leads') && (
             <div className="animate-fade-in">
               <LeadsMarketingSection data={data.leads} />
@@ -436,6 +447,8 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
             <div className="animate-fade-in">
               <AutomationHealthSection data={data.automation} />
             </div>
+          )}
+            </>
           )}
         </div>
 
