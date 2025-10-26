@@ -42,6 +42,7 @@ interface ContactFormData {
 
 export default function PublicPropertyLanding({ property }: { property: Property }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [language, setLanguage] = useState<'en' | 'he'>('en');
   const [formData, setFormData] = useState<ContactFormData>({
     name: '',
     phone: '',
@@ -116,8 +117,34 @@ export default function PublicPropertyLanding({ property }: { property: Property
     setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
+  // Translations
+  const t = {
+    forSale: language === 'he' ? 'למכירה' : 'For Sale',
+    forRent: language === 'he' ? 'להשכרה' : 'For Rent',
+    perMonth: language === 'he' ? '/חודש' : '/month',
+    rooms: language === 'he' ? 'חדרים' : 'rooms',
+    sqm: language === 'he' ? 'מ"ר' : 'sqm',
+    pricePerSqm: language === 'he' ? 'מחיר למ"ר' : 'Price per sqm',
+    about: language === 'he' ? 'אודות הנכס' : 'About this property',
+    amenities: language === 'he' ? 'שירותים ומתקנים' : 'Amenities',
+    interested: language === 'he' ? 'מעוניין בנכס?' : 'Interested?',
+    contactUs: language === 'he' ? 'צור קשר' : 'Contact Us',
+    name: language === 'he' ? 'שם מלא' : 'Full Name',
+    phone: language === 'he' ? 'טלפון' : 'Phone',
+    email: language === 'he' ? 'אימייל' : 'Email',
+    message: language === 'he' ? 'הודעה' : 'Message',
+    messagePlaceholder: language === 'he' ? 'ספר לנו עוד על מה שאתה מחפש...' : 'Tell us more about what you\'re looking for...',
+    sendMessage: language === 'he' ? 'שלח הודעה' : 'Send Message',
+    sending: language === 'he' ? 'שולח...' : 'Sending...',
+    thankYou: language === 'he' ? 'תודה!' : 'Thank you!',
+    weWillContact: language === 'he' ? 'ניצור איתך קשר בקרוב' : 'We\'ll be in touch soon',
+    whatsapp: language === 'he' ? 'WhatsApp' : 'WhatsApp',
+    callAgent: language === 'he' ? 'התקשר לסוכן' : 'Call Agent',
+    rentTerms: language === 'he' ? 'תנאי שכירות' : 'Rental Terms',
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen bg-gray-50 ${language === 'he' ? 'rtl' : 'ltr'}`} dir={language === 'he' ? 'rtl' : 'ltr'}>
       {/* Hero Section with Image Gallery */}
       <div className="relative h-[60vh] bg-black">
         <img
@@ -157,12 +184,38 @@ export default function PublicPropertyLanding({ property }: { property: Property
           </>
         )}
 
+        {/* Language Toggle */}
+        <div className={`absolute top-4 ${language === 'he' ? 'left-4' : 'right-4'}`}>
+          <div className="flex items-center gap-1 bg-white/90 rounded-lg p-1 shadow-lg">
+            <button
+              onClick={() => setLanguage('en')}
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                language === 'en'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              EN
+            </button>
+            <button
+              onClick={() => setLanguage('he')}
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                language === 'he'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              HE
+            </button>
+          </div>
+        </div>
+
         {/* Transaction Type Badge */}
-        <div className="absolute top-4 left-4">
+        <div className={`absolute top-4 ${language === 'he' ? 'right-4' : 'left-4'}`}>
           <span className={`px-4 py-2 text-white rounded-full text-sm font-semibold shadow-lg ${
             isSale ? 'bg-blue-600' : 'bg-green-600'
           }`}>
-            {isSale ? 'For Sale' : 'For Rent'}
+            {isSale ? t.forSale : t.forRent}
           </span>
         </div>
       </div>
@@ -185,14 +238,14 @@ export default function PublicPropertyLanding({ property }: { property: Property
                   // Sale pricing
                   <>
                     <div>
-                      <div className="text-sm text-gray-500">Price</div>
+                      <div className="text-sm text-gray-500">{language === 'he' ? 'מחיר' : 'Price'}</div>
                       <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                        {property.price ? `₪${property.price.toLocaleString()}` : 'Contact for price'}
+                        {property.price ? `₪${property.price.toLocaleString()}` : (language === 'he' ? 'פנה למחיר' : 'Contact for price')}
                       </div>
                     </div>
                     {pricePerSqm && (
                       <div>
-                        <div className="text-sm text-gray-500">Price per sqm</div>
+                        <div className="text-sm text-gray-500">{t.pricePerSqm}</div>
                         <div className="text-xl font-semibold text-gray-900">
                           ₪{pricePerSqm.toLocaleString()}/m²
                         </div>
@@ -203,16 +256,16 @@ export default function PublicPropertyLanding({ property }: { property: Property
                   // Rental pricing
                   <>
                     <div>
-                      <div className="text-sm text-gray-500">Monthly Rent</div>
+                      <div className="text-sm text-gray-500">{language === 'he' ? 'שכירות חודשית' : 'Monthly Rent'}</div>
                       <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
-                        {property.rentPriceMonthly ? `₪${property.rentPriceMonthly.toLocaleString()}/mo` : 'Contact for price'}
+                        {property.rentPriceMonthly ? `₪${property.rentPriceMonthly.toLocaleString()}${t.perMonth}` : (language === 'he' ? 'פנה למחיר' : 'Contact for price')}
                       </div>
                     </div>
                     {pricePerSqm && (
                       <div>
-                        <div className="text-sm text-gray-500">Rent per sqm</div>
+                        <div className="text-sm text-gray-500">{language === 'he' ? 'שכירות למ"ר' : 'Rent per sqm'}</div>
                         <div className="text-xl font-semibold text-gray-900">
-                          ₪{pricePerSqm.toLocaleString()}/m²/mo
+                          ₪{pricePerSqm.toLocaleString()}/m²{t.perMonth}
                         </div>
                       </div>
                     )}
@@ -231,27 +284,27 @@ export default function PublicPropertyLanding({ property }: { property: Property
 
             {/* Key Features */}
             <div className="bg-white rounded-xl shadow-sm p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Key Features</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-4">{language === 'he' ? 'מאפיינים עיקריים' : 'Key Features'}</h2>
               <div className="grid grid-cols-3 gap-4">
                 <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
                   <Home className="w-6 h-6 text-blue-600" />
                   <div>
-                    <div className="text-sm text-gray-600">Rooms</div>
+                    <div className="text-sm text-gray-600">{t.rooms}</div>
                     <div className="text-lg font-semibold text-gray-900">{property.rooms}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-4 bg-purple-50 rounded-lg">
                   <Ruler className="w-6 h-6 text-purple-600" />
                   <div>
-                    <div className="text-sm text-gray-600">Size</div>
+                    <div className="text-sm text-gray-600">{language === 'he' ? 'גודל' : 'Size'}</div>
                     <div className="text-lg font-semibold text-gray-900">{property.size} m²</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
                   <DollarSign className="w-6 h-6 text-green-600" />
                   <div>
-                    <div className="text-sm text-gray-600">Status</div>
-                    <div className="text-lg font-semibold text-gray-900">Listed</div>
+                    <div className="text-sm text-gray-600">{language === 'he' ? 'סטטוס' : 'Status'}</div>
+                    <div className="text-lg font-semibold text-gray-900">{language === 'he' ? 'רשום' : 'Listed'}</div>
                   </div>
                 </div>
               </div>
@@ -260,7 +313,7 @@ export default function PublicPropertyLanding({ property }: { property: Property
             {/* Description */}
             {property.description && (
               <div className="bg-white rounded-xl shadow-sm p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">About This Property</h2>
+                <h2 className="text-xl font-bold text-gray-900 mb-4">{t.about}</h2>
                 <p className="text-gray-700 leading-relaxed">{property.description}</p>
               </div>
             )}
@@ -268,7 +321,7 @@ export default function PublicPropertyLanding({ property }: { property: Property
             {/* Amenities */}
             {amenitiesList.length > 0 && (
               <div className="bg-white rounded-xl shadow-sm p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Amenities</h2>
+                <h2 className="text-xl font-bold text-gray-900 mb-4">{t.amenities}</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {amenitiesList.map((amenity, idx) => (
                     <div key={idx} className="flex items-center gap-2 text-gray-700">
@@ -296,11 +349,11 @@ export default function PublicPropertyLanding({ property }: { property: Property
           <div className="space-y-6">
             {/* Agent Card */}
             <div className="bg-white rounded-xl shadow-sm p-6 sticky top-4">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Contact Agent</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">{t.contactUs}</h3>
 
               {property.agentName && (
                 <div className="mb-4">
-                  <div className="text-sm text-gray-600">Agent</div>
+                  <div className="text-sm text-gray-600">{language === 'he' ? 'סוכן' : 'Agent'}</div>
                   <div className="text-lg font-semibold text-gray-900">{property.agentName}</div>
                 </div>
               )}
@@ -314,7 +367,7 @@ export default function PublicPropertyLanding({ property }: { property: Property
                       className="flex items-center justify-center gap-2 w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                     >
                       <Phone className="w-5 h-5" />
-                      Call Now
+                      {t.callAgent}
                     </a>
 
                     <button
@@ -322,7 +375,7 @@ export default function PublicPropertyLanding({ property }: { property: Property
                       className="flex items-center justify-center gap-2 w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
                     >
                       <MessageCircle className="w-5 h-5" />
-                      WhatsApp
+                      {t.whatsapp}
                     </button>
                   </>
                 )}
@@ -334,7 +387,7 @@ export default function PublicPropertyLanding({ property }: { property: Property
                   <div>
                     <input
                       type="text"
-                      placeholder="Your Name"
+                      placeholder={t.name}
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       required
@@ -345,7 +398,7 @@ export default function PublicPropertyLanding({ property }: { property: Property
                   <div>
                     <input
                       type="tel"
-                      placeholder="Phone Number"
+                      placeholder={t.phone}
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       required
@@ -356,7 +409,7 @@ export default function PublicPropertyLanding({ property }: { property: Property
                   <div>
                     <input
                       type="email"
-                      placeholder="Email Address"
+                      placeholder={t.email}
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       required
@@ -366,7 +419,7 @@ export default function PublicPropertyLanding({ property }: { property: Property
 
                   <div>
                     <textarea
-                      placeholder="Message (optional)"
+                      placeholder={t.messagePlaceholder}
                       value={formData.message}
                       onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                       rows={3}
@@ -379,7 +432,7 @@ export default function PublicPropertyLanding({ property }: { property: Property
                     disabled={submitting}
                     className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-medium disabled:opacity-50"
                   >
-                    {submitting ? 'Sending...' : 'Request Information'}
+                    {submitting ? t.sending : t.sendMessage}
                   </button>
                 </form>
               ) : (
@@ -387,8 +440,8 @@ export default function PublicPropertyLanding({ property }: { property: Property
                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Check className="w-8 h-8 text-green-600" />
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Thank You!</h4>
-                  <p className="text-gray-600">We'll contact you shortly.</p>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">{t.thankYou}</h4>
+                  <p className="text-gray-600">{t.weWillContact}</p>
                 </div>
               )}
             </div>
