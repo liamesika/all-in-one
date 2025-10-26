@@ -597,6 +597,15 @@ model User {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
+  // Profile settings (Phase 13)
+  displayName        String?
+  firstName          String?
+  lastName           String?
+  avatarUrl          String?
+  timezone           String?  @default("UTC")
+  emailNotifications Boolean  @default(true)
+  pushNotifications  Boolean  @default(true)
+
   // Relations
   memberships        Membership[]
   userProfile        UserProfile?
@@ -629,6 +638,10 @@ model Organization {
   domainAllowlist String[]         @default([])
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
+
+  // Organization settings (Phase 13)
+  language        String?          @default("en")
+  timezone        String?          @default("UTC")
 
   // Relations
   owner        User          @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)

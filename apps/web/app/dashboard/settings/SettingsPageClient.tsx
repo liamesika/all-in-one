@@ -21,6 +21,8 @@ import {
   CardBody,
   UniversalButton,
 } from '@/components/shared';
+import { analytics } from '@/lib/analytics';
+import { auth } from '@/lib/firebase';
 
 interface SettingsData {
   profile: {
@@ -65,16 +67,39 @@ export function SettingsPageClient() {
   });
 
   useEffect(() => {
-    // Load settings from API/localStorage
     const loadSettings = async () => {
       try {
-        // TODO: Replace with actual API call
+        const user = auth.currentUser;
+        if (!user) return;
+
+        const token = await user.getIdToken();
+        const response = await fetch('/api/user/settings', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setSettings({
+            profile: data.profile || {},
+            organization: data.organization || { name: '', language: 'en', timezone: 'UTC' },
+            notifications: data.preferences || { emailNotifications: true, pushNotifications: false },
+          });
+        } else {
+          // Fallback to localStorage if API fails
+          const stored = localStorage.getItem('userSettings');
+          if (stored) {
+            setSettings(JSON.parse(stored));
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load settings:', error);
+        // Fallback to localStorage
         const stored = localStorage.getItem('userSettings');
         if (stored) {
           setSettings(JSON.parse(stored));
         }
-      } catch (error) {
-        console.error('Failed to load settings:', error);
       }
     };
     loadSettings();
@@ -83,17 +108,47 @@ export function SettingsPageClient() {
   const handleSave = async () => {
     setLoading(true);
     try {
-      // TODO: Replace with actual API call
+      const user = auth.currentUser;
+      if (!user) throw new Error('Not authenticated');
+
+      const token = await user.getIdToken();
+      const response = await fetch('/api/user/settings', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          profile: settings.profile,
+          organization: settings.organization,
+          preferences: settings.notifications,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save settings');
+      }
+
+      const data = await response.json();
+
+      // Update localStorage as cache
       localStorage.setItem('userSettings', JSON.stringify(settings));
-      localStorage.setItem('userProfile', JSON.stringify(settings.profile));
+      localStorage.setItem('userProfile', JSON.stringify(data.profile));
 
       // Dispatch custom event to notify other components
-      window.dispatchEvent(new CustomEvent('profileUpdated', { detail: settings.profile }));
+      window.dispatchEvent(new CustomEvent('profileUpdated', { detail: data.profile }));
+
+      // Track analytics
+      const changedKeys = Object.keys(settings.profile).filter(
+        (key) => settings.profile[key as keyof typeof settings.profile] !== data.profile[key]
+      );
+      analytics.track('settings_saved', { changed_keys: changedKeys });
 
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (error) {
       console.error('Failed to save settings:', error);
+      // Show error toast (TODO: implement error UI)
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { auth } from '@/lib/firebase';
 
 interface DashboardGreetingProps {
   firstName?: string;
@@ -20,6 +21,52 @@ export function DashboardGreeting({ firstName: initialFirstName, vertical }: Das
   const [firstName, setFirstName] = useState(initialFirstName || 'User');
 
   useEffect(() => {
+    // Fetch from API on mount (server as source of truth)
+    const fetchProfile = async () => {
+      try {
+        const user = auth.currentUser;
+        if (!user) return;
+
+        const token = await user.getIdToken();
+        const response = await fetch('/api/user/profile', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const newName = data.profile.displayName || data.profile.firstName || 'User';
+          setFirstName(newName.split(' ')[0]);
+          // Update localStorage cache
+          localStorage.setItem('userProfile', JSON.stringify(data.profile));
+        } else {
+          // Fallback to localStorage cache
+          const stored = localStorage.getItem('userProfile');
+          if (stored) {
+            const profile = JSON.parse(stored);
+            const newName = profile.displayName || profile.firstName || 'User';
+            setFirstName(newName.split(' ')[0]);
+          }
+        }
+      } catch (error) {
+        // Fallback to localStorage cache
+        try {
+          const stored = localStorage.getItem('userProfile');
+          if (stored) {
+            const profile = JSON.parse(stored);
+            const newName = profile.displayName || profile.firstName || 'User';
+            setFirstName(newName.split(' ')[0]);
+          }
+        } catch (e) {
+          // Silently ignore
+        }
+      }
+    };
+
+    fetchProfile();
+
+    // Listen for profile updates (optimistic UI only)
     const handleProfileUpdate = (event: CustomEvent) => {
       const profile = event.detail;
       const newName = profile.displayName || profile.firstName || 'User';
@@ -27,18 +74,6 @@ export function DashboardGreeting({ firstName: initialFirstName, vertical }: Das
     };
 
     window.addEventListener('profileUpdated', handleProfileUpdate as EventListener);
-
-    // Check localStorage on mount for persisted profile
-    try {
-      const stored = localStorage.getItem('userProfile');
-      if (stored) {
-        const profile = JSON.parse(stored);
-        const newName = profile.displayName || profile.firstName || 'User';
-        setFirstName(newName.split(' ')[0]);
-      }
-    } catch (error) {
-      // Silently ignore localStorage errors
-    }
 
     return () => {
       window.removeEventListener('profileUpdated', handleProfileUpdate as EventListener);
