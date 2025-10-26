@@ -40,6 +40,10 @@ import { useLang } from '@/components/i18n/LangProvider';
 import { LanguageProvider } from '@/lib/language-context';
 import { RealEstateFooter } from '@/components/real-estate/RealEstateFooter';
 import { useFilters } from '@/hooks/useFilters';
+import { DashboardGreeting } from '@/components/dashboard/DashboardGreeting';
+import { PrimaryKPICard } from '@/components/dashboard/PrimaryKPICard';
+import { useAuth } from '@/lib/auth-context';
+import { useRouter } from 'next/navigation';
 
 // Mock data generator - replace with actual API data
 function generateMockData() {
@@ -238,6 +242,8 @@ function generateMockData() {
 
 function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }) {
   const { lang } = useLang();
+  const { userProfile } = useAuth();
+  const router = useRouter();
   const { filters, updateFilter } = useFilters(initialFilters);
   const [activeView, setActiveView] = useState<'all' | 'leads' | 'listings' | 'deals' | 'operations'>('all');
 
@@ -277,49 +283,51 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
 
       {/* Main Content - Add padding-top to account for fixed header + extra spacing */}
       <div className="pt-20 pb-20">
-        {/* Quick Stats Bar with Design System 2.0 */}
-        <div className="px-6 mt-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white dark:bg-[#1A2F4B] rounded-lg p-4 border border-gray-200 dark:border-[#2979FF]/20 transition-all hover:shadow-md">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-body-sm text-gray-600 dark:text-gray-400">Total Leads</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{data.kpis.totalLeads}</p>
-                  <p className="text-xs text-green-500 mt-1">+12 vs last month</p>
-                </div>
-                <TrendingUp className="w-5 h-5 text-[#2979FF]" />
-              </div>
-            </div>
-            <div className="bg-white dark:bg-[#1A2F4B] rounded-lg p-4 border border-gray-200 dark:border-[#2979FF]/20 transition-all hover:shadow-md">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-body-sm text-gray-600 dark:text-gray-400">Active Listings</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{data.kpis.activeListings}</p>
-                  <p className="text-xs text-green-500 mt-1">+5 this week</p>
-                </div>
-                <Home className="w-5 h-5 text-[#2979FF]" />
-              </div>
-            </div>
-            <div className="bg-white dark:bg-[#1A2F4B] rounded-lg p-4 border border-gray-200 dark:border-[#2979FF]/20 transition-all hover:shadow-md">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-body-sm text-gray-600 dark:text-gray-400">Open Deals</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{data.kpis.dealsClosed}</p>
-                  <p className="text-xs text-gray-500 mt-1">-3 pending</p>
-                </div>
-                <CheckCircle className="w-5 h-5 text-[#2979FF]" />
-              </div>
-            </div>
-            <div className="bg-white dark:bg-[#1A2F4B] rounded-lg p-4 border border-gray-200 dark:border-[#2979FF]/20 transition-all hover:shadow-md">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-body-sm text-gray-600 dark:text-gray-400">Avg Response Time</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">2.4h</p>
-                  <p className="text-xs text-green-500 mt-1">-15% improved</p>
-                </div>
-                <Zap className="w-5 h-5 text-[#2979FF]" />
-              </div>
-            </div>
+        {/* Greeting */}
+        <DashboardGreeting
+          firstName={userProfile?.displayName || userProfile?.firstName}
+          vertical="Real-Estate"
+        />
+
+        {/* Primary KPI Cards - Emphasized */}
+        <div className="px-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <PrimaryKPICard
+              icon={<Users size={28} />}
+              label="Total Leads"
+              value={data.kpis.totalLeads}
+              change="+12% from last month"
+              trend="up"
+              tooltip="Total number of leads across all sources and statuses"
+              href="/dashboard/real-estate/leads"
+            />
+            <PrimaryKPICard
+              icon={<Building2 size={28} />}
+              label="Active Properties"
+              value={data.kpis.activeListings}
+              change="+5 this week"
+              trend="up"
+              tooltip="Properties currently listed and available on the market"
+              href="/dashboard/real-estate/properties"
+            />
+            <PrimaryKPICard
+              icon={<BarChart3 size={28} />}
+              label="Active Campaigns"
+              value={24}
+              change="3 scheduled"
+              trend="neutral"
+              tooltip="Marketing campaigns currently running across all platforms"
+              href="/dashboard/real-estate/campaigns"
+            />
+            <PrimaryKPICard
+              icon={<Zap size={28} />}
+              label="Active Automations"
+              value={data.kpis.automatedTasks}
+              change="98% success rate"
+              trend="up"
+              tooltip="Automated workflows and tasks running to save time"
+              href="/dashboard/real-estate/automations"
+            />
           </div>
         </div>
 
