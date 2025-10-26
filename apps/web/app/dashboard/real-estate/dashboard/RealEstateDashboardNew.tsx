@@ -284,9 +284,9 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
 
       {/* Floating Action Button */}
       <FloatingActionButton
-        onAddLead={() => console.log('Add Lead')}
-        onAddProperty={() => console.log('Add Property')}
-        onAddCampaign={() => console.log('Create Campaign')}
+        onAddLead={() => router.push('/dashboard/real-estate/leads?action=new')}
+        onAddProperty={() => router.push('/dashboard/real-estate/properties?action=new')}
+        onAddCampaign={() => router.push('/dashboard/real-estate/campaigns?action=new')}
       />
 
       {/* Main Content - Mobile-optimized with centered layout */}
@@ -410,13 +410,19 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
             <>
           {shouldShowSection('leads') && (
             <div className="animate-fade-in">
-              <LeadsMarketingSection data={data.leads} />
+              <LeadsMarketingSection
+                data={data.leads}
+                onViewDetails={() => router.push('/dashboard/real-estate/leads')}
+              />
             </div>
           )}
 
           {shouldShowSection('listings') && (
             <div className="animate-fade-in">
-              <ListingsInventorySection data={data.listings} />
+              <ListingsInventorySection
+                data={data.listings}
+                onViewDetails={() => router.push('/dashboard/real-estate/properties')}
+              />
             </div>
           )}
 

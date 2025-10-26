@@ -5,7 +5,8 @@
  */
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Sparkles, Plus, Upload, Share2, Eye, Edit, Filter, CheckSquare, Square, Download, Trash2 } from "lucide-react";
 import {
   UniversalCard,
@@ -34,6 +35,7 @@ import { useLanguage } from "@/lib/language-context";
 
 export default function PropertiesClient({ initialData }: { initialData: any[] }) {
   const { language } = useLanguage();
+  const searchParams = useSearchParams();
   const [properties, setProperties] = useState(initialData);
   const [selectedProperty, setSelectedProperty] = useState<any>(null);
   const [showAdGenerator, setShowAdGenerator] = useState(false);
@@ -49,6 +51,13 @@ export default function PropertiesClient({ initialData }: { initialData: any[] }
   const [tempTransactionTypeFilter, setTempTransactionTypeFilter] = useState<'ALL' | 'SALE' | 'RENT'>('ALL');
   const [tempAssignedAgentFilter, setTempAssignedAgentFilter] = useState<string>('ALL');
   const [selectedProperties, setSelectedProperties] = useState<Set<string>>(new Set());
+
+  // Auto-open property form if ?action=new
+  useEffect(() => {
+    if (searchParams?.get('action') === 'new') {
+      handleCreateProperty();
+    }
+  }, [searchParams]);
 
   // Filter properties by transaction type and assigned agent
   const filteredProperties = properties.filter(property => {

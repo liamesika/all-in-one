@@ -30,9 +30,10 @@ interface LeadsMarketingData {
 
 interface LeadsMarketingSectionProps {
   data: LeadsMarketingData;
+  onViewDetails?: () => void;
 }
 
-export function LeadsMarketingSection({ data }: LeadsMarketingSectionProps) {
+export function LeadsMarketingSection({ data, onViewDetails }: LeadsMarketingSectionProps) {
   const { lang } = useLang();
 
   return (
@@ -52,7 +53,7 @@ export function LeadsMarketingSection({ data }: LeadsMarketingSectionProps) {
               </p>
             </div>
           </div>
-          <UniversalButton variant="primary" size="sm">
+          <UniversalButton variant="primary" size="sm" onClick={onViewDetails}>
             {lang === 'he' ? 'צפה בפרטים' : 'View Details'}
           </UniversalButton>
         </div>

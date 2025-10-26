@@ -21,9 +21,10 @@ interface ListingsInventoryData {
 
 interface ListingsInventorySectionProps {
   data: ListingsInventoryData;
+  onViewDetails?: () => void;
 }
 
-export function ListingsInventorySection({ data }: ListingsInventorySectionProps) {
+export function ListingsInventorySection({ data, onViewDetails }: ListingsInventorySectionProps) {
   const { lang } = useLang();
 
   return (
@@ -43,7 +44,7 @@ export function ListingsInventorySection({ data }: ListingsInventorySectionProps
               </p>
             </div>
           </div>
-          <UniversalButton variant="primary" size="sm">
+          <UniversalButton variant="primary" size="sm" onClick={onViewDetails}>
             {lang === 'he' ? 'צפה בפרטים' : 'View Details'}
           </UniversalButton>
         </div>

@@ -93,7 +93,7 @@ export function UserMenu({ userProfile, onLogout, onOpenProfile }: UserMenuProps
 
   const handleSettings = () => {
     setIsOpen(false);
-    router.push('/dashboard/billing');
+    router.push('/dashboard/settings');
   };
 
   const handleLogout = () => {
