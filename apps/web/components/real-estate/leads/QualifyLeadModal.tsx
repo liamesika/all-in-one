@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { X, Sparkles, Loader2, Home, MapPin, DollarSign, Link as LinkIcon } from 'lucide-react';
 import { useLanguage } from '@/lib/language-context';
+import { auth } from '@/lib/firebase';
 
 interface Property {
   id: string;
@@ -49,15 +50,27 @@ export function QualifyLeadModal({ isOpen, leadId, onClose, onPropertyLink }: Qu
     rent: language === 'he' ? 'להשכרה' : 'For Rent',
     rooms: language === 'he' ? 'חדרים' : 'rooms',
     error: language === 'he' ? 'שגיאה בניתוח' : 'Analysis failed',
+    authError: language === 'he' ? 'נדרשת אימות. אנא התחבר מחדש.' : 'Authentication required. Please sign in again.',
   };
 
   const handleAnalyze = async () => {
     setLoading(true);
     setResult(null);
     try {
+      const user = auth.currentUser;
+      if (!user) {
+        alert(t.authError);
+        setLoading(false);
+        return;
+      }
+      const token = await user.getIdToken();
+
       const response = await fetch(`/api/real-estate/leads/${leadId}/qualify`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify({ notes: notes.trim() || undefined }),
       });
 
@@ -76,9 +89,20 @@ export function QualifyLeadModal({ isOpen, leadId, onClose, onPropertyLink }: Qu
   const handleLinkProperty = async (propertyId: string) => {
     setLinkingPropertyId(propertyId);
     try {
+      const user = auth.currentUser;
+      if (!user) {
+        alert(t.authError);
+        setLinkingPropertyId(null);
+        return;
+      }
+      const token = await user.getIdToken();
+
       const response = await fetch(`/api/real-estate/leads/${leadId}/link-property`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify({ propertyId }),
       });
 
@@ -92,6 +116,12 @@ export function QualifyLeadModal({ isOpen, leadId, onClose, onPropertyLink }: Qu
     } catch (error) {
       console.error('Error linking property:', error);
       setLinkingPropertyId(null);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape' && !loading && !linkingPropertyId) {
+      handleClose();
     }
   };
 
@@ -113,7 +143,13 @@ export function QualifyLeadModal({ isOpen, leadId, onClose, onPropertyLink }: Qu
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="qualify-lead-title"
+      onKeyDown={handleKeyDown}
+    >
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -130,16 +166,18 @@ export function QualifyLeadModal({ isOpen, leadId, onClose, onPropertyLink }: Qu
           className="sticky top-0 z-10 flex items-center justify-between p-6 border-b"
           style={{ background: '#FFFFFF', borderColor: '#E5E7EB' }}
         >
-          <h2 className="text-2xl font-bold flex items-center gap-3" style={{ color: '#111827' }}>
+          <h2 id="qualify-lead-title" className="text-2xl font-bold flex items-center gap-3" style={{ color: '#111827' }}>
             <Sparkles className="w-7 h-7" style={{ color: '#8B5CF6' }} />
             {t.title}
           </h2>
           <button
             onClick={handleClose}
-            className="p-2 rounded-lg transition-colors"
+            disabled={loading || !!linkingPropertyId}
+            className="p-2 min-h-[44px] min-w-[44px] rounded-lg transition-colors"
             style={{ color: '#6B7280' }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = '#F3F4F6')}
+            onMouseEnter={(e) => !loading && !linkingPropertyId && (e.currentTarget.style.background = '#F3F4F6')}
             onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+            aria-label={t.close}
           >
             <X className="w-6 h-6" />
           </button>
@@ -175,7 +213,7 @@ export function QualifyLeadModal({ isOpen, leadId, onClose, onPropertyLink }: Qu
             <button
               onClick={handleAnalyze}
               disabled={loading}
-              className="w-full py-4 rounded-lg font-semibold flex items-center justify-center gap-3 transition-all text-lg"
+              className="w-full py-4 min-h-[44px] rounded-lg font-semibold flex items-center justify-center gap-3 transition-all text-lg"
               style={{
                 background: loading ? '#9CA3AF' : 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)',
                 color: '#FFFFFF',
@@ -277,7 +315,7 @@ export function QualifyLeadModal({ isOpen, leadId, onClose, onPropertyLink }: Qu
                           <button
                             onClick={() => handleLinkProperty(property.id)}
                             disabled={linkingPropertyId === property.id}
-                            className="px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-all whitespace-nowrap"
+                            className="px-4 py-2.5 min-h-[44px] rounded-lg font-medium flex items-center gap-2 transition-all whitespace-nowrap"
                             style={{
                               background: linkingPropertyId === property.id ? '#9CA3AF' : '#2979FF',
                               color: '#FFFFFF',
@@ -322,9 +360,10 @@ export function QualifyLeadModal({ isOpen, leadId, onClose, onPropertyLink }: Qu
         >
           <button
             onClick={handleClose}
-            className="px-6 py-2 rounded-lg font-medium transition-colors"
+            disabled={loading || !!linkingPropertyId}
+            className="px-6 py-2.5 min-h-[44px] rounded-lg font-medium transition-colors"
             style={{ background: '#F3F4F6', color: '#374151' }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = '#E5E7EB')}
+            onMouseEnter={(e) => !loading && !linkingPropertyId && (e.currentTarget.style.background = '#E5E7EB')}
             onMouseLeave={(e) => (e.currentTarget.style.background = '#F3F4F6')}
           >
             {t.close}
