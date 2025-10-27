@@ -2909,16 +2909,11 @@ model EcomCSVSession {
 // Store structure - collections and menus
 model EcomStructure {
   id          String   @id @default(cuid())
-  ownerUid    String
+  ownerUid    String   @unique
   orgId       String?
-  type        String // COLLECTION, MENU
 
-  // Collection data
-  name        String?
-  handle      String?
-  description String?
-  rules       Json? // For automatic collections
-  products    Json? // Manual product IDs
+  // Collections array
+  collections Json? // Array of collection objects
 
   // Menu data
   menuItems   Json? // Nested menu structure
@@ -2934,15 +2929,15 @@ model EcomStructure {
 
   @@index([ownerUid])
   @@index([orgId])
-  @@index([ownerUid, type])
 }
 
 // Layout blueprint presets
 model EcomLayoutBlueprint {
   id          String   @id @default(cuid())
-  ownerUid    String
+  ownerUid    String   @unique
   orgId       String?
-  name        String
+  presetId    String?
+  name        String   @default("Custom Layout")
   isPreset    Boolean  @default(false) // System preset or user custom
 
   // Section order
@@ -2957,7 +2952,6 @@ model EcomLayoutBlueprint {
 
   @@index([ownerUid])
   @@index([orgId])
-  @@index([ownerUid, active])
   @@index([isPreset])
 }
 
@@ -3093,7 +3087,7 @@ model EcomStats {
   totalImageCost        Float    @default(0)
 
   // Campaign stats
-  campaignBriefsCreated Int      @default(0)
+  campaignsCreated      Int      @default(0)
   activeCampaigns       Int      @default(0)
 
   // Performance stats
@@ -3108,4 +3102,35 @@ model EcomStats {
 
   @@index([ownerUid])
   @@index([orgId])
+}
+
+// AI-generated images
+model EcomAIImage {
+  id          String   @id @default(cuid())
+  ownerUid    String
+  orgId       String?
+  prompt      String
+  imageUrl    String
+  size        String   @default("1024x1024")
+  format      String   @default("webp")
+  createdAt   DateTime @default(now())
+
+  @@index([ownerUid])
+  @@index([orgId])
+  @@index([createdAt])
+}
+
+// Campaign versions with audiences and ad copies
+model EcomCampaignVersion {
+  id          String   @id @default(cuid())
+  ownerUid    String
+  orgId       String?
+  brief       Json     // Campaign brief object
+  audiences   Json     // Array of audience suggestions
+  adCopies    Json     // Array of ad copy variants
+  createdAt   DateTime @default(now())
+
+  @@index([ownerUid])
+  @@index([orgId])
+  @@index([createdAt])
 }
