@@ -1,26 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth.server';
 import { prisma } from '@/lib/prisma.server';
+import { generateImage } from '@/lib/openai.server';
+import { uploadImageFromUrl } from '@/lib/s3.server';
+import { rateLimit, RATE_LIMITS } from '@/lib/rate-limit.server';
 
 export const dynamic = 'force-dynamic';
-
-async function generateAIImage(prompt: string, size: string, format: string) {
-  // In production with OpenAI API:
-  // const response = await openai.images.generate({
-  //   model: "dall-e-3",
-  //   prompt: prompt,
-  //   size: size,
-  //   quality: "hd",
-  //   n: 1,
-  // });
-  // const imageUrl = response.data[0].url;
-  // Then download and upload to S3
-
-  // For now, simulate with placeholder
-  const width = size.split('x')[0];
-  const height = size.split('x')[1];
-  return `https://placehold.co/${width}x${height}/2979FF/FFFFFF/png?text=AI+Generated`;
-}
+export const maxDuration = 300; // 5 minutes for batch image generation
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,6 +16,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Rate limiting - per user
+    const rateLimitResult = await rateLimit({
+      ...RATE_LIMITS.OPENAI_IMAGES,
+      identifier: `ai-images-${currentUser.uid}`,
+    });
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          error: 'Rate limit exceeded. Please try again later.',
+          resetAt: rateLimitResult.resetAt,
+        },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+            'X-RateLimit-Reset': rateLimitResult.resetAt.toString(),
+          },
+        }
+      );
+    }
+
     const body = await request.json();
     const { prompt, count, size, format } = body;
 
@@ -37,27 +45,61 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
     }
 
-    // Generate images
-    const imagePromises = Array.from({ length: count || 1 }, () =>
-      generateAIImage(prompt, size || '1024x1024', format || 'webp')
-    );
+    // DALL-E 3 only supports n=1, so we need to make multiple calls for batch
+    const batchCount = count || 1;
+    const imageSize = (size || '1024x1024') as '1024x1024' | '1024x1792' | '1792x1024';
 
-    const imageUrls = await Promise.all(imagePromises);
+    const images = [];
 
-    // Save to database
-    const images = await Promise.all(
-      imageUrls.map(url =>
-        prisma.ecomAIImage.create({
+    for (let i = 0; i < batchCount; i++) {
+      try {
+        // Generate image with DALL-E 3
+        const tempImageUrl = await generateImage(prompt, imageSize);
+
+        if (!tempImageUrl) {
+          throw new Error('No image URL returned from DALL-E');
+        }
+
+        // Upload to S3 for permanent storage
+        let permanentUrl: string;
+        try {
+          const s3Key = `ecommerce/${currentUser.uid}/ai-images/${Date.now()}-${i}.png`;
+          permanentUrl = await uploadImageFromUrl(tempImageUrl, s3Key);
+          console.log('[AI Images] Uploaded to S3:', s3Key);
+        } catch (s3Error) {
+          console.warn('[S3] Upload failed, using temporary URL:', s3Error);
+          permanentUrl = tempImageUrl;
+        }
+
+        // Save to database
+        const savedImage = await prisma.ecomAIImage.create({
           data: {
             ownerUid: currentUser.uid,
             prompt,
-            imageUrl: url,
-            size: size || '1024x1024',
+            imageUrl: permanentUrl,
+            size: imageSize,
             format: format || 'webp',
           },
-        })
-      )
-    );
+        });
+
+        images.push({
+          id: savedImage.id,
+          url: savedImage.imageUrl,
+          prompt: savedImage.prompt,
+          createdAt: savedImage.createdAt.toISOString(),
+        });
+      } catch (imageError) {
+        console.error(`[AI Images] Failed to generate image ${i + 1}:`, imageError);
+        // Continue with next image instead of failing entire batch
+      }
+    }
+
+    if (images.length === 0) {
+      return NextResponse.json(
+        { error: 'Failed to generate any images. Check OpenAI API key.' },
+        { status: 500 }
+      );
+    }
 
     // Update stats
     await prisma.ecomStats.upsert({
@@ -71,16 +113,9 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    console.log('[AI Images] Generated', images.length, 'images');
+    console.log('[AI Images] Successfully generated', images.length, 'images with DALL-E 3');
 
-    return NextResponse.json({
-      images: images.map(img => ({
-        id: img.id,
-        url: img.imageUrl,
-        prompt: img.prompt,
-        createdAt: img.createdAt.toISOString(),
-      })),
-    });
+    return NextResponse.json({ images });
   } catch (error) {
     console.error('[POST /api/ecommerce/ai-images/generate] Error:', error);
     return NextResponse.json(

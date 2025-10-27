@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth.server';
 import { prisma } from '@/lib/prisma.server';
+import { generateCampaignContent } from '@/lib/openai.server';
+import { rateLimit, RATE_LIMITS } from '@/lib/rate-limit.server';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 120; // 2 minutes for AI generation
 
 interface CampaignBrief {
   goal: string;
@@ -10,72 +13,7 @@ interface CampaignBrief {
   targetRegion: string;
   targetAudience: string;
   productCategory: string;
-  additionalNotes: string;
-}
-
-function generateAudiences(brief: CampaignBrief) {
-  // In production, use OpenAI to analyze brief and generate audiences
-  // For now, return realistic mock data
-
-  const baseAudiences = [
-    {
-      name: 'Core Target Audience',
-      description: `Primary audience segment based on ${brief.targetAudience || 'demographics'}`,
-      demographics: brief.targetAudience || 'Adults 25-54',
-      interests: [brief.productCategory || 'Shopping', 'Online Shopping', 'Product Discovery'],
-      estimatedReach: '50K - 200K',
-    },
-    {
-      name: 'Lookalike Audience',
-      description: 'Similar profiles to your best customers with high conversion potential',
-      demographics: brief.targetAudience || 'Adults 25-54',
-      interests: [brief.productCategory || 'Shopping', 'E-commerce', 'Brand Enthusiasts'],
-      estimatedReach: '100K - 500K',
-    },
-    {
-      name: 'Retargeting Audience',
-      description: 'Previous website visitors and engaged users',
-      demographics: 'Site Visitors (Last 30 days)',
-      interests: ['Your Products', 'Cart Abandoners', 'Product Viewers'],
-      estimatedReach: '10K - 50K',
-    },
-  ];
-
-  return baseAudiences.map((aud, index) => ({
-    id: `aud-${Date.now()}-${index}`,
-    ...aud,
-  }));
-}
-
-function generateAdCopies(brief: CampaignBrief) {
-  // In production, use OpenAI to generate personalized ad copy
-  // For now, return realistic variants
-
-  const variants = [
-    {
-      headline: `Discover Premium ${brief.productCategory || 'Products'}`,
-      body: `Shop the latest collection with exclusive deals. Limited time offer - save up to 40%!`,
-      cta: 'Shop Now',
-      tone: 'Professional',
-    },
-    {
-      headline: `${brief.productCategory || 'Products'} You'll Love`,
-      body: `Join thousands of happy customers. Free shipping on orders over $50. Quality guaranteed.`,
-      cta: 'Explore Collection',
-      tone: 'Friendly',
-    },
-    {
-      headline: `Limited Time: ${brief.productCategory || 'Sale'} Event`,
-      body: `Don't miss out! Grab your favorites before they're gone. Flash sale ends soon!`,
-      cta: 'Get Yours Now',
-      tone: 'Urgent',
-    },
-  ];
-
-  return variants.map((variant, index) => ({
-    id: `copy-${Date.now()}-${index}`,
-    ...variant,
-  }));
+  additionalNotes?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -84,6 +22,28 @@ export async function POST(request: NextRequest) {
 
     if (!currentUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Rate limiting - per user
+    const rateLimitResult = await rateLimit({
+      ...RATE_LIMITS.OPENAI_CAMPAIGNS,
+      identifier: `campaigns-${currentUser.uid}`,
+    });
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          error: 'Rate limit exceeded. Please try again later.',
+          resetAt: rateLimitResult.resetAt,
+        },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+            'X-RateLimit-Reset': rateLimitResult.resetAt.toString(),
+          },
+        }
+      );
     }
 
     const body = await request.json();
@@ -96,17 +56,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate audiences and ad copies
-    const audiences = generateAudiences(brief);
-    const adCopies = generateAdCopies(brief);
+    // Generate audiences and ad copies using real GPT-4
+    const { audiences, adCopies } = await generateCampaignContent(brief);
+
+    // Add IDs to the results
+    const audiencesWithIds = audiences.map((aud, index) => ({
+      id: `aud-${Date.now()}-${index}`,
+      ...aud,
+    }));
+
+    const adCopiesWithIds = adCopies.map((copy, index) => ({
+      id: `copy-${Date.now()}-${index}`,
+      ...copy,
+    }));
 
     // Save to database
     const version = await prisma.ecomCampaignVersion.create({
       data: {
         ownerUid: currentUser.uid,
         brief: brief as any,
-        audiences: audiences as any,
-        adCopies: adCopies as any,
+        audiences: audiencesWithIds as any,
+        adCopies: adCopiesWithIds as any,
       },
     });
 
@@ -122,7 +92,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    console.log('[Campaign Assistant] Generated campaign:', version.id);
+    console.log('[Campaign Assistant] Generated campaign with GPT-4:', version.id);
 
     return NextResponse.json({
       version: {
@@ -132,13 +102,13 @@ export async function POST(request: NextRequest) {
         adCopies: version.adCopies,
         createdAt: version.createdAt.toISOString(),
       },
-      audiences,
-      adCopies,
+      audiences: audiencesWithIds,
+      adCopies: adCopiesWithIds,
     });
   } catch (error) {
     console.error('[POST /api/ecommerce/campaigns/assistant/generate] Error:', error);
     return NextResponse.json(
-      { error: 'Failed to generate campaign' },
+      { error: 'Failed to generate campaign. Check OpenAI API key.' },
       { status: 500 }
     );
   }

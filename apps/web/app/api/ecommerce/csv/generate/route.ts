@@ -1,29 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma.server';
 import { getCurrentUser } from '@/lib/auth.server';
+import { generateProductData } from '@/lib/openai.server';
+import { rateLimit, RATE_LIMITS } from '@/lib/rate-limit.server';
 
 export const dynamic = 'force-dynamic';
-
-// Server-side AI generation
-async function generateProductData(imageUrl: string, language: string) {
-  // Simulated AI generation - in production, call OpenAI Vision API
-  const products = {
-    en: {
-      name: 'Premium Product',
-      description: 'High-quality product with excellent features',
-      tags: 'premium, quality, new',
-      basePrice: 29.99,
-    },
-    he: {
-      name: 'מוצר פרימיום',
-      description: 'מוצר איכותי עם תכונות מצוינות',
-      tags: 'פרימיום, איכות, חדש',
-      basePrice: 29.99,
-    },
-  };
-
-  return products[language as keyof typeof products] || products.en;
-}
+export const maxDuration = 300; // 5 minutes for batch processing
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,20 +15,62 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Rate limiting - per user
+    const rateLimitResult = await rateLimit({
+      ...RATE_LIMITS.OPENAI_CSV,
+      identifier: `csv-generate-${currentUser.uid}`,
+    });
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          error: 'Rate limit exceeded. Please try again later.',
+          resetAt: rateLimitResult.resetAt,
+        },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+            'X-RateLimit-Reset': rateLimitResult.resetAt.toString(),
+          },
+        }
+      );
+    }
+
     const body = await request.json();
-    const { imageUrls, targetLanguage, pricingRule, aliExpressUrl } = body;
+    const { imageUrls, targetLanguage, pricingRule, aliExpressUrl, productCategory } = body;
 
     if (!imageUrls || imageUrls.length === 0) {
       return NextResponse.json({ error: 'No images provided' }, { status: 400 });
     }
 
-    // Generate product data for each image
+    // Generate product data for each image using real OpenAI
     const products = await Promise.all(
-      imageUrls.map((url: string) => generateProductData(url, targetLanguage))
+      imageUrls.map(async (url: string) => {
+        try {
+          return await generateProductData(
+            url,
+            targetLanguage as 'en' | 'he',
+            productCategory
+          );
+        } catch (aiError) {
+          console.error('[OpenAI] Generation failed for image:', url, aiError);
+          // Fallback to basic product if AI fails
+          return {
+            name: targetLanguage === 'he' ? 'מוצר' : 'Product',
+            description:
+              targetLanguage === 'he'
+                ? 'תיאור המוצר יתווסף בקרוב'
+                : 'Product description coming soon',
+            tags: 'product',
+            basePrice: 29.99,
+          };
+        }
+      })
     );
 
     // Save to database
-    await prisma.ecomCSVSession.create({
+    const session = await prisma.ecomCSVSession.create({
       data: {
         ownerUid: currentUser.uid,
         sourceType: aliExpressUrl ? 'ALIEXPRESS_IMPORT' : 'MANUAL_UPLOAD',
@@ -74,9 +98,11 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    console.log('[CSV Generate] Generated', products.length, 'products with OpenAI');
+
     return NextResponse.json({
       products,
-      sessionId: 'session-id',
+      sessionId: session.id,
     });
   } catch (error) {
     console.error('[POST /api/ecommerce/csv/generate] Error:', error);

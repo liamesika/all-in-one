@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth.server';
+import { uploadToS3 } from '@/lib/s3.server';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,15 +20,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No images provided' }, { status: 400 });
     }
 
-    // S3 upload simulation - in production, use AWS SDK
-    // For now, using data URLs as placeholders
+    // Upload to S3
     const uploadedUrls = await Promise.all(
-      images.map(async (image) => {
-        const buffer = await image.arrayBuffer();
-        const base64 = Buffer.from(buffer).toString('base64');
-        return `data:${image.type};base64,${base64}`;
+      images.map(async (image, index) => {
+        const buffer = Buffer.from(await image.arrayBuffer());
+        const timestamp = Date.now();
+        const key = `ecommerce/${currentUser.uid}/csv/${timestamp}-${index}-${image.name}`;
+
+        try {
+          const url = await uploadToS3(buffer, key, image.type);
+          return url;
+        } catch (s3Error) {
+          console.warn('[S3] Upload failed, using data URL fallback:', s3Error);
+          // Fallback to data URL if S3 not configured
+          const base64 = buffer.toString('base64');
+          return `data:${image.type};base64,${base64}`;
+        }
       })
     );
+
+    console.log('[CSV Upload] Uploaded', uploadedUrls.length, 'images');
 
     return NextResponse.json({
       uploadedUrls,
