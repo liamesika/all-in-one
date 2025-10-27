@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { X, Search, Link as LinkIcon, Unlink, Home, MapPin, DollarSign, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/lib/language-context';
+import { auth } from '@/lib/firebase';
 
 interface Property {
   id: string;
@@ -51,6 +52,7 @@ export function LinkPropertyModal({
     sale: language === 'he' ? 'למכירה' : 'For Sale',
     rent: language === 'he' ? 'להשכרה' : 'For Rent',
     rooms: language === 'he' ? 'חדרים' : 'rooms',
+    authError: language === 'he' ? 'נדרשת אימות. אנא התחבר מחדש.' : 'Authentication required. Please sign in again.',
   };
 
   // Debounced search
@@ -69,8 +71,20 @@ export function LinkPropertyModal({
   const searchProperties = async () => {
     setLoading(true);
     try {
+      const user = auth.currentUser;
+      if (!user) {
+        console.error(t.authError);
+        setLoading(false);
+        return;
+      }
+      const token = await user.getIdToken();
+
       const params = new URLSearchParams({ search: searchQuery });
-      const response = await fetch(`/api/real-estate/properties/search?${params.toString()}`);
+      const response = await fetch(`/api/real-estate/properties/search?${params.toString()}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       if (!response.ok) throw new Error('Search failed');
       const data = await response.json();
       setProperties(data.properties || []);
@@ -85,9 +99,20 @@ export function LinkPropertyModal({
   const handleLink = async () => {
     setLinking(true);
     try {
+      const user = auth.currentUser;
+      if (!user) {
+        console.error(t.authError);
+        setLinking(false);
+        return;
+      }
+      const token = await user.getIdToken();
+
       const response = await fetch(`/api/real-estate/leads/${leadId}/link-property`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify({ propertyId: selectedPropertyId }),
       });
 
@@ -106,9 +131,20 @@ export function LinkPropertyModal({
     setSelectedPropertyId(null);
     setLinking(true);
     try {
+      const user = auth.currentUser;
+      if (!user) {
+        console.error(t.authError);
+        setLinking(false);
+        return;
+      }
+      const token = await user.getIdToken();
+
       const response = await fetch(`/api/real-estate/leads/${leadId}/link-property`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify({ propertyId: null }),
       });
 
@@ -120,6 +156,12 @@ export function LinkPropertyModal({
       console.error('Error unlinking property:', error);
     } finally {
       setLinking(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape' && !linking) {
+      onClose();
     }
   };
 
@@ -135,7 +177,13 @@ export function LinkPropertyModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="link-property-title"
+      onKeyDown={handleKeyDown}
+    >
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -152,15 +200,17 @@ export function LinkPropertyModal({
           className="flex items-center justify-between p-6 border-b"
           style={{ background: '#FFFFFF', borderColor: '#E5E7EB' }}
         >
-          <h2 className="text-2xl font-bold" style={{ color: '#111827' }}>
+          <h2 id="link-property-title" className="text-2xl font-bold" style={{ color: '#111827' }}>
             {t.title}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg transition-colors"
+            disabled={linking}
+            className="p-2 min-h-[44px] min-w-[44px] rounded-lg transition-colors"
             style={{ color: '#6B7280' }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = '#F3F4F6')}
+            onMouseEnter={(e) => !linking && (e.currentTarget.style.background = '#F3F4F6')}
             onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+            aria-label={t.cancel}
           >
             <X className="w-6 h-6" />
           </button>
@@ -203,7 +253,7 @@ export function LinkPropertyModal({
                 <button
                   onClick={handleUnlink}
                   disabled={linking}
-                  className="px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+                  className="px-3 py-2 min-h-[44px] rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
                   style={{ background: '#DC2626', color: '#FFFFFF' }}
                   onMouseEnter={(e) => !linking && (e.currentTarget.style.background = '#B91C1C')}
                   onMouseLeave={(e) => (e.currentTarget.style.background = '#DC2626')}
@@ -311,7 +361,7 @@ export function LinkPropertyModal({
             type="button"
             onClick={onClose}
             disabled={linking}
-            className="px-6 py-2 rounded-lg font-medium transition-colors"
+            className="px-6 py-2.5 min-h-[44px] rounded-lg font-medium transition-colors"
             style={{ background: '#F3F4F6', color: '#374151' }}
             onMouseEnter={(e) => !linking && (e.currentTarget.style.background = '#E5E7EB')}
             onMouseLeave={(e) => (e.currentTarget.style.background = '#F3F4F6')}
@@ -321,7 +371,7 @@ export function LinkPropertyModal({
           <button
             onClick={handleLink}
             disabled={linking || !selectedPropertyId || selectedPropertyId === currentPropertyId}
-            className="px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-all"
+            className="px-6 py-2.5 min-h-[44px] rounded-lg font-medium flex items-center gap-2 transition-all"
             style={{
               background: linking || !selectedPropertyId || selectedPropertyId === currentPropertyId ? '#9CA3AF' : '#2979FF',
               color: '#FFFFFF',
