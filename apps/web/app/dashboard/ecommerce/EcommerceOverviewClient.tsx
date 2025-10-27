@@ -199,11 +199,52 @@ export function EcommerceOverviewClient() {
                 {lang === 'he' ? 'סוויטת מסחר אלקטרוני' : 'E-Commerce Suite'}
               </h1>
             </div>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
               {lang === 'he'
                 ? 'כלים מקצועיים לבניה וניהול של חנות Shopify מצליחה'
                 : 'Professional tools for building and managing a successful Shopify store'}
             </p>
+
+            {/* Educational Overview Section */}
+            <UniversalCard variant="elevated" className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-[#2979FF]/20">
+              <CardBody>
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[#2979FF] flex items-center justify-center">
+                    <GraduationCap className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                      {lang === 'he' ? 'מהו Effinity E-Commerce Suite?' : 'What is Effinity E-Commerce Suite?'}
+                    </h2>
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                      {lang === 'he'
+                        ? 'Effinity E-Commerce Suite היא פלטפורמת עסקית וקורס דיגיטלי אינטראקטיבי המדריך אותך שלב אחר שלב — מהעלאת המוצרים הראשונים שלך וכתיבת תיאורי AI מושלמים, דרך יצירת תמונות והשקת קמפיינים פרסומיים משלך — הכל במערכת אחת.'
+                        : 'The Effinity E-Commerce Suite is an interactive digital course and business platform guiding you step-by-step — from uploading your first products and writing perfect AI descriptions, to generating images and launching your own ad campaigns — all within one system.'}
+                    </p>
+                    <div className="mt-4 flex flex-wrap gap-3">
+                      <div className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <Sparkles className="w-4 h-4 text-[#2979FF]" />
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          {lang === 'he' ? 'תוכן AI' : 'AI Content'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <ImageIcon className="w-4 h-4 text-[#2979FF]" />
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          {lang === 'he' ? 'יצירת תמונות' : 'Image Generation'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <Target className="w-4 h-4 text-[#2979FF]" />
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          {lang === 'he' ? 'קמפיינים' : 'Campaigns'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardBody>
+            </UniversalCard>
           </div>
 
           {/* KPIs */}

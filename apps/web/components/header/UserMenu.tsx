@@ -117,7 +117,7 @@ export function UserMenu({ userProfile, onLogout, onOpenProfile }: UserMenuProps
           {displayName}
         </span>
         <div
-          className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold text-lg overflow-hidden"
+          className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center overflow-hidden"
           style={{ boxShadow: 'var(--re-shadow-md)' }}
         >
           {userProfile?.avatarUrl ? (
@@ -129,7 +129,7 @@ export function UserMenu({ userProfile, onLogout, onOpenProfile }: UserMenuProps
               className="object-cover w-full h-full"
             />
           ) : (
-            <span>{initials}</span>
+            <User className="w-5 h-5 text-gray-500 dark:text-gray-400" />
           )}
         </div>
       </button>
@@ -151,7 +151,7 @@ export function UserMenu({ userProfile, onLogout, onOpenProfile }: UserMenuProps
           <div className="px-4 py-3 border-b border-gray-200" style={{ background: '#F9FAFB' }}>
             <div className="flex items-center gap-3">
               <div
-                className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold text-xl overflow-hidden flex-shrink-0"
+                className="w-12 h-12 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center overflow-hidden flex-shrink-0"
               >
                 {userProfile?.avatarUrl ? (
                   <Image
@@ -162,7 +162,7 @@ export function UserMenu({ userProfile, onLogout, onOpenProfile }: UserMenuProps
                     className="object-cover w-full h-full"
                   />
                 ) : (
-                  <span>{initials}</span>
+                  <User className="w-6 h-6 text-gray-500 dark:text-gray-400" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
