@@ -47,6 +47,15 @@ import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import { EmptyState } from '@/components/dashboard/EmptyState';
 import { analytics } from '@/lib/analytics';
+import { PricingPanel } from '@/components/pricing/PricingPanel';
+import { TrialBanner } from '@/components/subscription/TrialBanner';
+import { auth } from '@/lib/firebase';
+
+interface Subscription {
+  status: 'ACTIVE' | 'TRIAL' | 'EXPIRED' | 'CANCELED';
+  trialEndsAt?: string;
+  plan: string;
+}
 
 // Mock data generator - replace with actual API data
 function generateMockData() {
@@ -249,6 +258,8 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
   const router = useRouter();
   const { filters, updateFilter } = useFilters(initialFilters);
   const [activeView, setActiveView] = useState<'all' | 'leads' | 'listings' | 'deals' | 'operations'>('all');
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [loadingSubscription, setLoadingSubscription] = useState(true);
 
   const data = generateMockData();
 
@@ -256,6 +267,52 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
   React.useEffect(() => {
     analytics.dashboardViewed(null, !data.isEmpty);
   }, [data.isEmpty]);
+
+  // Fetch subscription status
+  React.useEffect(() => {
+    const fetchSubscription = async () => {
+      try {
+        const user = auth.currentUser;
+        if (!user) return;
+
+        const token = await user.getIdToken();
+        const response = await fetch('/api/subscriptions/status', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setSubscription(data.subscription);
+        }
+      } catch (error) {
+        console.error('Failed to fetch subscription:', error);
+      } finally {
+        setLoadingSubscription(false);
+      }
+    };
+
+    fetchSubscription();
+  }, []);
+
+  const handleTrialStart = async () => {
+    // Refresh subscription after trial activation
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const token = await user.getIdToken();
+    const response = await fetch('/api/subscriptions/status', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      setSubscription(data.subscription);
+    }
+  };
 
   // Determine which sections to show based on active view
   const shouldShowSection = (sectionId: string) => {
@@ -297,6 +354,60 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
           firstName={userProfile?.displayName || userProfile?.firstName}
           vertical="Real-Estate"
         />
+
+        {/* Trial Banner */}
+        {!loadingSubscription && subscription && (
+          <>
+            {subscription.status === 'EXPIRED' && (
+              <div className="mb-6">
+                <TrialBanner
+                  status="expired"
+                  lang={lang}
+                  onUpgrade={() => {
+                    const pricingSection = document.getElementById('pricing-section');
+                    if (pricingSection) {
+                      pricingSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                />
+              </div>
+            )}
+            {subscription.status === 'TRIAL' && subscription.trialEndsAt && (
+              (() => {
+                const daysRemaining = Math.ceil(
+                  (new Date(subscription.trialEndsAt).getTime() - new Date().getTime()) /
+                    (1000 * 60 * 60 * 24)
+                );
+                return daysRemaining <= 7 ? (
+                  <div className="mb-6">
+                    <TrialBanner
+                      status="expiring"
+                      daysRemaining={daysRemaining}
+                      lang={lang}
+                      onUpgrade={() => {
+                        const pricingSection = document.getElementById('pricing-section');
+                        if (pricingSection) {
+                          pricingSection.scrollIntoView({ behavior: 'smooth' });
+                        }
+                      }}
+                    />
+                  </div>
+                ) : null;
+              })()
+            )}
+          </>
+        )}
+
+        {/* Pricing Panel */}
+        {!loadingSubscription && (!subscription || subscription.status !== 'ACTIVE') && (
+          <div id="pricing-section" className="mb-8">
+            <PricingPanel
+              vertical="realestate"
+              lang={lang}
+              onTrialStart={handleTrialStart}
+            />
+          </div>
+        )}
 
         {/* Primary KPI Cards - Emphasized */}
         <div className="mb-10">

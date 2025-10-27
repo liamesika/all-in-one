@@ -43,6 +43,16 @@ import {
 } from '@/components/law/shared';
 import { trackEventWithConsent } from '@/lib/analytics/consent';
 import { preserveUTMParams } from '@/lib/utils/utm';
+import { PricingPanel } from '@/components/pricing/PricingPanel';
+import { TrialBanner } from '@/components/subscription/TrialBanner';
+import { auth } from '@/lib/firebase';
+import { useLang } from '@/components/i18n/LangProvider';
+
+interface Subscription {
+  status: 'ACTIVE' | 'TRIAL' | 'EXPIRED' | 'CANCELED';
+  trialEndsAt?: string;
+  plan: string;
+}
 
 // Types
 interface DashboardKPI {
@@ -226,11 +236,14 @@ function QuickActionModal({ isOpen, onClose, action }: QuickActionModalProps) {
 // Main Dashboard Component
 export function PolishedLawDashboard({ initialData }: { initialData: DashboardData }) {
   const router = useRouter();
+  const { lang } = useLang();
   const [data, setData] = useState<DashboardData>(initialData);
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     action: 'case' | 'client' | 'task' | 'event' | null;
   }>({ isOpen: false, action: null });
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [loadingSubscription, setLoadingSubscription] = useState(true);
 
   useEffect(() => {
     preserveUTMParams();
@@ -240,6 +253,52 @@ export function PolishedLawDashboard({ initialData }: { initialData: DashboardDa
       vertical: 'law',
     });
   }, []);
+
+  // Fetch subscription status
+  useEffect(() => {
+    const fetchSubscription = async () => {
+      try {
+        const user = auth.currentUser;
+        if (!user) return;
+
+        const token = await user.getIdToken();
+        const response = await fetch('/api/subscriptions/status', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setSubscription(data.subscription);
+        }
+      } catch (error) {
+        console.error('Failed to fetch subscription:', error);
+      } finally {
+        setLoadingSubscription(false);
+      }
+    };
+
+    fetchSubscription();
+  }, []);
+
+  const handleTrialStart = async () => {
+    // Refresh subscription after trial activation
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const token = await user.getIdToken();
+    const response = await fetch('/api/subscriptions/status', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      setSubscription(data.subscription);
+    }
+  };
 
   const kpis: DashboardKPI[] = [
     {
@@ -360,6 +419,60 @@ export function PolishedLawDashboard({ initialData }: { initialData: DashboardDa
 
         {/* Main Content */}
         <div className="max-w-[1400px] mx-auto px-6 py-8">
+          {/* Trial Banner */}
+          {!loadingSubscription && subscription && (
+            <>
+              {subscription.status === 'EXPIRED' && (
+                <div className="mb-6">
+                  <TrialBanner
+                    status="expired"
+                    lang={lang}
+                    onUpgrade={() => {
+                      const pricingSection = document.getElementById('pricing-section');
+                      if (pricingSection) {
+                        pricingSection.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }}
+                  />
+                </div>
+              )}
+              {subscription.status === 'TRIAL' && subscription.trialEndsAt && (
+                (() => {
+                  const daysRemaining = Math.ceil(
+                    (new Date(subscription.trialEndsAt).getTime() - new Date().getTime()) /
+                      (1000 * 60 * 60 * 24)
+                  );
+                  return daysRemaining <= 7 ? (
+                    <div className="mb-6">
+                      <TrialBanner
+                        status="expiring"
+                        daysRemaining={daysRemaining}
+                        lang={lang}
+                        onUpgrade={() => {
+                          const pricingSection = document.getElementById('pricing-section');
+                          if (pricingSection) {
+                            pricingSection.scrollIntoView({ behavior: 'smooth' });
+                          }
+                        }}
+                      />
+                    </div>
+                  ) : null;
+                })()
+              )}
+            </>
+          )}
+
+          {/* Pricing Panel */}
+          {!loadingSubscription && (!subscription || subscription.status !== 'ACTIVE') && (
+            <div id="pricing-section" className="mb-8">
+              <PricingPanel
+                vertical="law"
+                lang={lang}
+                onTrialStart={handleTrialStart}
+              />
+            </div>
+          )}
+
           {/* KPI Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {kpis.map((kpi, index) => {

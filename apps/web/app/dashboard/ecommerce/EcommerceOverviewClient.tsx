@@ -26,6 +26,14 @@ import { EcommerceHeader } from '@/components/dashboard/EcommerceHeader';
 import { useLang } from '@/components/i18n/LangProvider';
 import { auth } from '@/lib/firebase';
 import { TaskProgressModal, type TutorialTask } from '@/components/ecommerce/TaskProgressModal';
+import { PricingPanel } from '@/components/pricing/PricingPanel';
+import { TrialBanner } from '@/components/subscription/TrialBanner';
+
+interface Subscription {
+  status: 'ACTIVE' | 'TRIAL' | 'EXPIRED' | 'CANCELED';
+  trialEndsAt?: string;
+  plan: string;
+}
 
 interface EcomStats {
   tutorialsCompleted: number;
@@ -68,6 +76,8 @@ export function EcommerceOverviewClient() {
   const [loading, setLoading] = useState(true);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [tasks, setTasks] = useState<TutorialTask[]>(DEFAULT_TASKS);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [loadingSubscription, setLoadingSubscription] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -98,6 +108,51 @@ export function EcommerceOverviewClient() {
 
     fetchStats();
   }, []);
+
+  useEffect(() => {
+    const fetchSubscription = async () => {
+      try {
+        const user = auth.currentUser;
+        if (!user) return;
+
+        const token = await user.getIdToken();
+        const response = await fetch('/api/subscriptions/status', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setSubscription(data.subscription);
+        }
+      } catch (error) {
+        console.error('Failed to fetch subscription:', error);
+      } finally {
+        setLoadingSubscription(false);
+      }
+    };
+
+    fetchSubscription();
+  }, []);
+
+  const handleTrialStart = async () => {
+    // Refresh subscription after trial activation
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const token = await user.getIdToken();
+    const response = await fetch('/api/subscriptions/status', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      setSubscription(data.subscription);
+    }
+  };
 
   const handleUpdateTask = async (taskId: number, status: TutorialTask['status']) => {
     try {
@@ -245,6 +300,60 @@ export function EcommerceOverviewClient() {
                 </div>
               </CardBody>
             </UniversalCard>
+
+            {/* Trial Banner */}
+            {!loadingSubscription && subscription && (
+              <>
+                {subscription.status === 'EXPIRED' && (
+                  <div className="mt-6">
+                    <TrialBanner
+                      status="expired"
+                      lang={lang}
+                      onUpgrade={() => {
+                        const pricingSection = document.getElementById('pricing-section');
+                        if (pricingSection) {
+                          pricingSection.scrollIntoView({ behavior: 'smooth' });
+                        }
+                      }}
+                    />
+                  </div>
+                )}
+                {subscription.status === 'TRIAL' && subscription.trialEndsAt && (
+                  (() => {
+                    const daysRemaining = Math.ceil(
+                      (new Date(subscription.trialEndsAt).getTime() - new Date().getTime()) /
+                        (1000 * 60 * 60 * 24)
+                    );
+                    return daysRemaining <= 7 ? (
+                      <div className="mt-6">
+                        <TrialBanner
+                          status="expiring"
+                          daysRemaining={daysRemaining}
+                          lang={lang}
+                          onUpgrade={() => {
+                            const pricingSection = document.getElementById('pricing-section');
+                            if (pricingSection) {
+                              pricingSection.scrollIntoView({ behavior: 'smooth' });
+                            }
+                          }}
+                        />
+                      </div>
+                    ) : null;
+                  })()
+                )}
+              </>
+            )}
+
+            {/* Pricing Panel */}
+            {!loadingSubscription && (!subscription || subscription.status !== 'ACTIVE') && (
+              <div id="pricing-section" className="mt-8">
+                <PricingPanel
+                  vertical="ecommerce"
+                  lang={lang}
+                  onTrialStart={handleTrialStart}
+                />
+              </div>
+            )}
           </div>
 
           {/* KPIs */}
