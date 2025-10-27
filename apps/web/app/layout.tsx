@@ -8,6 +8,7 @@ import { cookies, headers } from 'next/headers';
 import AppProviders from './providers';
 import { Inter } from 'next/font/google';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
+import { GlobalFooter } from '@/components/GlobalFooter';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -152,7 +153,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         className={`min-h-screen bg-white text-gray-900 antialiased ${inter.variable}`}
       >
         <AppProviders initialLang={lang}>{children}</AppProviders>
-        
+        <GlobalFooter />
+
         {/* Global logout helper for console debugging */}
         <script
           dangerouslySetInnerHTML={{

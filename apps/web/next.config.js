@@ -120,12 +120,21 @@ const nextConfig = {
     return config;
   },
 
-  // Headers and redirects not supported in static export
+  // Rewrites for route normalization
+  async rewrites() {
+    return [
+      {
+        source: '/dashboard/ecommerce/:path*',
+        destination: '/dashboard/e-commerce/:path*',
+      },
+    ];
+  },
 
   // Environment variables
   env: {
     NEXT_PUBLIC_BUILD_TIME: new Date().toISOString(),
     NEXT_PUBLIC_BUILD_ID: process.env.NEXT_BUILD_ID || 'development',
+    NEXT_PUBLIC_RELEASE: process.env.NEXT_PUBLIC_RELEASE || process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) || 'dev',
   },
 
   // TypeScript and ESLint
