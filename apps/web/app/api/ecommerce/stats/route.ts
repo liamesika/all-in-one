@@ -36,6 +36,7 @@ export async function GET(request: NextRequest) {
         campaignBriefsCreated: stats.campaignBriefsCreated,
         shopifyConnected: stats.shopifyConnected,
         shopifyStoreUrl: stats.shopifyStoreUrl,
+        tutorialTasks: stats.tutorialTasks || null,
       },
     });
   } catch (error) {

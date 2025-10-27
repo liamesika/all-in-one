@@ -3077,6 +3077,7 @@ model EcomStats {
   // Tutorial stats
   tutorialsCompleted    Int      @default(0)
   totalTutorials        Int      @default(10)
+  tutorialTasks         Json?    // Array of {id, title, status: 'not_started'|'in_progress'|'completed'}
 
   // Product stats
   productsUploaded      Int      @default(0)

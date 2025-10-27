@@ -13,6 +13,7 @@ import {
   Image as ImageIcon,
   Target,
   Zap,
+  ListTodo,
 } from 'lucide-react';
 import {
   UniversalCard,
@@ -21,9 +22,10 @@ import {
   UniversalButton,
   KPICard,
 } from '@/components/shared';
-import { RealEstateHeader } from '@/components/dashboard/RealEstateHeader';
+import { EcommerceHeader } from '@/components/dashboard/EcommerceHeader';
 import { useLang } from '@/components/i18n/LangProvider';
 import { auth } from '@/lib/firebase';
+import { TaskProgressModal, type TutorialTask } from '@/components/ecommerce/TaskProgressModal';
 
 interface EcomStats {
   tutorialsCompleted: number;
@@ -34,7 +36,21 @@ interface EcomStats {
   csvSessionsCompleted: number;
   campaignBriefsCreated: number;
   shopifyConnected: boolean;
+  tutorialTasks?: TutorialTask[];
 }
+
+const DEFAULT_TASKS: TutorialTask[] = [
+  { id: 1, title: 'Getting Started with Shopify', titleHe: 'תחילת העבודה עם Shopify', status: 'not_started' },
+  { id: 2, title: 'Store Theme Selection', titleHe: 'בחירת ערכת עיצוב', status: 'not_started' },
+  { id: 3, title: 'Product Management', titleHe: 'ניהול מוצרים', status: 'not_started' },
+  { id: 4, title: 'Collections & Categories', titleHe: 'קטגוריות ואוספים', status: 'not_started' },
+  { id: 5, title: 'Payment Gateway Setup', titleHe: 'הגדרת שער תשלום', status: 'not_started' },
+  { id: 6, title: 'Shipping Configuration', titleHe: 'הגדרת משלוח', status: 'not_started' },
+  { id: 7, title: 'Marketing Tools', titleHe: 'כלי שיווק', status: 'not_started' },
+  { id: 8, title: 'SEO Optimization', titleHe: 'אופטימיזציה ל-SEO', status: 'not_started' },
+  { id: 9, title: 'Analytics Dashboard', titleHe: 'לוח בקרה אנליטי', status: 'not_started' },
+  { id: 10, title: 'Advanced Customization', titleHe: 'התאמה אישית מתקדמת', status: 'not_started' },
+];
 
 export function EcommerceOverviewClient() {
   const router = useRouter();
@@ -50,6 +66,8 @@ export function EcommerceOverviewClient() {
     shopifyConnected: false,
   });
   const [loading, setLoading] = useState(true);
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [tasks, setTasks] = useState<TutorialTask[]>(DEFAULT_TASKS);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -67,6 +85,9 @@ export function EcommerceOverviewClient() {
         if (response.ok) {
           const data = await response.json();
           setStats(data.stats);
+          if (data.stats.tutorialTasks && Array.isArray(data.stats.tutorialTasks)) {
+            setTasks(data.stats.tutorialTasks);
+          }
         }
       } catch (error) {
         console.error('Failed to fetch stats:', error);
@@ -77,6 +98,33 @@ export function EcommerceOverviewClient() {
 
     fetchStats();
   }, []);
+
+  const handleUpdateTask = async (taskId: number, status: TutorialTask['status']) => {
+    try {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const token = await user.getIdToken();
+      const updatedTasks = tasks.map((t) => (t.id === taskId ? { ...t, status } : t));
+
+      const response = await fetch('/api/ecommerce/tutorials/update-task', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ taskId, status, allTasks: updatedTasks }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setTasks(updatedTasks);
+        setStats((prev) => ({ ...prev, tutorialsCompleted: data.completed }));
+      }
+    } catch (error) {
+      console.error('Failed to update task:', error);
+    }
+  };
 
   const quickActions = [
     {
@@ -139,7 +187,7 @@ export function EcommerceOverviewClient() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B]">
-      <RealEstateHeader />
+      <EcommerceHeader />
 
       <div className="pt-20 pb-16 max-w-full mx-auto">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -160,15 +208,20 @@ export function EcommerceOverviewClient() {
 
           {/* KPIs */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 mb-10">
-            <KPICard
-              icon={<GraduationCap className="w-5 h-5" />}
-              label={lang === 'he' ? 'הדרכות שהושלמו' : 'Tutorials Completed'}
-              value={`${stats.tutorialsCompleted}/${stats.totalTutorials}`}
-              change={{
-                value: `${Math.round((stats.tutorialsCompleted / stats.totalTutorials) * 100)}%`,
-                trend: stats.tutorialsCompleted > 0 ? 'up' : 'neutral',
-              }}
-            />
+            <button
+              onClick={() => setShowTaskModal(true)}
+              className="group cursor-pointer"
+            >
+              <KPICard
+                icon={<GraduationCap className="w-5 h-5" />}
+                label={lang === 'he' ? 'הדרכות שהושלמו' : 'Tutorials Completed'}
+                value={`${stats.tutorialsCompleted}/${stats.totalTutorials}`}
+                change={{
+                  value: `${Math.round((stats.tutorialsCompleted / stats.totalTutorials) * 100)}%`,
+                  trend: stats.tutorialsCompleted > 0 ? 'up' : 'neutral',
+                }}
+              />
+            </button>
             <KPICard
               icon={<Upload className="w-5 h-5" />}
               label={lang === 'he' ? 'מוצרים שהועלו' : 'Products Uploaded'}
@@ -269,6 +322,15 @@ export function EcommerceOverviewClient() {
           )}
         </div>
       </div>
+
+      {/* Task Progress Modal */}
+      <TaskProgressModal
+        isOpen={showTaskModal}
+        onClose={() => setShowTaskModal(false)}
+        tasks={tasks}
+        onUpdateTask={handleUpdateTask}
+        lang={lang}
+      />
     </div>
   );
 }
