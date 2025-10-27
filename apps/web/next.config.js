@@ -124,8 +124,8 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: '/dashboard/ecommerce/:path*',
-        destination: '/dashboard/e-commerce/:path*',
+        source: '/dashboard/e-commerce/:path*',
+        destination: '/dashboard/ecommerce/:path*',
       },
     ];
   },
