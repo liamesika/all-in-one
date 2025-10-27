@@ -45,6 +45,14 @@ const nextConfig = {
     // Apply to both client and server to prevent self references in any bundles
     config.output.globalObject = '(typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : this)';
 
+    // Suppress noisy Sentry/OpenTelemetry warnings in development
+    // These are webpack module resolution warnings that don't affect functionality
+    config.ignoreWarnings = [
+      /Critical dependency: the request of a dependency is an expression/,
+      /require-in-the-middle/,
+      /@opentelemetry/,
+    ];
+
     // Additional global polyfills for SSR compatibility - apply to server only
     if (isServer) {
       config.plugins.push(
