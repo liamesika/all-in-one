@@ -11,6 +11,9 @@ const updateLeadSchema = z.object({
   email: z.string().email().optional().or(z.literal('')),
   message: z.string().max(500).optional(),
   source: z.string().optional(),
+  qualificationStatus: z.enum(['NEW', 'CONTACTED', 'IN_PROGRESS', 'MEETING', 'OFFER', 'DEAL', 'CONVERTED', 'DISQUALIFIED']).optional(),
+  assignedToId: z.string().optional().or(z.null()),
+  notes: z.string().max(1000).optional().or(z.null()),
 });
 
 // GET /api/real-estate/leads/[id] - Get lead details
@@ -36,6 +39,13 @@ export const GET = withAuth(async (request, { user, params }) => {
             neighborhood: true,
           }
         },
+        assignedTo: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+          }
+        }
       }
     });
 
@@ -93,7 +103,10 @@ export const PATCH = withAuth(async (request, { user, params }) => {
     // Update lead
     const lead = await prisma.realEstateLead.update({
       where: { id: params.id },
-      data: result.data,
+      data: {
+        ...result.data,
+        qualificationStatus: result.data.qualificationStatus as any,
+      },
       include: {
         property: {
           select: {
@@ -103,6 +116,13 @@ export const PATCH = withAuth(async (request, { user, params }) => {
             city: true,
           }
         },
+        assignedTo: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+          }
+        }
       }
     });
 

@@ -1,37 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, getOwnerUid } from '@/lib/apiAuth';
-
-// Import mock leads from import route
-// In production, this would query Prisma with filters
-const getMockLeads = () => {
-  // This would be replaced with Prisma query
-  return [
-    {
-      id: '1',
-      ownerUid: 'demo-user',
-      name: 'David Cohen',
-      phone: '0501234567',
-      email: 'david@example.com',
-      status: 'HOT',
-      source: 'Website',
-      notes: 'Interested in 3-room apartment',
-      propertyId: null,
-      createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-    },
-    {
-      id: '2',
-      ownerUid: 'demo-user',
-      name: 'Rachel Levi',
-      phone: '0529876543',
-      email: 'rachel@example.com',
-      status: 'WARM',
-      source: 'Facebook',
-      notes: 'Looking for investment property',
-      propertyId: null,
-      createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
-    },
-  ];
-};
+import { prisma } from '@/lib/prisma.server';
 
 export const GET = withAuth(async (request, { user }) => {
   try {
@@ -44,45 +13,64 @@ export const GET = withAuth(async (request, { user }) => {
     const searchQuery = searchParams.get('search');
     const selectedIds = searchParams.get('selectedIds')?.split(',').filter(Boolean);
 
-    // TODO: Replace with Prisma query
-    let leads = getMockLeads().filter((lead) => lead.ownerUid === ownerUid);
+    // Build where clause
+    const where: any = { ownerUid };
 
-    // Apply filters
     if (statusFilter) {
-      leads = leads.filter((l) => l.status === statusFilter);
+      where.qualificationStatus = statusFilter;
     }
 
     if (sourceFilter) {
-      leads = leads.filter((l) => l.source === sourceFilter);
+      where.source = sourceFilter;
     }
 
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      leads = leads.filter(
-        (l) =>
-          l.name.toLowerCase().includes(query) ||
-          l.phone.includes(query) ||
-          l.email?.toLowerCase().includes(query)
-      );
+      where.OR = [
+        { fullName: { contains: searchQuery, mode: 'insensitive' } },
+        { email: { contains: searchQuery, mode: 'insensitive' } },
+        { phone: { contains: searchQuery, mode: 'insensitive' } },
+      ];
     }
 
     // If specific IDs selected, filter to those
     if (selectedIds && selectedIds.length > 0) {
-      leads = leads.filter((l) => selectedIds.includes(l.id));
+      where.id = { in: selectedIds };
     }
 
+    // Fetch leads from database
+    const leads = await prisma.realEstateLead.findMany({
+      where,
+      include: {
+        property: {
+          select: {
+            name: true,
+            address: true,
+          }
+        },
+        assignedTo: {
+          select: {
+            fullName: true,
+            email: true,
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
     // Generate CSV
-    const headers = ['Name', 'Phone', 'Email', 'Status', 'Source', 'Notes', 'Created At'];
+    const headers = ['Name', 'Phone', 'Email', 'Status', 'Source', 'Notes', 'Assigned To', 'Property', 'Created At'];
     const csvRows = [headers.join(',')];
 
     leads.forEach((lead) => {
       const row = [
-        escapeCsvField(lead.name),
-        escapeCsvField(lead.phone),
+        escapeCsvField(lead.fullName || ''),
+        escapeCsvField(lead.phone || ''),
         escapeCsvField(lead.email || ''),
-        escapeCsvField(lead.status),
-        escapeCsvField(lead.source),
+        escapeCsvField(lead.qualificationStatus),
+        escapeCsvField(lead.source || ''),
         escapeCsvField(lead.notes || ''),
+        escapeCsvField(lead.assignedTo?.fullName || ''),
+        escapeCsvField(lead.property?.name || ''),
         escapeCsvField(new Date(lead.createdAt).toISOString()),
       ];
       csvRows.push(row.join(','));
@@ -93,6 +81,8 @@ export const GET = withAuth(async (request, { user }) => {
     // Add UTF-8 BOM for Hebrew support in Excel
     const bom = '\uFEFF';
     const csvWithBom = bom + csv;
+
+    console.log(`[Leads Export] Exported ${leads.length} leads`);
 
     return new NextResponse(csvWithBom, {
       status: 200,

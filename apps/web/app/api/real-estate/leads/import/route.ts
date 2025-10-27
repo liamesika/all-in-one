@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, getOwnerUid } from '@/lib/apiAuth';
+import { prisma } from '@/lib/prisma.server';
 
 interface LeadImportRow {
   name: string;
@@ -7,6 +8,7 @@ interface LeadImportRow {
   email?: string;
   source?: string;
   notes?: string;
+  status?: string;
   createdAt?: string;
 }
 
@@ -17,34 +19,6 @@ interface ImportResult {
   errors: Array<{ row: number; error: string }>;
   leads?: any[];
 }
-
-// In-memory storage for leads (TODO: Replace with Prisma)
-let mockLeads: any[] = [
-  {
-    id: '1',
-    ownerUid: 'demo-user',
-    name: 'David Cohen',
-    phone: '0501234567',
-    email: 'david@example.com',
-    status: 'HOT',
-    source: 'Website',
-    notes: 'Interested in 3-room apartment',
-    propertyId: null,
-    createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-  },
-  {
-    id: '2',
-    ownerUid: 'demo-user',
-    name: 'Rachel Levi',
-    phone: '0529876543',
-    email: 'rachel@example.com',
-    status: 'WARM',
-    source: 'Facebook',
-    notes: 'Looking for investment property',
-    propertyId: null,
-    createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
-  },
-];
 
 export const POST = withAuth(async (request, { user }) => {
   try {
@@ -100,31 +74,57 @@ export const POST = withAuth(async (request, { user }) => {
         }
 
         // Check for duplicates (unique by ownerUid + phone)
-        const isDuplicate = mockLeads.some(
-          (l) => l.ownerUid === ownerUid && l.phone === cleanPhone
-        );
+        const existingLead = await prisma.realEstateLead.findFirst({
+          where: {
+            ownerUid,
+            phone: cleanPhone,
+          },
+        });
 
-        if (isDuplicate) {
+        if (existingLead) {
           result.duplicates++;
           continue;
         }
 
-        // Create new lead
-        const newLead = {
-          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          ownerUid,
-          name: row.name.trim(),
-          phone: cleanPhone,
-          email: row.email?.trim() || null,
-          source: row.source?.trim() || 'Import',
-          status: 'WARM', // Default status for imported leads
-          notes: row.notes?.trim() || '',
-          propertyId: null,
-          createdAt: row.createdAt || new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
+        // Determine qualification status from old status field or default to NEW
+        let qualificationStatus: any = 'NEW';
+        if (row.status) {
+          const statusUpper = row.status.toUpperCase();
+          // Map old statuses to new enum values
+          if (['HOT', 'WARM', 'COLD'].includes(statusUpper)) {
+            qualificationStatus = 'NEW'; // Default mapping for old statuses
+          } else if (['NEW', 'CONTACTED', 'IN_PROGRESS', 'MEETING', 'OFFER', 'DEAL', 'CONVERTED', 'DISQUALIFIED'].includes(statusUpper)) {
+            qualificationStatus = statusUpper;
+          }
+        }
 
-        mockLeads.push(newLead);
+        // Create new lead
+        const newLead = await prisma.realEstateLead.create({
+          data: {
+            ownerUid,
+            fullName: row.name.trim(),
+            phone: cleanPhone,
+            email: row.email?.trim() || null,
+            source: row.source?.trim() || 'Import',
+            qualificationStatus,
+            notes: row.notes?.trim() || null,
+            message: null,
+            propertyId: null,
+          },
+        });
+
+        // Create import event
+        await prisma.realEstateLeadEvent.create({
+          data: {
+            leadId: newLead.id,
+            type: 'IMPORTED',
+            payload: {
+              importType,
+              rowNumber: rowNum,
+            },
+          },
+        });
+
         result.leads!.push(newLead);
         result.imported++;
       } catch (error: any) {
@@ -140,6 +140,8 @@ export const POST = withAuth(async (request, { user }) => {
       result.success = false;
     }
 
+    console.log(`[Leads Import] Imported ${result.imported} leads, ${result.duplicates} duplicates, ${result.errors.length} errors`);
+
     return NextResponse.json(result, { status: result.success ? 200 : 400 });
   } catch (error: any) {
     console.error('[Leads Import] Error:', error);
@@ -149,6 +151,3 @@ export const POST = withAuth(async (request, { user }) => {
     );
   }
 });
-
-// Export mock leads for use in other routes
-export { mockLeads };

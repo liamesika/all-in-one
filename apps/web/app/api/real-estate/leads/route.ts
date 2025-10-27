@@ -12,6 +12,9 @@ const createLeadSchema = z.object({
   message: z.string().max(500, 'Message too long').optional(),
   source: z.string().min(1, 'Source is required'),
   propertyId: z.string().optional(),
+  qualificationStatus: z.enum(['NEW', 'CONTACTED', 'IN_PROGRESS', 'MEETING', 'OFFER', 'DEAL', 'CONVERTED', 'DISQUALIFIED']).optional(),
+  assignedToId: z.string().optional(),
+  notes: z.string().max(1000).optional(),
 });
 
 // GET /api/real-estate/leads - List leads with filters
@@ -55,6 +58,13 @@ export const GET = withAuth(async (request, { user }) => {
               address: true,
               price: true,
             }
+          },
+          assignedTo: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+            }
           }
         },
         orderBy: { createdAt: 'desc' },
@@ -97,7 +107,7 @@ export const POST = withAuth(async (request, { user }) => {
       );
     }
 
-    const { fullName, email, phone, message, source, propertyId } = result.data;
+    const { fullName, email, phone, message, source, propertyId, qualificationStatus, assignedToId, notes } = result.data;
 
     // Check for duplicate by phone number (primary deduplication key)
     const existingLead = await prisma.realEstateLead.findFirst({
@@ -111,6 +121,13 @@ export const POST = withAuth(async (request, { user }) => {
             id: true,
             name: true,
             address: true,
+          }
+        },
+        assignedTo: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
           }
         }
       }
@@ -137,6 +154,9 @@ export const POST = withAuth(async (request, { user }) => {
         message: message || null,
         source,
         propertyId: propertyId || null,
+        qualificationStatus: (qualificationStatus as any) || 'NEW',
+        assignedToId: assignedToId || null,
+        notes: notes || null,
         ownerUid,
       },
       include: {
@@ -145,6 +165,13 @@ export const POST = withAuth(async (request, { user }) => {
             id: true,
             name: true,
             address: true,
+          }
+        },
+        assignedTo: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
           }
         }
       }
