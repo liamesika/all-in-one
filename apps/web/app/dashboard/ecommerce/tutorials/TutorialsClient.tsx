@@ -18,9 +18,11 @@ import {
   CardBody,
   UniversalButton,
 } from '@/components/shared';
-import { RealEstateHeader } from '@/components/dashboard/RealEstateHeader';
+import { EcommerceHeader } from '@/components/dashboard/EcommerceHeader';
 import { useLang } from '@/components/i18n/LangProvider';
 import { auth } from '@/lib/firebase';
+import { Clock } from 'lucide-react';
+import { TutorialDocumentModal } from '@/components/ecommerce/TutorialDocumentModal';
 
 interface TutorialStep {
   index: number;
@@ -39,6 +41,7 @@ interface Tutorial {
   stepIndex: number;
   totalSteps: number;
   completed: boolean;
+  status: 'not_started' | 'in_progress' | 'completed';
   steps: TutorialStep[];
 }
 
@@ -206,10 +209,12 @@ const TUTORIALS_DATA = [
 
 export function TutorialsClient() {
   const router = useRouter();
-  const { lang } = useLang();
+  const { lang, setLang } = useLang();
   const [tutorials, setTutorials] = useState<Tutorial[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedTutorial, setSelectedTutorial] = useState<Tutorial | null>(null);
+  const [modalLang, setModalLang] = useState<'en' | 'he'>(lang);
 
   useEffect(() => {
     const fetchTutorials = async () => {
@@ -242,6 +247,7 @@ export function TutorialsClient() {
             stepIndex: 0,
             totalSteps: t.steps.length,
             completed: false,
+            status: 'not_started' as const,
             steps: t.steps.map((s, i) => ({
               index: i,
               title: lang === 'he' ? s.he : s.en,
@@ -301,12 +307,39 @@ export function TutorialsClient() {
     }
   };
 
+  const handleUpdateStatus = async (tutorialId: string, status: 'not_started' | 'in_progress' | 'completed') => {
+    try {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const token = await user.getIdToken();
+      const response = await fetch('/api/ecommerce/tutorials/update-status', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tutorialId, status }),
+      });
+
+      if (response.ok) {
+        setTutorials(prev =>
+          prev.map(t =>
+            t.id === tutorialId ? { ...t, status, completed: status === 'completed' } : t
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Failed to update status:', error);
+    }
+  };
+
   const completedCount = tutorials.filter(t => t.completed).length;
   const progressPercent = tutorials.length > 0 ? Math.round((completedCount / tutorials.length) * 100) : 0;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B]">
-      <RealEstateHeader />
+      <EcommerceHeader />
 
       <div className="pt-20 pb-16 max-w-full mx-auto">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -367,7 +400,13 @@ export function TutorialsClient() {
                 <CardBody>
                   <div
                     className="flex items-start justify-between cursor-pointer"
-                    onClick={() => setExpandedId(expandedId === tutorial.id ? null : tutorial.id)}
+                    onClick={() => {
+                      const tutorialData = TUTORIALS_DATA.find(t => t.id === tutorial.id);
+                      if (tutorialData) {
+                        setSelectedTutorial({ ...tutorialData, status: tutorial.status });
+                        setModalLang(lang);
+                      }
+                    }}
                   >
                     <div className="flex items-start gap-4 flex-1">
                       <div className={`mt-1 ${tutorial.completed ? 'text-green-500' : 'text-gray-400'}`}>
@@ -397,79 +436,25 @@ export function TutorialsClient() {
                         </div>
                       </div>
                     </div>
-                    <ChevronDown
-                      className={`w-5 h-5 text-gray-400 transition-transform ${
-                        expandedId === tutorial.id ? 'rotate-180' : ''
-                      }`}
-                    />
+                    <BookOpen className="w-5 h-5 text-[#2979FF]" />
                   </div>
-
-                  {expandedId === tutorial.id && (
-                    <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                      {tutorial.videoUrl && (
-                        <div className="mb-6 rounded-lg overflow-hidden aspect-video">
-                          <iframe
-                            src={tutorial.videoUrl}
-                            className="w-full h-full"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                          />
-                        </div>
-                      )}
-
-                      <div className="space-y-3 mb-6">
-                        {tutorial.steps.map((step) => (
-                          <div
-                            key={step.index}
-                            className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
-                            onClick={() => handleToggleStep(tutorial.id, step.index)}
-                          >
-                            <div className={`mt-0.5 ${step.completed ? 'text-green-500' : 'text-gray-400'}`}>
-                              {step.completed ? (
-                                <CheckCircle2 className="w-5 h-5" />
-                              ) : (
-                                <Circle className="w-5 h-5" />
-                              )}
-                            </div>
-                            <div className="flex-1">
-                              <p
-                                className={`text-sm ${
-                                  step.completed
-                                    ? 'text-gray-500 line-through'
-                                    : 'text-gray-900 dark:text-white'
-                                }`}
-                              >
-                                {step.title}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      {tutorial.externalLinks && tutorial.externalLinks.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {tutorial.externalLinks.map((link, i) => (
-                            <a
-                              key={i}
-                              href={link.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 px-4 py-2 bg-[#2979FF] text-white rounded-lg hover:bg-[#1d66d9] transition-colors text-sm"
-                            >
-                              <ExternalLink className="w-4 h-4" />
-                              {link.label}
-                            </a>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </CardBody>
               </UniversalCard>
             ))}
           </div>
         </div>
       </div>
+
+      {/* Tutorial Document Modal */}
+      {selectedTutorial && (
+        <TutorialDocumentModal
+          isOpen={!!selectedTutorial}
+          onClose={() => setSelectedTutorial(null)}
+          tutorial={selectedTutorial}
+          onUpdateStatus={handleUpdateStatus}
+          initialLang={modalLang}
+        />
+      )}
     </div>
   );
 }
