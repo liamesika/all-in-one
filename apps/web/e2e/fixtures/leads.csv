@@ -1,0 +1,8 @@
+fullName,phone,email,source,notes
+John Doe,0501234567,john.doe@example.com,Website,Looking for 3BR apartment
+Jane Smith,0507654321,jane.smith@example.com,Facebook,Interested in Tel Aviv properties
+David Cohen,0523456789,david.cohen@example.com,Instagram,First-time buyer
+Sarah Levi,0549876543,sarah.levi@example.com,Import,Relocating from abroad
+Michael Brown,0556789012,michael.brown@example.com,Other,Investment property
+Invalid Row,not-a-phone,invalid-email,Website,This row has validation issues
+Rachel Green,0501112222,rachel.green@example.com,Website,Downtown studio preferred
