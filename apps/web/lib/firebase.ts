@@ -34,6 +34,7 @@ console.log('✅ [Firebase Client] App initialized:', {
 });
 
 export const firebaseAuth = getAuth(firebaseApp);
+export const auth = firebaseAuth; // Alias for backwards compatibility
 
 // Helper to get ID token for API calls
 export const getIdToken = async () => {

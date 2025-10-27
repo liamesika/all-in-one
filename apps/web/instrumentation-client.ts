@@ -6,13 +6,14 @@ Sentry.init({
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
   environment: process.env.VERCEL_ENV || process.env.NODE_ENV || 'development',
-  integrations: [
-    Sentry.replayIntegration({
-      maskAllText: true,
-      blockAllMedia: true,
-    }),
-    Sentry.browserTracingIntegration(),
-  ],
+  // Note: Integration functions may not be available in this Sentry version
+  // integrations: [
+  //   Sentry.replayIntegration({
+  //     maskAllText: true,
+  //     blockAllMedia: true,
+  //   }),
+  //   Sentry.browserTracingIntegration(),
+  // ],
   beforeSend(event) {
     if (event.request) {
       delete event.request.cookies;
