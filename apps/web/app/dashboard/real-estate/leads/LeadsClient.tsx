@@ -498,6 +498,7 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
                   leftIcon={<Upload className="w-4 h-4" />}
                   onClick={() => setShowImportModal(true)}
                   className="!bg-gradient-to-r from-green-600 to-green-700"
+                  data-testid="import-leads-button"
                 >
                   {t.import}
                 </UniversalButton>
@@ -508,6 +509,7 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
                   leftIcon={loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                   onClick={() => handleExport(false)}
                   disabled={loading}
+                  data-testid="export-leads-button"
                 >
                   {t.export}
                 </UniversalButton>
@@ -517,6 +519,7 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
                   size="md"
                   leftIcon={<Plus className="w-4 h-4" />}
                   onClick={() => setShowCreateModal(true)}
+                  data-testid="create-lead-button"
                 >
                   {t.create}
                 </UniversalButton>
@@ -563,6 +566,7 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 min-h-[44px] rounded-lg border border-gray-300 dark:border-[#2979FF]/20 bg-white dark:bg-[#1A2F4B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all"
+                    data-testid="search-leads-input"
                   />
                 </div>
               </div>
@@ -574,6 +578,7 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="px-4 py-2.5 min-h-[44px] rounded-lg border border-gray-300 dark:border-[#2979FF]/20 bg-white dark:bg-[#1A2F4B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all"
+                  data-testid="filter-status-select"
                 >
                   <option value="">{t.all} - {t.status}</option>
                   <option value="NEW">{t.new}</option>
@@ -591,6 +596,7 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
                   value={sourceFilter}
                   onChange={(e) => setSourceFilter(e.target.value)}
                   className="px-4 py-2.5 min-h-[44px] rounded-lg border border-gray-300 dark:border-[#2979FF]/20 bg-white dark:bg-[#1A2F4B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all"
+                  data-testid="filter-source-select"
                 >
                   <option value="">{t.all} - {t.source}</option>
                   <option value="Website">{t.website}</option>
@@ -638,9 +644,9 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
         ) : (
           <>
             {/* Mobile Card View */}
-            <div className="sm:hidden space-y-3">
+            <div className="sm:hidden space-y-3" data-testid="leads-mobile-cards">
               {filteredLeads.map((lead) => (
-                <UniversalCard key={lead.id} variant="default" className="p-4">
+                <UniversalCard key={lead.id} variant="default" className="p-4" data-testid={`lead-card-${lead.id}`}>
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <button onClick={() => handleSelectLead(lead.id)} className="p-1">
@@ -651,11 +657,11 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
                         )}
                       </button>
                       <div>
-                        <h3 className="font-semibold text-gray-900 dark:text-white">{lead.fullName}</h3>
+                        <h3 className="font-semibold text-gray-900 dark:text-white" data-testid={`lead-name-${lead.id}`}>{lead.fullName}</h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400" dir="ltr">{lead.phone}</p>
                       </div>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(lead.qualificationStatus)}`}>
+                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(lead.qualificationStatus)}`} data-testid={`lead-status-${lead.id}`}>
                       {getStatusLabel(lead.qualificationStatus)}
                     </span>
                   </div>
@@ -665,19 +671,19 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
                     )}
                     <div className="text-gray-600 dark:text-gray-400">{t.source}: {lead.source}</div>
                     {lead.assignedTo && (
-                      <div className="text-gray-600 dark:text-gray-400">
+                      <div className="text-gray-600 dark:text-gray-400" data-testid={`lead-agent-${lead.id}`}>
                         {language === 'he' ? 'סוכן: ' : 'Agent: '}{lead.assignedTo.fullName}
                       </div>
                     )}
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <UniversalButton variant="outline" size="sm" onClick={() => handleViewLead(lead.id)} leftIcon={<Eye className="w-4 h-4" />} className="flex-1 !min-h-[44px]">
+                    <UniversalButton variant="outline" size="sm" onClick={() => handleViewLead(lead.id)} leftIcon={<Eye className="w-4 h-4" />} className="flex-1 !min-h-[44px]" data-testid={`view-lead-${lead.id}`}>
                       {t.view}
                     </UniversalButton>
-                    <UniversalButton variant="outline" size="sm" onClick={() => handleEditLead(lead.id)} leftIcon={<Edit className="w-4 h-4" />} className="flex-1 !min-h-[44px]">
+                    <UniversalButton variant="outline" size="sm" onClick={() => handleEditLead(lead.id)} leftIcon={<Edit className="w-4 h-4" />} className="flex-1 !min-h-[44px]" data-testid={`edit-lead-${lead.id}`}>
                       {t.edit}
                     </UniversalButton>
-                    <UniversalButton variant="danger" size="sm" onClick={() => handleDelete(lead.id)} leftIcon={<Trash2 className="w-4 h-4" />} className="flex-1 !min-h-[44px]">
+                    <UniversalButton variant="danger" size="sm" onClick={() => handleDelete(lead.id)} leftIcon={<Trash2 className="w-4 h-4" />} className="flex-1 !min-h-[44px]" data-testid={`delete-lead-${lead.id}`}>
                       {t.delete}
                     </UniversalButton>
                   </div>
@@ -686,7 +692,7 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
             </div>
 
             {/* Desktop Table View */}
-            <UniversalCard variant="default" className="hidden sm:block">
+            <UniversalCard variant="default" className="hidden sm:block" data-testid="leads-table">
             <CardHeader className="border-b border-gray-200 dark:border-[#2979FF]/20">
               <h2 className="text-heading-4 text-gray-900 dark:text-white">
                 {language === 'he' ? 'רשימת לידים' : 'Leads List'} ({filteredLeads.length})
@@ -696,7 +702,7 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
               <UniversalTableHeader>
                 <UniversalTableRow>
                   <UniversalTableHead>
-                    <button onClick={handleSelectAll} className="p-1 rounded hover:bg-gray-100 dark:hover:bg-[#374151] transition-colors">
+                    <button onClick={handleSelectAll} className="p-1 rounded hover:bg-gray-100 dark:hover:bg-[#374151] transition-colors" data-testid="select-all-leads">
                       {selectedLeads.size === filteredLeads.length && filteredLeads.length > 0 ? (
                         <CheckSquare className="w-5 h-5 text-[#2979FF]" />
                       ) : (
@@ -715,7 +721,7 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
               </UniversalTableHeader>
               <UniversalTableBody>
                 {filteredLeads.map((lead) => (
-                  <UniversalTableRow key={lead.id} hoverable>
+                  <UniversalTableRow key={lead.id} hoverable data-testid={`lead-row-${lead.id}`}>
                     <UniversalTableCell>
                       <button onClick={() => handleSelectLead(lead.id)} className="p-1 rounded hover:bg-gray-100 dark:hover:bg-[#374151] transition-colors">
                         {selectedLeads.has(lead.id) ? (
@@ -725,28 +731,28 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
                         )}
                       </button>
                     </UniversalTableCell>
-                    <UniversalTableCell className="font-medium">{lead.fullName}</UniversalTableCell>
+                    <UniversalTableCell className="font-medium" data-testid={`lead-name-${lead.id}`}>{lead.fullName}</UniversalTableCell>
                     <UniversalTableCell dir="ltr">{lead.phone}</UniversalTableCell>
                     <UniversalTableCell>{lead.email || '-'}</UniversalTableCell>
                     <UniversalTableCell>
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(lead.qualificationStatus)}`}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(lead.qualificationStatus)}`} data-testid={`lead-status-${lead.id}`}>
                         {getStatusLabel(lead.qualificationStatus)}
                       </span>
                     </UniversalTableCell>
                     <UniversalTableCell>{lead.source}</UniversalTableCell>
-                    <UniversalTableCell>{lead.assignedTo?.fullName || '-'}</UniversalTableCell>
+                    <UniversalTableCell data-testid={`lead-agent-${lead.id}`}>{lead.assignedTo?.fullName || '-'}</UniversalTableCell>
                     <UniversalTableCell>
                       <div className="flex items-center gap-2">
-                        <UniversalButton variant="ghost" size="sm" onClick={() => handleViewLead(lead.id)} className="!p-1.5">
+                        <UniversalButton variant="ghost" size="sm" onClick={() => handleViewLead(lead.id)} className="!p-1.5" data-testid={`view-lead-${lead.id}`}>
                           <Eye className="w-4 h-4 text-[#2979FF]" />
                         </UniversalButton>
-                        <UniversalButton variant="ghost" size="sm" onClick={() => handleEditLead(lead.id)} className="!p-1.5">
+                        <UniversalButton variant="ghost" size="sm" onClick={() => handleEditLead(lead.id)} className="!p-1.5" data-testid={`edit-lead-${lead.id}`}>
                           <Edit className="w-4 h-4 text-gray-600" />
                         </UniversalButton>
-                        <UniversalButton variant="ghost" size="sm" onClick={() => handleDelete(lead.id)} className="!p-1.5">
+                        <UniversalButton variant="ghost" size="sm" onClick={() => handleDelete(lead.id)} className="!p-1.5" data-testid={`delete-lead-${lead.id}`}>
                           <Trash2 className="w-4 h-4 text-red-600" />
                         </UniversalButton>
-                        <UniversalButton variant="ghost" size="sm" onClick={() => handleLinkProperty(lead.id)} className="!p-1.5">
+                        <UniversalButton variant="ghost" size="sm" onClick={() => handleLinkProperty(lead.id)} className="!p-1.5" data-testid={`link-property-${lead.id}`}>
                           <LinkIcon className="w-4 h-4 text-green-600" />
                         </UniversalButton>
                         {lead.phone && <WhatsAppActions phone={lead.phone} leadName={lead.fullName} variant="icon" />}
