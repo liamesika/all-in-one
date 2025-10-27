@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, User, Phone, Mail, MessageSquare, Calendar, Tag, Link as LinkIcon, FileText, Clock } from 'lucide-react';
 import { useLanguage } from '@/lib/language-context';
+import { auth } from '@/lib/firebase';
 
 interface Lead {
   id: string;
@@ -11,6 +12,14 @@ interface Lead {
   email?: string;
   message?: string;
   source?: string;
+  qualificationStatus?: string;
+  assignedToId?: string | null;
+  assignedTo?: {
+    id: string;
+    fullName: string;
+    email: string;
+  } | null;
+  notes?: string | null;
   createdAt: string;
   updatedAt: string;
   propertyId?: string | null;
@@ -49,14 +58,19 @@ export function ViewLeadModal({ isOpen, leadId, onClose }: ViewLeadModalProps) {
     email: language === 'he' ? 'אימייל' : 'Email',
     message: language === 'he' ? 'הודעה' : 'Message',
     source: language === 'he' ? 'מקור' : 'Source',
+    status: language === 'he' ? 'סטטוס' : 'Status',
+    assignedTo: language === 'he' ? 'מוקצה ל' : 'Assigned To',
     linkedProperty: language === 'he' ? 'נכס מקושר' : 'Linked Property',
     createdAt: language === 'he' ? 'נוצר ב' : 'Created',
     updatedAt: language === 'he' ? 'עודכן ב' : 'Updated',
     timeline: language === 'he' ? 'היסטוריה' : 'Timeline',
     notes: language === 'he' ? 'הערות' : 'Notes',
     noProperty: language === 'he' ? 'אין נכס מקושר' : 'No linked property',
+    noAgent: language === 'he' ? 'לא מוקצה' : 'Not assigned',
+    noNotes: language === 'he' ? 'אין הערות' : 'No notes',
     loading: language === 'he' ? 'טוען...' : 'Loading...',
     close: language === 'he' ? 'סגור' : 'Close',
+    authError: language === 'he' ? 'נדרשת אימות. אנא התחבר מחדש.' : 'Authentication required. Please sign in again.',
   };
 
   useEffect(() => {
@@ -68,14 +82,30 @@ export function ViewLeadModal({ isOpen, leadId, onClose }: ViewLeadModalProps) {
   const fetchLeadDetails = async () => {
     setLoading(true);
     try {
+      const user = auth.currentUser;
+      if (!user) {
+        console.error(t.authError);
+        setLoading(false);
+        return;
+      }
+      const token = await user.getIdToken();
+
       // Fetch lead details
-      const leadResponse = await fetch(`/api/real-estate/leads/${leadId}`);
+      const leadResponse = await fetch(`/api/real-estate/leads/${leadId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       if (!leadResponse.ok) throw new Error('Failed to fetch lead');
       const leadData = await leadResponse.json();
       setLead(leadData);
 
       // Fetch lead events/timeline
-      const eventsResponse = await fetch(`/api/real-estate/leads/${leadId}/events`);
+      const eventsResponse = await fetch(`/api/real-estate/leads/${leadId}/events`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       if (eventsResponse.ok) {
         const eventsData = await eventsResponse.json();
         setEvents(eventsData);
@@ -84,6 +114,26 @@ export function ViewLeadModal({ isOpen, leadId, onClose }: ViewLeadModalProps) {
       console.error('Error fetching lead details:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const getStatusLabel = (status?: string) => {
+    const statusLabels: Record<string, string> = {
+      NEW: language === 'he' ? 'חדש' : 'New',
+      CONTACTED: language === 'he' ? 'יצירת קשר' : 'Contacted',
+      IN_PROGRESS: language === 'he' ? 'בתהליך' : 'In Progress',
+      MEETING: language === 'he' ? 'פגישה' : 'Meeting',
+      OFFER: language === 'he' ? 'הצעה' : 'Offer',
+      DEAL: language === 'he' ? 'עסקה' : 'Deal',
+      CONVERTED: language === 'he' ? 'הומר' : 'Converted',
+      DISQUALIFIED: language === 'he' ? 'לא רלוונטי' : 'Disqualified',
+    };
+    return statusLabels[status || 'NEW'] || status || 'NEW';
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      onClose();
     }
   };
 
@@ -112,7 +162,13 @@ export function ViewLeadModal({ isOpen, leadId, onClose }: ViewLeadModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="view-lead-title"
+      onKeyDown={handleKeyDown}
+    >
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -129,15 +185,16 @@ export function ViewLeadModal({ isOpen, leadId, onClose }: ViewLeadModalProps) {
           className="sticky top-0 z-10 flex items-center justify-between p-6 border-b"
           style={{ background: '#FFFFFF', borderColor: '#E5E7EB' }}
         >
-          <h2 className="text-2xl font-bold" style={{ color: '#111827' }}>
+          <h2 id="view-lead-title" className="text-2xl font-bold" style={{ color: '#111827' }}>
             {t.title}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg transition-colors"
+            className="p-2 min-h-[44px] min-w-[44px] rounded-lg transition-colors"
             style={{ color: '#6B7280' }}
             onMouseEnter={(e) => (e.currentTarget.style.background = '#F3F4F6')}
             onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+            aria-label={t.close}
           >
             <X className="w-6 h-6" />
           </button>
@@ -199,6 +256,24 @@ export function ViewLeadModal({ isOpen, leadId, onClose }: ViewLeadModalProps) {
                       {lead.source || '-'}
                     </div>
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1" style={{ color: '#6B7280' }}>
+                      {t.status}
+                    </label>
+                    <div className="flex items-center gap-2 text-base" style={{ color: '#111827' }}>
+                      <Tag className="w-4 h-4" style={{ color: '#9CA3AF' }} />
+                      {getStatusLabel(lead.qualificationStatus)}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1" style={{ color: '#6B7280' }}>
+                      {t.assignedTo}
+                    </label>
+                    <div className="flex items-center gap-2 text-base" style={{ color: '#111827' }}>
+                      <User className="w-4 h-4" style={{ color: '#9CA3AF' }} />
+                      {lead.assignedTo?.fullName || t.noAgent}
+                    </div>
+                  </div>
                 </div>
 
                 {lead.message && (
@@ -209,6 +284,18 @@ export function ViewLeadModal({ isOpen, leadId, onClose }: ViewLeadModalProps) {
                     <div className="flex items-start gap-2 p-3 rounded-lg" style={{ background: '#FFFFFF', border: '1px solid #E5E7EB' }}>
                       <MessageSquare className="w-4 h-4 mt-1" style={{ color: '#9CA3AF' }} />
                       <p className="text-sm" style={{ color: '#111827' }}>{lead.message}</p>
+                    </div>
+                  </div>
+                )}
+
+                {lead.notes && (
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium mb-1" style={{ color: '#6B7280' }}>
+                      {t.notes}
+                    </label>
+                    <div className="flex items-start gap-2 p-3 rounded-lg" style={{ background: '#FFFFFF', border: '1px solid #E5E7EB' }}>
+                      <FileText className="w-4 h-4 mt-1" style={{ color: '#9CA3AF' }} />
+                      <p className="text-sm" style={{ color: '#111827' }}>{lead.notes}</p>
                     </div>
                   </div>
                 )}
@@ -285,7 +372,7 @@ export function ViewLeadModal({ isOpen, leadId, onClose }: ViewLeadModalProps) {
         >
           <button
             onClick={onClose}
-            className="px-6 py-2 rounded-lg font-medium transition-colors"
+            className="px-6 py-2.5 min-h-[44px] rounded-lg font-medium transition-colors"
             style={{ background: '#F3F4F6', color: '#374151' }}
             onMouseEnter={(e) => (e.currentTarget.style.background = '#E5E7EB')}
             onMouseLeave={(e) => (e.currentTarget.style.background = '#F3F4F6')}
