@@ -120,15 +120,7 @@ const nextConfig = {
     return config;
   },
 
-  // Rewrites for route normalization
-  async rewrites() {
-    return [
-      {
-        source: '/dashboard/e-commerce/:path*',
-        destination: '/dashboard/ecommerce/:path*',
-      },
-    ];
-  },
+  // No rewrites needed - both /dashboard/ecommerce and /dashboard/e-commerce are separate sections
 
   // Environment variables
   env: {
