@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useLanguage } from '@/lib/language-context';
+import { auth } from '@/lib/firebase';
 import { X, Upload, FileText, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 
 interface ImportLeadsModalProps {
@@ -11,7 +12,7 @@ interface ImportLeadsModalProps {
 }
 
 interface ParsedLead {
-  name: string;
+  fullName: string;
   phone: string;
   email?: string;
   source?: string;
@@ -49,6 +50,7 @@ export function ImportLeadsModal({ isOpen, onClose, onSuccess }: ImportLeadsModa
     leads: language === 'he' ? 'לידים' : 'leads',
     invalidFile: language === 'he' ? 'קובץ לא תקין' : 'Invalid file',
     uploadError: language === 'he' ? 'שגיאה בהעלאת הקובץ' : 'Error uploading file',
+    authError: language === 'he' ? 'נדרשת אימות. אנא התחבר מחדש.' : 'Authentication required. Please sign in again.',
   };
 
   const handleFileSelect = (selectedFile: File | null) => {
@@ -80,7 +82,7 @@ export function ImportLeadsModal({ isOpen, onClose, onSuccess }: ImportLeadsModa
         // Parse header
         const header = lines[0].split(',').map((h) => h.trim().toLowerCase());
 
-        // Find column indices
+        // Find column indices - support both 'name' and 'fullname'
         const nameIdx = header.findIndex((h) => h.includes('name'));
         const phoneIdx = header.findIndex((h) => h.includes('phone'));
         const emailIdx = header.findIndex((h) => h.includes('email'));
@@ -89,7 +91,7 @@ export function ImportLeadsModal({ isOpen, onClose, onSuccess }: ImportLeadsModa
         const createdIdx = header.findIndex((h) => h.includes('created'));
 
         if (nameIdx === -1 || phoneIdx === -1) {
-          setError('CSV must contain "name" and "phone" columns');
+          setError('CSV must contain "name" or "fullName" and "phone" columns');
           return;
         }
 
@@ -101,7 +103,7 @@ export function ImportLeadsModal({ isOpen, onClose, onSuccess }: ImportLeadsModa
           if (values.length < 2) continue; // Skip incomplete rows
 
           const lead: ParsedLead = {
-            name: values[nameIdx] || '',
+            fullName: values[nameIdx] || '',
             phone: values[phoneIdx] || '',
           };
 
@@ -128,11 +130,19 @@ export function ImportLeadsModal({ isOpen, onClose, onSuccess }: ImportLeadsModa
     setStep('importing');
 
     try {
+      const user = auth.currentUser;
+      if (!user) {
+        setError(t.authError);
+        setStep('preview');
+        return;
+      }
+      const token = await user.getIdToken();
+
       const response = await fetch('/api/real-estate/leads/import', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-owner-uid': 'demo-user', // TODO: Get from auth
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           rows: parsedData,
@@ -159,6 +169,12 @@ export function ImportLeadsModal({ isOpen, onClose, onSuccess }: ImportLeadsModa
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape' && step !== 'importing') {
+      handleClose();
+    }
+  };
+
   const handleClose = () => {
     setStep('upload');
     setFile(null);
@@ -171,14 +187,22 @@ export function ImportLeadsModal({ isOpen, onClose, onSuccess }: ImportLeadsModa
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="import-leads-title"
+      onKeyDown={handleKeyDown}
+    >
       <div className={`bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden ${language === 'he' ? 'rtl' : 'ltr'}`}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900">{t.title}</h2>
+          <h2 id="import-leads-title" className="text-2xl font-bold text-gray-900">{t.title}</h2>
           <button
             onClick={handleClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            disabled={step === 'importing'}
+            className="p-2 min-h-[44px] min-w-[44px] hover:bg-gray-100 rounded-lg transition-colors"
+            aria-label={t.close}
           >
             <X className="w-6 h-6 text-gray-500" />
           </button>
@@ -196,7 +220,7 @@ export function ImportLeadsModal({ isOpen, onClose, onSuccess }: ImportLeadsModa
                 <Upload className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <p className="text-lg font-medium text-gray-900 mb-2">{t.dragDrop}</p>
                 <p className="text-sm text-gray-500 mb-4">{t.or}</p>
-                <button className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                <button className="px-6 py-2.5 min-h-[44px] bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                   {t.browse}
                 </button>
                 <input
@@ -276,7 +300,7 @@ export function ImportLeadsModal({ isOpen, onClose, onSuccess }: ImportLeadsModa
                     <tbody className="divide-y divide-gray-200">
                       {parsedData.slice(0, 10).map((lead, idx) => (
                         <tr key={idx} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 text-gray-900">{lead.name}</td>
+                          <td className="px-4 py-3 text-gray-900">{lead.fullName}</td>
                           <td className="px-4 py-3 text-gray-600">{lead.phone}</td>
                           <td className="px-4 py-3 text-gray-600">{lead.email || '-'}</td>
                           <td className="px-4 py-3 text-gray-600">{lead.source || 'Import'}</td>
@@ -358,14 +382,15 @@ export function ImportLeadsModal({ isOpen, onClose, onSuccess }: ImportLeadsModa
         <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200">
           <button
             onClick={handleClose}
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            disabled={step === 'importing'}
+            className="px-6 py-2.5 min-h-[44px] border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
           >
             {step === 'results' ? t.close : t.cancel}
           </button>
           {step === 'preview' && (
             <button
               onClick={handleImport}
-              className="px-8 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              className="px-8 py-2.5 min-h-[44px] bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
             >
               {t.import}
             </button>

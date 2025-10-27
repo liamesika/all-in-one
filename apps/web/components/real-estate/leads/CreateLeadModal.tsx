@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { X, Save, Loader2, AlertCircle } from 'lucide-react';
 import { useLanguage } from '@/lib/language-context';
+import { auth } from '@/lib/firebase';
 import { z } from 'zod';
 
 // Zod validation schema
@@ -12,6 +13,8 @@ const leadSchema = z.object({
   email: z.string().email('Invalid email address').optional().or(z.literal('')),
   message: z.string().max(500, 'Message too long').optional(),
   source: z.string().min(1, 'Source is required'),
+  qualificationStatus: z.enum(['NEW', 'CONTACTED', 'IN_PROGRESS', 'MEETING', 'OFFER', 'DEAL', 'CONVERTED', 'DISQUALIFIED']).optional(),
+  notes: z.string().max(1000).optional(),
 });
 
 type LeadFormData = z.infer<typeof leadSchema>;
@@ -30,6 +33,8 @@ export function CreateLeadModal({ isOpen, onClose, onSuccess }: CreateLeadModalP
     email: '',
     message: '',
     source: '',
+    qualificationStatus: 'NEW',
+    notes: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -41,11 +46,14 @@ export function CreateLeadModal({ isOpen, onClose, onSuccess }: CreateLeadModalP
     email: language === 'he' ? 'אימייל' : 'Email',
     message: language === 'he' ? 'הודעה' : 'Message',
     source: language === 'he' ? 'מקור' : 'Source',
+    status: language === 'he' ? 'סטטוס' : 'Status',
+    notes: language === 'he' ? 'הערות' : 'Notes',
     create: language === 'he' ? 'צור ליד' : 'Create Lead',
     cancel: language === 'he' ? 'ביטול' : 'Cancel',
     creating: language === 'he' ? 'יוצר...' : 'Creating...',
     required: language === 'he' ? 'שדה חובה' : 'Required',
     duplicateError: language === 'he' ? 'ליד עם מספר טלפון זה כבר קיים במערכת' : 'A lead with this phone number already exists',
+    authError: language === 'he' ? 'נדרשת התחברות' : 'Authentication required',
   };
 
   const sources = [
@@ -55,6 +63,15 @@ export function CreateLeadModal({ isOpen, onClose, onSuccess }: CreateLeadModalP
     { value: 'Google', label: 'Google' },
     { value: 'Referral', label: language === 'he' ? 'הפניה' : 'Referral' },
     { value: 'Other', label: language === 'he' ? 'אחר' : 'Other' },
+  ];
+
+  const statuses = [
+    { value: 'NEW', label: language === 'he' ? 'חדש' : 'New' },
+    { value: 'CONTACTED', label: language === 'he' ? 'יצרנו קשר' : 'Contacted' },
+    { value: 'IN_PROGRESS', label: language === 'he' ? 'בטיפול' : 'In Progress' },
+    { value: 'MEETING', label: language === 'he' ? 'פגישה' : 'Meeting' },
+    { value: 'OFFER', label: language === 'he' ? 'הצעה' : 'Offer' },
+    { value: 'DEAL', label: language === 'he' ? 'עסקה' : 'Deal' },
   ];
 
   const handleChange = (field: keyof LeadFormData, value: string) => {
@@ -88,15 +105,26 @@ export function CreateLeadModal({ isOpen, onClose, onSuccess }: CreateLeadModalP
 
     setLoading(true);
     try {
+      const user = auth.currentUser;
+      if (!user) {
+        setErrors({ _form: t.authError });
+        setLoading(false);
+        return;
+      }
+
+      const token = await user.getIdToken();
+
       const response = await fetch('/api/real-estate/leads', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify(result.data),
       });
 
       if (response.status === 409) {
         // Duplicate lead
-        const data = await response.json();
         setErrors({ phone: t.duplicateError });
         setLoading(false);
         return;
@@ -113,6 +141,8 @@ export function CreateLeadModal({ isOpen, onClose, onSuccess }: CreateLeadModalP
         email: '',
         message: '',
         source: '',
+        qualificationStatus: 'NEW',
+        notes: '',
       });
       setErrors({});
 
@@ -120,7 +150,7 @@ export function CreateLeadModal({ isOpen, onClose, onSuccess }: CreateLeadModalP
       onClose();
     } catch (error) {
       console.error('Error creating lead:', error);
-      setErrors({ _form: 'Failed to create lead. Please try again.' });
+      setErrors({ _form: language === 'he' ? 'שגיאה ביצירת ליד. נסה שוב.' : 'Failed to create lead. Please try again.' });
     } finally {
       setLoading(false);
     }
@@ -133,15 +163,30 @@ export function CreateLeadModal({ isOpen, onClose, onSuccess }: CreateLeadModalP
       email: '',
       message: '',
       source: '',
+      qualificationStatus: 'NEW',
+      notes: '',
     });
     setErrors({});
     onClose();
   };
 
+  // Keyboard accessibility
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      handleClose();
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="create-lead-title"
+      onKeyDown={handleKeyDown}
+    >
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -150,208 +195,194 @@ export function CreateLeadModal({ isOpen, onClose, onSuccess }: CreateLeadModalP
 
       {/* Modal */}
       <div
-        className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl"
-        style={{ background: '#FFFFFF' }}
+        className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl bg-white dark:bg-[#1A2F4B] ${language === 'he' ? 'rtl' : 'ltr'}`}
       >
         {/* Header */}
-        <div
-          className="sticky top-0 z-10 flex items-center justify-between p-6 border-b"
-          style={{ background: '#FFFFFF', borderColor: '#E5E7EB' }}
-        >
-          <h2 className="text-2xl font-bold" style={{ color: '#111827' }}>
-            {t.title}
-          </h2>
-          <button
-            onClick={handleClose}
-            className="p-2 rounded-lg transition-colors"
-            style={{ color: '#6B7280' }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = '#F3F4F6')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-          >
-            <X className="w-6 h-6" />
-          </button>
+        <div className="sticky top-0 z-10 bg-white dark:bg-[#1A2F4B] border-b border-gray-200 dark:border-[#2979FF]/20 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <h2 id="create-lead-title" className="text-heading-3 text-gray-900 dark:text-white">
+              {t.title}
+            </h2>
+            <button
+              onClick={handleClose}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#374151] transition-colors"
+              aria-label={t.cancel}
+            >
+              <X className="w-5 h-5 text-gray-500" />
+            </button>
+          </div>
         </div>
 
-        {/* Content */}
-        <form onSubmit={handleSubmit} className="p-6">
-          <div className="space-y-5">
-            {/* Full Name */}
-            <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
-                {t.name} <span style={{ color: '#EF4444' }}>*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.fullName}
-                onChange={(e) => handleChange('fullName', e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-all"
-                style={{
-                  borderColor: errors.fullName ? '#EF4444' : '#D1D5DB',
-                  background: '#F9FAFB',
-                  color: '#111827',
-                }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = '#2979FF')}
-                onBlur={(e) => (e.currentTarget.style.borderColor = errors.fullName ? '#EF4444' : '#D1D5DB')}
-              />
-              {errors.fullName && (
-                <p className="mt-1 text-sm" style={{ color: '#EF4444' }}>{errors.fullName}</p>
-              )}
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Error Alert */}
+          {errors._form && (
+            <div className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-800 dark:text-red-200">{errors._form}</p>
             </div>
+          )}
 
-            {/* Phone */}
-            <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
-                {t.phone} <span style={{ color: '#EF4444' }}>*</span>
-              </label>
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => handleChange('phone', e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-all"
-                style={{
-                  borderColor: errors.phone ? '#EF4444' : '#D1D5DB',
-                  background: '#F9FAFB',
-                  color: '#111827',
-                }}
-                dir="ltr"
-                placeholder="+972501234567"
-                onFocus={(e) => (e.currentTarget.style.borderColor = '#2979FF')}
-                onBlur={(e) => (e.currentTarget.style.borderColor = errors.phone ? '#EF4444' : '#D1D5DB')}
-              />
-              {errors.phone && (
-                <div className="mt-1 flex items-start gap-1">
-                  <AlertCircle className="w-4 h-4 mt-0.5" style={{ color: '#EF4444' }} />
-                  <p className="text-sm" style={{ color: '#EF4444' }}>{errors.phone}</p>
-                </div>
+          {/* Full Name */}
+          <div>
+            <label htmlFor="fullName" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              {t.name} <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="fullName"
+              value={formData.fullName}
+              onChange={(e) => handleChange('fullName', e.target.value)}
+              className={`w-full px-4 py-2.5 min-h-[44px] rounded-lg border ${
+                errors.fullName ? 'border-red-500' : 'border-gray-300 dark:border-[#2979FF]/20'
+              } bg-white dark:bg-[#0E1A2B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all`}
+              autoFocus
+            />
+            {errors.fullName && <p className="mt-1 text-sm text-red-600">{errors.fullName}</p>}
+          </div>
+
+          {/* Phone */}
+          <div>
+            <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              {t.phone} <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="tel"
+              id="phone"
+              value={formData.phone}
+              onChange={(e) => handleChange('phone', e.target.value)}
+              placeholder="0501234567"
+              className={`w-full px-4 py-2.5 min-h-[44px] rounded-lg border ${
+                errors.phone ? 'border-red-500' : 'border-gray-300 dark:border-[#2979FF]/20'
+              } bg-white dark:bg-[#0E1A2B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all`}
+              dir="ltr"
+            />
+            {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
+          </div>
+
+          {/* Email */}
+          <div>
+            <label htmlFor="email" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              {t.email}
+            </label>
+            <input
+              type="email"
+              id="email"
+              value={formData.email}
+              onChange={(e) => handleChange('email', e.target.value)}
+              className={`w-full px-4 py-2.5 min-h-[44px] rounded-lg border ${
+                errors.email ? 'border-red-500' : 'border-gray-300 dark:border-[#2979FF]/20'
+              } bg-white dark:bg-[#0E1A2B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all`}
+            />
+            {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+          </div>
+
+          {/* Source */}
+          <div>
+            <label htmlFor="source" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              {t.source} <span className="text-red-500">*</span>
+            </label>
+            <select
+              id="source"
+              value={formData.source}
+              onChange={(e) => handleChange('source', e.target.value)}
+              className={`w-full px-4 py-2.5 min-h-[44px] rounded-lg border ${
+                errors.source ? 'border-red-500' : 'border-gray-300 dark:border-[#2979FF]/20'
+              } bg-white dark:bg-[#0E1A2B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all`}
+            >
+              <option value="">{language === 'he' ? 'בחר מקור' : 'Select source'}</option>
+              {sources.map((source) => (
+                <option key={source.value} value={source.value}>
+                  {source.label}
+                </option>
+              ))}
+            </select>
+            {errors.source && <p className="mt-1 text-sm text-red-600">{errors.source}</p>}
+          </div>
+
+          {/* Status */}
+          <div>
+            <label htmlFor="qualificationStatus" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              {t.status}
+            </label>
+            <select
+              id="qualificationStatus"
+              value={formData.qualificationStatus}
+              onChange={(e) => handleChange('qualificationStatus', e.target.value)}
+              className="w-full px-4 py-2.5 min-h-[44px] rounded-lg border border-gray-300 dark:border-[#2979FF]/20 bg-white dark:bg-[#0E1A2B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all"
+            >
+              {statuses.map((status) => (
+                <option key={status.value} value={status.value}>
+                  {status.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Message */}
+          <div>
+            <label htmlFor="message" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              {t.message}
+            </label>
+            <textarea
+              id="message"
+              value={formData.message}
+              onChange={(e) => handleChange('message', e.target.value)}
+              rows={3}
+              className={`w-full px-4 py-2.5 rounded-lg border ${
+                errors.message ? 'border-red-500' : 'border-gray-300 dark:border-[#2979FF]/20'
+              } bg-white dark:bg-[#0E1A2B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all resize-none`}
+            />
+            {errors.message && <p className="mt-1 text-sm text-red-600">{errors.message}</p>}
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label htmlFor="notes" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              {t.notes}
+            </label>
+            <textarea
+              id="notes"
+              value={formData.notes}
+              onChange={(e) => handleChange('notes', e.target.value)}
+              rows={3}
+              className={`w-full px-4 py-2.5 rounded-lg border ${
+                errors.notes ? 'border-red-500' : 'border-gray-300 dark:border-[#2979FF]/20'
+              } bg-white dark:bg-[#0E1A2B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all resize-none`}
+              placeholder={language === 'he' ? 'הערות פנימיות...' : 'Internal notes...'}
+            />
+            {errors.notes && <p className="mt-1 text-sm text-red-600">{errors.notes}</p>}
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-[#2979FF]/20">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="px-6 py-2.5 min-h-[44px] rounded-lg border border-gray-300 dark:border-[#2979FF]/20 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#374151] transition-colors font-medium"
+              disabled={loading}
+            >
+              {t.cancel}
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-6 py-2.5 min-h-[44px] rounded-lg bg-gradient-to-r from-[#2979FF] to-[#1E5FCC] text-white font-medium hover:shadow-lg hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {t.creating}
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  {t.create}
+                </>
               )}
-            </div>
-
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
-                {t.email}
-              </label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleChange('email', e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-all"
-                style={{
-                  borderColor: errors.email ? '#EF4444' : '#D1D5DB',
-                  background: '#F9FAFB',
-                  color: '#111827',
-                }}
-                placeholder="email@example.com"
-                onFocus={(e) => (e.currentTarget.style.borderColor = '#2979FF')}
-                onBlur={(e) => (e.currentTarget.style.borderColor = errors.email ? '#EF4444' : '#D1D5DB')}
-              />
-              {errors.email && (
-                <p className="mt-1 text-sm" style={{ color: '#EF4444' }}>{errors.email}</p>
-              )}
-            </div>
-
-            {/* Source */}
-            <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
-                {t.source} <span style={{ color: '#EF4444' }}>*</span>
-              </label>
-              <select
-                value={formData.source}
-                onChange={(e) => handleChange('source', e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-all"
-                style={{
-                  borderColor: errors.source ? '#EF4444' : '#D1D5DB',
-                  background: '#F9FAFB',
-                  color: '#111827',
-                }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = '#2979FF')}
-                onBlur={(e) => (e.currentTarget.style.borderColor = errors.source ? '#EF4444' : '#D1D5DB')}
-              >
-                <option value="">Select source...</option>
-                {sources.map((source) => (
-                  <option key={source.value} value={source.value}>
-                    {source.label}
-                  </option>
-                ))}
-              </select>
-              {errors.source && (
-                <p className="mt-1 text-sm" style={{ color: '#EF4444' }}>{errors.source}</p>
-              )}
-            </div>
-
-            {/* Message */}
-            <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
-                {t.message}
-              </label>
-              <textarea
-                value={formData.message}
-                onChange={(e) => handleChange('message', e.target.value)}
-                rows={4}
-                className="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-all resize-none"
-                style={{
-                  borderColor: errors.message ? '#EF4444' : '#D1D5DB',
-                  background: '#F9FAFB',
-                  color: '#111827',
-                }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = '#2979FF')}
-                onBlur={(e) => (e.currentTarget.style.borderColor = errors.message ? '#EF4444' : '#D1D5DB')}
-              />
-              {errors.message && (
-                <p className="mt-1 text-sm" style={{ color: '#EF4444' }}>{errors.message}</p>
-              )}
-            </div>
-
-            {/* Form-level error */}
-            {errors._form && (
-              <div className="p-4 rounded-lg" style={{ background: '#FEE2E2', border: '1px solid #EF4444' }}>
-                <p className="text-sm" style={{ color: '#DC2626' }}>{errors._form}</p>
-              </div>
-            )}
+            </button>
           </div>
         </form>
-
-        {/* Footer */}
-        <div
-          className="sticky bottom-0 flex items-center justify-end gap-3 p-6 border-t"
-          style={{ background: '#FFFFFF', borderColor: '#E5E7EB' }}
-        >
-          <button
-            type="button"
-            onClick={handleClose}
-            disabled={loading}
-            className="px-6 py-2 rounded-lg font-medium transition-colors"
-            style={{ background: '#F3F4F6', color: '#374151' }}
-            onMouseEnter={(e) => !loading && (e.currentTarget.style.background = '#E5E7EB')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = '#F3F4F6')}
-          >
-            {t.cancel}
-          </button>
-          <button
-            type="submit"
-            onClick={handleSubmit}
-            disabled={loading}
-            className="px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-all"
-            style={{
-              background: loading ? '#9CA3AF' : '#2979FF',
-              color: '#FFFFFF',
-            }}
-            onMouseEnter={(e) => !loading && (e.currentTarget.style.background = '#1d4ed8')}
-            onMouseLeave={(e) => !loading && (e.currentTarget.style.background = '#2979FF')}
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                {t.creating}
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4" />
-                {t.create}
-              </>
-            )}
-          </button>
-        </div>
       </div>
     </div>
   );

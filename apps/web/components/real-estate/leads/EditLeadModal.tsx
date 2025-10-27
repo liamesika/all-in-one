@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, Save, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/lib/language-context';
+import { auth } from '@/lib/firebase';
 import { z } from 'zod';
 
 // Zod validation schema
@@ -12,6 +13,9 @@ const leadSchema = z.object({
   email: z.string().email('Invalid email address').optional().or(z.literal('')),
   message: z.string().max(500, 'Message too long').optional(),
   source: z.string().min(1, 'Source is required'),
+  qualificationStatus: z.enum(['NEW', 'CONTACTED', 'IN_PROGRESS', 'MEETING', 'OFFER', 'DEAL', 'CONVERTED', 'DISQUALIFIED']).optional(),
+  assignedToId: z.string().optional().or(z.null()),
+  notes: z.string().max(1000, 'Notes too long').optional(),
 });
 
 type LeadFormData = z.infer<typeof leadSchema>;
@@ -31,6 +35,9 @@ export function EditLeadModal({ isOpen, leadId, onClose, onSuccess }: EditLeadMo
     email: '',
     message: '',
     source: '',
+    qualificationStatus: 'NEW',
+    assignedToId: null,
+    notes: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -43,11 +50,14 @@ export function EditLeadModal({ isOpen, leadId, onClose, onSuccess }: EditLeadMo
     email: language === 'he' ? 'אימייל' : 'Email',
     message: language === 'he' ? 'הודעה' : 'Message',
     source: language === 'he' ? 'מקור' : 'Source',
+    status: language === 'he' ? 'סטטוס' : 'Status',
+    notes: language === 'he' ? 'הערות' : 'Notes',
     save: language === 'he' ? 'שמור' : 'Save Changes',
     cancel: language === 'he' ? 'ביטול' : 'Cancel',
     loading: language === 'he' ? 'טוען...' : 'Loading...',
     saving: language === 'he' ? 'שומר...' : 'Saving...',
     required: language === 'he' ? 'שדה חובה' : 'Required',
+    authError: language === 'he' ? 'נדרשת אימות. אנא התחבר מחדש.' : 'Authentication required. Please sign in again.',
   };
 
   const sources = [
@@ -59,6 +69,17 @@ export function EditLeadModal({ isOpen, leadId, onClose, onSuccess }: EditLeadMo
     { value: 'Other', label: language === 'he' ? 'אחר' : 'Other' },
   ];
 
+  const statuses = [
+    { value: 'NEW', label: language === 'he' ? 'חדש' : 'New' },
+    { value: 'CONTACTED', label: language === 'he' ? 'יצירת קשר' : 'Contacted' },
+    { value: 'IN_PROGRESS', label: language === 'he' ? 'בתהליך' : 'In Progress' },
+    { value: 'MEETING', label: language === 'he' ? 'פגישה' : 'Meeting' },
+    { value: 'OFFER', label: language === 'he' ? 'הצעה' : 'Offer' },
+    { value: 'DEAL', label: language === 'he' ? 'עסקה' : 'Deal' },
+    { value: 'CONVERTED', label: language === 'he' ? 'הומר' : 'Converted' },
+    { value: 'DISQUALIFIED', label: language === 'he' ? 'לא רלוונטי' : 'Disqualified' },
+  ];
+
   useEffect(() => {
     if (isOpen && leadId) {
       fetchLeadData();
@@ -68,7 +89,19 @@ export function EditLeadModal({ isOpen, leadId, onClose, onSuccess }: EditLeadMo
   const fetchLeadData = async () => {
     setFetching(true);
     try {
-      const response = await fetch(`/api/real-estate/leads/${leadId}`);
+      const user = auth.currentUser;
+      if (!user) {
+        setErrors({ _form: t.authError });
+        setFetching(false);
+        return;
+      }
+      const token = await user.getIdToken();
+
+      const response = await fetch(`/api/real-estate/leads/${leadId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       if (!response.ok) throw new Error('Failed to fetch lead');
       const data = await response.json();
 
@@ -78,9 +111,13 @@ export function EditLeadModal({ isOpen, leadId, onClose, onSuccess }: EditLeadMo
         email: data.email || '',
         message: data.message || '',
         source: data.source || '',
+        qualificationStatus: data.qualificationStatus || 'NEW',
+        assignedToId: data.assignedToId || null,
+        notes: data.notes || '',
       });
     } catch (error) {
       console.error('Error fetching lead:', error);
+      setErrors({ _form: language === 'he' ? 'שגיאה בטעינת הליד' : 'Failed to load lead' });
     } finally {
       setFetching(false);
     }
@@ -117,9 +154,20 @@ export function EditLeadModal({ isOpen, leadId, onClose, onSuccess }: EditLeadMo
 
     setLoading(true);
     try {
+      const user = auth.currentUser;
+      if (!user) {
+        setErrors({ _form: t.authError });
+        setLoading(false);
+        return;
+      }
+      const token = await user.getIdToken();
+
       const response = await fetch(`/api/real-estate/leads/${leadId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify(result.data),
       });
 
@@ -129,20 +177,39 @@ export function EditLeadModal({ isOpen, leadId, onClose, onSuccess }: EditLeadMo
       onClose();
     } catch (error) {
       console.error('Error updating lead:', error);
-      setErrors({ _form: 'Failed to update lead. Please try again.' });
+      setErrors({ _form: language === 'he' ? 'שגיאה בעדכון הליד. נסה שוב.' : 'Failed to update lead. Please try again.' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape' && !loading) {
+      onClose();
+    }
+  };
+
+  const handleClose = () => {
+    if (!loading) {
+      setErrors({});
+      onClose();
     }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="edit-lead-title"
+      onKeyDown={handleKeyDown}
+    >
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
+        onClick={handleClose}
       />
 
       {/* Modal */}
@@ -155,15 +222,17 @@ export function EditLeadModal({ isOpen, leadId, onClose, onSuccess }: EditLeadMo
           className="sticky top-0 z-10 flex items-center justify-between p-6 border-b"
           style={{ background: '#FFFFFF', borderColor: '#E5E7EB' }}
         >
-          <h2 className="text-2xl font-bold" style={{ color: '#111827' }}>
+          <h2 id="edit-lead-title" className="text-2xl font-bold" style={{ color: '#111827' }}>
             {t.title}
           </h2>
           <button
-            onClick={onClose}
-            className="p-2 rounded-lg transition-colors"
+            onClick={handleClose}
+            disabled={loading}
+            className="p-2 min-h-[44px] min-w-[44px] rounded-lg transition-colors"
             style={{ color: '#6B7280' }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = '#F3F4F6')}
+            onMouseEnter={(e) => !loading && (e.currentTarget.style.background = '#F3F4F6')}
             onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+            aria-label={t.cancel}
           >
             <X className="w-6 h-6" />
           </button>
@@ -300,6 +369,60 @@ export function EditLeadModal({ isOpen, leadId, onClose, onSuccess }: EditLeadMo
                 )}
               </div>
 
+              {/* Status */}
+              <div>
+                <label htmlFor="qualificationStatus" className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
+                  {t.status}
+                </label>
+                <select
+                  id="qualificationStatus"
+                  value={formData.qualificationStatus}
+                  onChange={(e) => handleChange('qualificationStatus', e.target.value)}
+                  className="w-full px-4 py-2.5 min-h-[44px] rounded-lg border focus:outline-none focus:ring-2 transition-all"
+                  style={{
+                    borderColor: errors.qualificationStatus ? '#EF4444' : '#D1D5DB',
+                    background: '#F9FAFB',
+                    color: '#111827',
+                  }}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = '#2979FF')}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = errors.qualificationStatus ? '#EF4444' : '#D1D5DB')}
+                >
+                  {statuses.map((status) => (
+                    <option key={status.value} value={status.value}>
+                      {status.label}
+                    </option>
+                  ))}
+                </select>
+                {errors.qualificationStatus && (
+                  <p className="mt-1 text-sm" style={{ color: '#EF4444' }}>{errors.qualificationStatus}</p>
+                )}
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label htmlFor="notes" className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
+                  {t.notes}
+                </label>
+                <textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) => handleChange('notes', e.target.value)}
+                  rows={3}
+                  placeholder={language === 'he' ? 'הערות פנימיות...' : 'Internal notes...'}
+                  className="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-all resize-none"
+                  style={{
+                    borderColor: errors.notes ? '#EF4444' : '#D1D5DB',
+                    background: '#F9FAFB',
+                    color: '#111827',
+                  }}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = '#2979FF')}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = errors.notes ? '#EF4444' : '#D1D5DB')}
+                />
+                {errors.notes && (
+                  <p className="mt-1 text-sm" style={{ color: '#EF4444' }}>{errors.notes}</p>
+                )}
+              </div>
+
               {/* Form-level error */}
               {errors._form && (
                 <div className="p-4 rounded-lg" style={{ background: '#FEE2E2', border: '1px solid #EF4444' }}>
@@ -317,9 +440,9 @@ export function EditLeadModal({ isOpen, leadId, onClose, onSuccess }: EditLeadMo
         >
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             disabled={loading}
-            className="px-6 py-2 rounded-lg font-medium transition-colors"
+            className="px-6 py-2.5 min-h-[44px] rounded-lg font-medium transition-colors"
             style={{ background: '#F3F4F6', color: '#374151' }}
             onMouseEnter={(e) => !loading && (e.currentTarget.style.background = '#E5E7EB')}
             onMouseLeave={(e) => (e.currentTarget.style.background = '#F3F4F6')}
@@ -330,7 +453,7 @@ export function EditLeadModal({ isOpen, leadId, onClose, onSuccess }: EditLeadMo
             type="submit"
             onClick={handleSubmit}
             disabled={loading || fetching}
-            className="px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-all"
+            className="px-6 py-2.5 min-h-[44px] rounded-lg font-medium flex items-center gap-2 transition-all"
             style={{
               background: loading ? '#9CA3AF' : '#2979FF',
               color: '#FFFFFF',
