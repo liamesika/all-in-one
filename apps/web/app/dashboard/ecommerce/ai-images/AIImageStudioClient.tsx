@@ -22,6 +22,14 @@ import {
 import { RealEstateHeader } from '@/components/dashboard/RealEstateHeader';
 import { useLang } from '@/components/i18n/LangProvider';
 import { auth } from '@/lib/firebase';
+import { InlineUpsellBanner } from '@/components/subscription/InlineUpsellBanner';
+import { hasAccess } from '@/lib/subscription-utils';
+
+interface Subscription {
+  status: 'ACTIVE' | 'TRIAL' | 'EXPIRED' | 'CANCELED';
+  plan: 'BASIC' | 'PRO' | 'AGENCY' | 'ENTERPRISE';
+  trialEndsAt?: string;
+}
 
 interface ImagePreset {
   id: string;
@@ -80,6 +88,8 @@ export function AIImageStudioClient() {
   const [generating, setGenerating] = useState(false);
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
   const [history, setHistory] = useState<GeneratedImage[]>([]);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [loadingSubscription, setLoadingSubscription] = useState(true);
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -104,6 +114,33 @@ export function AIImageStudioClient() {
     };
 
     fetchHistory();
+  }, []);
+
+  useEffect(() => {
+    const fetchSubscription = async () => {
+      try {
+        const user = auth.currentUser;
+        if (!user) return;
+
+        const token = await user.getIdToken();
+        const response = await fetch('/api/subscriptions/status', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setSubscription(data.subscription);
+        }
+      } catch (error) {
+        console.error('Failed to fetch subscription:', error);
+      } finally {
+        setLoadingSubscription(false);
+      }
+    };
+
+    fetchSubscription();
   }, []);
 
   const handlePresetSelect = (preset: ImagePreset) => {
@@ -251,13 +288,32 @@ export function AIImageStudioClient() {
                       <select
                         value={batchCount}
                         onChange={e => setBatchCount(Number(e.target.value))}
-                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                        disabled={!loadingSubscription && !hasAccess(subscription, 'ai_images_bulk')}
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <option value={1}>1</option>
                         <option value={2}>2</option>
-                        <option value={4}>4</option>
-                        <option value={8}>8</option>
+                        <option value={4}>4 {!hasAccess(subscription, 'ai_images_bulk') && '🔒'}</option>
+                        <option value={8}>8 {!hasAccess(subscription, 'ai_images_bulk') && '🔒'}</option>
                       </select>
+                      {!loadingSubscription && !hasAccess(subscription, 'ai_images_bulk') && batchCount > 2 && (
+                        <div className="mt-3">
+                          <InlineUpsellBanner
+                            title="Unlock Batch Image Generation"
+                            titleHe="פתח יצירת תמונות בכמות"
+                            description="Generate up to 8 images at once with Pro plan"
+                            descriptionHe="צור עד 8 תמונות בו זמנית עם תוכנית Pro"
+                            featureName="Batch AI Image Generation (4-8 images)"
+                            featureNameHe="יצירת תמונות AI בכמות (4-8 תמונות)"
+                            requiredPlan="PRO"
+                            lang={lang}
+                            onUpgrade={() => {
+                              router.push('/dashboard/ecommerce#pricing-section');
+                            }}
+                            variant="compact"
+                          />
+                        </div>
+                      )}
                     </div>
 
                     {/* Size */}

@@ -3,13 +3,18 @@ import { SubscriptionStatus, SubscriptionPlan } from '@prisma/client';
 export type FeatureKey =
   | 'ai_descriptions'
   | 'ai_images'
+  | 'ai_images_bulk' // Batch generation >2 images
   | 'campaigns'
   | 'advanced_analytics'
   | 'csv_builder'
+  | 'csv_export' // PSI PDF export
   | 'api_access'
   | 'white_label'
   | 'unlimited_leads'
-  | 'unlimited_properties';
+  | 'unlimited_properties'
+  | 'ai_property_scoring' // AI property scoring >10/day
+  | 'video_renders' // Video renders >3
+  | 'document_generation'; // Document generation >3/day
 
 export interface Subscription {
   status: SubscriptionStatus;
@@ -49,33 +54,48 @@ export function hasAccess(
     PRO: new Set([
       'ai_descriptions',
       'ai_images',
+      'ai_images_bulk',
       'campaigns',
       'advanced_analytics',
       'csv_builder',
+      'csv_export',
       'unlimited_leads',
       'unlimited_properties',
+      'ai_property_scoring',
+      'video_renders',
+      'document_generation',
     ]),
     AGENCY: new Set([
       'ai_descriptions',
       'ai_images',
+      'ai_images_bulk',
       'campaigns',
       'advanced_analytics',
       'csv_builder',
+      'csv_export',
       'api_access',
       'white_label',
       'unlimited_leads',
       'unlimited_properties',
+      'ai_property_scoring',
+      'video_renders',
+      'document_generation',
     ]),
     ENTERPRISE: new Set([
       'ai_descriptions',
       'ai_images',
+      'ai_images_bulk',
       'campaigns',
       'advanced_analytics',
       'csv_builder',
+      'csv_export',
       'api_access',
       'white_label',
       'unlimited_leads',
       'unlimited_properties',
+      'ai_property_scoring',
+      'video_renders',
+      'document_generation',
     ]),
   };
 
