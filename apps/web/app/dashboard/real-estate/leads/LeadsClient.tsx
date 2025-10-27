@@ -1,11 +1,12 @@
 'use client';
 
 /**
- * Real Estate Leads Management - Redesigned with Design System 2.0
+ * Real Estate Leads Management - Wired to Real APIs
  */
 
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/lib/language-context';
+import { auth } from '@/lib/firebase';
 import {
   Download,
   Upload,
@@ -23,6 +24,7 @@ import {
   CheckCircle2,
   AlertCircle,
   MessageCircle,
+  RefreshCw,
 } from 'lucide-react';
 import {
   UniversalCard,
@@ -39,7 +41,6 @@ import {
   StatusBadge,
   Drawer,
   BulkActionsMenu,
-  type BulkAction,
 } from '@/components/shared';
 import { ImportLeadsModal } from '@/components/real-estate/leads/ImportLeadsModal';
 import { ViewLeadModal } from '@/components/real-estate/leads/ViewLeadModal';
@@ -47,18 +48,31 @@ import { EditLeadModal } from '@/components/real-estate/leads/EditLeadModal';
 import { LinkPropertyModal } from '@/components/real-estate/leads/LinkPropertyModal';
 import { QualifyLeadModal } from '@/components/real-estate/leads/QualifyLeadModal';
 import { CreateLeadModal } from '@/components/real-estate/leads/CreateLeadModal';
-import { WhatsAppActions, BatchWhatsAppActions } from '@/components/real-estate/leads/WhatsAppActions';
+import { WhatsAppActions } from '@/components/real-estate/leads/WhatsAppActions';
 
 interface Lead {
   id: string;
-  name: string;
+  fullName: string;
   phone: string;
-  email?: string;
-  status: 'HOT' | 'WARM' | 'COLD';
+  email?: string | null;
+  qualificationStatus: 'NEW' | 'CONTACTED' | 'IN_PROGRESS' | 'MEETING' | 'OFFER' | 'DEAL' | 'CONVERTED' | 'DISQUALIFIED';
   source: string;
-  notes?: string;
+  notes?: string | null;
+  message?: string | null;
   propertyId?: string | null;
+  assignedToId?: string | null;
+  assignedTo?: {
+    id: string;
+    fullName: string;
+    email: string;
+  } | null;
+  property?: {
+    id: string;
+    name: string;
+    address?: string;
+  } | null;
   createdAt: string;
+  updatedAt: string;
 }
 
 interface LeadsClientProps {
@@ -81,6 +95,8 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
   const [showQualifyModal, setShowQualifyModal] = useState(false);
   const [currentLeadId, setCurrentLeadId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [fetchingLeads, setFetchingLeads] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [showFilterDrawer, setShowFilterDrawer] = useState(false);
 
@@ -97,9 +113,16 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
     status: language === 'he' ? 'סטטוס' : 'Status',
     source: language === 'he' ? 'מקור' : 'Source',
     all: language === 'he' ? 'הכל' : 'All',
-    hot: language === 'he' ? 'חם' : 'Hot',
-    warm: language === 'he' ? 'פושר' : 'Warm',
-    cold: language === 'he' ? 'קר' : 'Cold',
+    // Status labels
+    new: language === 'he' ? 'חדש' : 'New',
+    contacted: language === 'he' ? 'יצרנו קשר' : 'Contacted',
+    inProgress: language === 'he' ? 'בטיפול' : 'In Progress',
+    meeting: language === 'he' ? 'פגישה' : 'Meeting',
+    offer: language === 'he' ? 'הצעה' : 'Offer',
+    deal: language === 'he' ? 'עסקה' : 'Deal',
+    converted: language === 'he' ? 'הומר ללקוח' : 'Converted',
+    disqualified: language === 'he' ? 'לא רלוונטי' : 'Disqualified',
+    // Sources
     website: language === 'he' ? 'אתר' : 'Website',
     facebook: language === 'he' ? 'פייסבוק' : 'Facebook',
     instagram: language === 'he' ? 'אינסטגרם' : 'Instagram',
@@ -110,6 +133,7 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
     bulkExport: language === 'he' ? 'ייצא נבחרים' : 'Export Selected',
     view: language === 'he' ? 'צפייה' : 'View',
     edit: language === 'he' ? 'עריכה' : 'Edit',
+    delete: language === 'he' ? 'מחיקה' : 'Delete',
     qualify: language === 'he' ? 'סיווג AI' : 'Qualify AI',
     linkProperty: language === 'he' ? 'קשר לנכס' : 'Link Property',
     archive: language === 'he' ? 'ארכוון' : 'Archive',
@@ -124,37 +148,84 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
     batchWhatsapp: language === 'he' ? 'שלח WhatsApp לנבחרים' : 'Send WhatsApp to Selected',
     updateSuccess: language === 'he' ? 'הליד עודכן בהצלחה' : 'Lead updated successfully',
     createSuccess: language === 'he' ? 'הליד נוצר בהצלחה' : 'Lead created successfully',
+    deleteSuccess: language === 'he' ? 'הליד נמחק בהצלחה' : 'Lead deleted successfully',
     filters: language === 'he' ? 'סינון' : 'Filters',
     resetFilters: language === 'he' ? 'אפס סינון' : 'Reset',
     applyFilters: language === 'he' ? 'החל סינון' : 'Apply',
+    loading: language === 'he' ? 'טוען...' : 'Loading...',
+    errorLoading: language === 'he' ? 'שגיאה בטעינת לידים' : 'Error loading leads',
+    retry: language === 'he' ? 'נסה שנית' : 'Retry',
+    authRequired: language === 'he' ? 'נדרשת התחברות' : 'Authentication required',
   };
 
-  // Debounced search
+  // Fetch leads from API
+  const fetchLeads = useCallback(async () => {
+    setFetchingLeads(true);
+    setFetchError(null);
+
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        setFetchError(t.authRequired);
+        setFetchingLeads(false);
+        return;
+      }
+
+      const token = await user.getIdToken();
+
+      // Build query params
+      const params = new URLSearchParams();
+      if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter);
+      if (sourceFilter && sourceFilter !== 'all') params.set('source', sourceFilter);
+      if (searchQuery) params.set('search', searchQuery);
+      params.set('limit', '100'); // TODO: Add pagination
+      params.set('offset', '0');
+
+      const response = await fetch(`/api/real-estate/leads?${params.toString()}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      setLeads(data.leads || []);
+      setFilteredLeads(data.leads || []);
+    } catch (error: any) {
+      console.error('[LeadsClient] Fetch error:', error);
+      setFetchError(error.message || t.errorLoading);
+      showToast('error', t.errorLoading);
+    } finally {
+      setFetchingLeads(false);
+    }
+  }, [statusFilter, sourceFilter, searchQuery, t.authRequired, t.errorLoading]);
+
+  // Fetch leads on mount and when filters change
   useEffect(() => {
-    const timer = setTimeout(() => {
-      applyFilters();
-    }, 300);
+    fetchLeads();
+  }, [fetchLeads]);
 
-    return () => clearTimeout(timer);
-  }, [searchQuery, statusFilter, sourceFilter, leads]);
-
-  const applyFilters = useCallback(() => {
+  // Client-side filtering (already filtered by API, but keep for responsiveness)
+  useEffect(() => {
     let filtered = [...leads];
 
-    // Search filter
+    // Search filter (client-side for instant feedback)
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (lead) =>
-          lead.name.toLowerCase().includes(query) ||
-          lead.phone.includes(query) ||
+          lead.fullName?.toLowerCase().includes(query) ||
+          lead.phone?.includes(query) ||
           lead.email?.toLowerCase().includes(query)
       );
     }
 
     // Status filter
     if (statusFilter && statusFilter !== 'all') {
-      filtered = filtered.filter((lead) => lead.status === statusFilter);
+      filtered = filtered.filter((lead) => lead.qualificationStatus === statusFilter);
     }
 
     // Source filter
@@ -186,7 +257,15 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
   const handleExport = async (selectedOnly = false) => {
     setLoading(true);
     try {
+      const user = auth.currentUser;
+      if (!user) {
+        showToast('error', t.authRequired);
+        return;
+      }
+
+      const token = await user.getIdToken();
       const params = new URLSearchParams();
+
       if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter);
       if (sourceFilter && sourceFilter !== 'all') params.set('source', sourceFilter);
       if (searchQuery) params.set('search', searchQuery);
@@ -195,7 +274,9 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
       }
 
       const response = await fetch(`/api/real-estate/leads/export?${params.toString()}`, {
-        headers: { 'x-owner-uid': 'demo-user' },
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
       });
 
       if (!response.ok) throw new Error('Export failed');
@@ -213,27 +294,52 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
       showToast('success', t.exportSuccess);
     } catch (error) {
       console.error('Export error:', error);
-      showToast('error', 'Export failed');
+      showToast('error', language === 'he' ? 'שגיאה בייצוא' : 'Export failed');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleDelete = async (leadId: string) => {
+    if (!confirm(language === 'he' ? 'האם אתה בטוח שברצונך למחוק ליד זה?' : 'Are you sure you want to delete this lead?')) {
+      return;
+    }
+
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        showToast('error', t.authRequired);
+        return;
+      }
+
+      const token = await user.getIdToken();
+      const response = await fetch(`/api/real-estate/leads/${leadId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Delete failed');
+      }
+
+      showToast('success', t.deleteSuccess);
+      await fetchLeads(); // Refresh list
+    } catch (error) {
+      console.error('Delete error:', error);
+      showToast('error', language === 'he' ? 'שגיאה במחיקת ליד' : 'Failed to delete lead');
+    }
+  };
+
   const handleImportSuccess = (imported: number) => {
     showToast('success', `${imported} ${t.importSuccess}`);
-    // Refresh leads list (in production, refetch from API)
-    setTimeout(() => window.location.reload(), 1500);
+    fetchLeads(); // Refresh leads list
   };
 
   const showToast = (type: 'success' | 'error', message: string) => {
     setToast({ type, message });
     setTimeout(() => setToast(null), 3000);
-  };
-
-  const refreshLeads = () => {
-    // In production, this would refetch from API
-    // For now, just reload the page
-    window.location.reload();
   };
 
   const handleViewLead = (leadId: string) => {
@@ -258,17 +364,17 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
 
   const handleEditSuccess = () => {
     showToast('success', t.updateSuccess);
-    refreshLeads();
+    fetchLeads();
   };
 
   const handleCreateSuccess = () => {
     showToast('success', t.createSuccess);
-    refreshLeads();
+    fetchLeads();
   };
 
   const handleLinkSuccess = () => {
-    showToast('success', 'Property linked successfully');
-    refreshLeads();
+    showToast('success', language === 'he' ? 'נכס קושר בהצלחה' : 'Property linked successfully');
+    fetchLeads();
   };
 
   const getCurrentLead = () => {
@@ -297,18 +403,73 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
     return filteredLeads.filter((l) => selectedLeads.has(l.id)).map((l) => ({
       id: l.id,
       phone: l.phone,
-      fullName: l.name,
+      fullName: l.fullName,
     }));
   };
 
-  const getStatusBadge = (status: string) => {
-    const colors = {
-      HOT: 'bg-red-100 text-red-800',
-      WARM: 'bg-yellow-100 text-yellow-800',
-      COLD: 'bg-blue-100 text-blue-800',
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      NEW: t.new,
+      CONTACTED: t.contacted,
+      IN_PROGRESS: t.inProgress,
+      MEETING: t.meeting,
+      OFFER: t.offer,
+      DEAL: t.deal,
+      CONVERTED: t.converted,
+      DISQUALIFIED: t.disqualified,
     };
-    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+    return labels[status] || status;
   };
+
+  const getStatusColor = (status: string) => {
+    const colors: Record<string, string> = {
+      NEW: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+      CONTACTED: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300',
+      IN_PROGRESS: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+      MEETING: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
+      OFFER: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
+      DEAL: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+      CONVERTED: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300',
+      DISQUALIFIED: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300',
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
+  };
+
+  // Loading state
+  if (fetchingLeads && leads.length === 0) {
+    return (
+      <main className={`min-h-screen bg-gray-50 dark:bg-[#0E1A2B] p-6 lg:p-8 ${language === 'he' ? 'rtl' : 'ltr'}`}>
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <Loader2 className="w-12 h-12 animate-spin text-[#2979FF] mx-auto mb-4" />
+              <p className="text-gray-600 dark:text-gray-400">{t.loading}</p>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // Error state
+  if (fetchError && leads.length === 0) {
+    return (
+      <main className={`min-h-screen bg-gray-50 dark:bg-[#0E1A2B] p-6 lg:p-8 ${language === 'he' ? 'rtl' : 'ltr'}`}>
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t.errorLoading}</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">{fetchError}</p>
+              <UniversalButton variant="primary" onClick={fetchLeads} leftIcon={<RefreshCw className="w-4 h-4" />}>
+                {t.retry}
+              </UniversalButton>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className={`min-h-screen bg-gray-50 dark:bg-[#0E1A2B] p-6 lg:p-8 ${language === 'he' ? 'rtl' : 'ltr'}`}>
@@ -359,6 +520,16 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
                 >
                   {t.create}
                 </UniversalButton>
+
+                <UniversalButton
+                  variant="ghost"
+                  size="md"
+                  leftIcon={<RefreshCw className={`w-4 h-4 ${fetchingLeads ? 'animate-spin' : ''}`} />}
+                  onClick={fetchLeads}
+                  disabled={fetchingLeads}
+                >
+                  {language === 'he' ? 'רענן' : 'Refresh'}
+                </UniversalButton>
               </div>
 
               {/* Bulk Actions Menu */}
@@ -367,33 +538,10 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
                 title={`${selectedLeads.size} ${t.selected}`}
                 actions={[
                   {
-                    id: 'whatsapp',
-                    label: t.batchWhatsapp,
-                    icon: <MessageCircle className="w-4 h-4" />,
-                    onClick: () => {
-                      // Trigger BatchWhatsAppActions functionality
-                      const leads = getSelectedLeadsData();
-                      // TODO: Implement WhatsApp batch send
-                      console.log('WhatsApp batch:', leads);
-                    },
-                  },
-                  {
                     id: 'export',
                     label: t.bulkExport,
                     icon: <Download className="w-4 h-4" />,
                     onClick: () => handleExport(true),
-                  },
-                  {
-                    id: 'archive',
-                    label: t.archive,
-                    icon: <Trash2 className="w-4 h-4" />,
-                    variant: 'danger' as const,
-                    onClick: () => {
-                      if (confirm(`${language === 'he' ? 'האם אתה בטוח?' : 'Are you sure?'}`)) {
-                        // Archive selected leads
-                        setSelectedLeads(new Set());
-                      }
-                    },
                   },
                 ]}
               />
@@ -428,9 +576,14 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
                   className="px-4 py-2.5 min-h-[44px] rounded-lg border border-gray-300 dark:border-[#2979FF]/20 bg-white dark:bg-[#1A2F4B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all"
                 >
                   <option value="">{t.all} - {t.status}</option>
-                  <option value="HOT">{t.hot}</option>
-                  <option value="WARM">{t.warm}</option>
-                  <option value="COLD">{t.cold}</option>
+                  <option value="NEW">{t.new}</option>
+                  <option value="CONTACTED">{t.contacted}</option>
+                  <option value="IN_PROGRESS">{t.inProgress}</option>
+                  <option value="MEETING">{t.meeting}</option>
+                  <option value="OFFER">{t.offer}</option>
+                  <option value="DEAL">{t.deal}</option>
+                  <option value="CONVERTED">{t.converted}</option>
+                  <option value="DISQUALIFIED">{t.disqualified}</option>
                 </select>
 
                 {/* Source Filter */}
@@ -443,6 +596,7 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
                   <option value="Website">{t.website}</option>
                   <option value="Facebook">{t.facebook}</option>
                   <option value="Instagram">{t.instagram}</option>
+                  <option value="Import">{language === 'he' ? 'ייבוא' : 'Import'}</option>
                   <option value="Other">{t.other}</option>
                 </select>
               </div>
@@ -474,7 +628,7 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
           <TableEmptyState
             icon={<Filter className="w-12 h-12" />}
             title={leads.length === 0 ? t.emptyTitle : t.noResults}
-            description={leads.length === 0 ? t.emptyDescription : 'Try adjusting your filters'}
+            description={leads.length === 0 ? t.emptyDescription : language === 'he' ? 'נסה לשנות את הפילטרים' : 'Try adjusting your filters'}
             action={leads.length === 0 ? (
               <UniversalButton variant="primary" size="md" leftIcon={<Upload />} onClick={() => setShowImportModal(true)}>
                 {t.import}
@@ -497,22 +651,24 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
                         )}
                       </button>
                       <div>
-                        <h3 className="font-semibold text-gray-900 dark:text-white">{lead.name}</h3>
+                        <h3 className="font-semibold text-gray-900 dark:text-white">{lead.fullName}</h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400" dir="ltr">{lead.phone}</p>
                       </div>
                     </div>
-                    <StatusBadge
-                      status={lead.status === 'HOT' ? 'failed' : lead.status === 'WARM' ? 'pending' : 'active'}
-                      className={lead.status === 'HOT' ? '!bg-red-100 !text-red-800' : lead.status === 'WARM' ? '!bg-yellow-100 !text-yellow-800' : '!bg-blue-100 !text-blue-800'}
-                    >
-                      {t[lead.status.toLowerCase() as keyof typeof t]}
-                    </StatusBadge>
+                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(lead.qualificationStatus)}`}>
+                      {getStatusLabel(lead.qualificationStatus)}
+                    </span>
                   </div>
                   <div className="space-y-2 mb-3 text-sm">
                     {lead.email && (
                       <div className="text-gray-600 dark:text-gray-400">{lead.email}</div>
                     )}
                     <div className="text-gray-600 dark:text-gray-400">{t.source}: {lead.source}</div>
+                    {lead.assignedTo && (
+                      <div className="text-gray-600 dark:text-gray-400">
+                        {language === 'he' ? 'סוכן: ' : 'Agent: '}{lead.assignedTo.fullName}
+                      </div>
+                    )}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <UniversalButton variant="outline" size="sm" onClick={() => handleViewLead(lead.id)} leftIcon={<Eye className="w-4 h-4" />} className="flex-1 !min-h-[44px]">
@@ -521,8 +677,8 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
                     <UniversalButton variant="outline" size="sm" onClick={() => handleEditLead(lead.id)} leftIcon={<Edit className="w-4 h-4" />} className="flex-1 !min-h-[44px]">
                       {t.edit}
                     </UniversalButton>
-                    <UniversalButton variant="primary" size="sm" onClick={() => handleQualifyLead(lead.id)} leftIcon={<Sparkles className="w-4 h-4" />} className="w-full !min-h-[44px]">
-                      {t.qualify}
+                    <UniversalButton variant="danger" size="sm" onClick={() => handleDelete(lead.id)} leftIcon={<Trash2 className="w-4 h-4" />} className="flex-1 !min-h-[44px]">
+                      {t.delete}
                     </UniversalButton>
                   </div>
                 </UniversalCard>
@@ -533,7 +689,7 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
             <UniversalCard variant="default" className="hidden sm:block">
             <CardHeader className="border-b border-gray-200 dark:border-[#2979FF]/20">
               <h2 className="text-heading-4 text-gray-900 dark:text-white">
-                {language === 'he' ? 'רשימת לידים' : 'Leads List'}
+                {language === 'he' ? 'רשימת לידים' : 'Leads List'} ({filteredLeads.length})
               </h2>
             </CardHeader>
             <UniversalTable>
@@ -541,7 +697,7 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
                 <UniversalTableRow>
                   <UniversalTableHead>
                     <button onClick={handleSelectAll} className="p-1 rounded hover:bg-gray-100 dark:hover:bg-[#374151] transition-colors">
-                      {selectedLeads.size === filteredLeads.length ? (
+                      {selectedLeads.size === filteredLeads.length && filteredLeads.length > 0 ? (
                         <CheckSquare className="w-5 h-5 text-[#2979FF]" />
                       ) : (
                         <Square className="w-5 h-5 text-gray-400" />
@@ -553,6 +709,7 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
                   <UniversalTableHead>{language === 'he' ? 'אימייל' : 'Email'}</UniversalTableHead>
                   <UniversalTableHead>{t.status}</UniversalTableHead>
                   <UniversalTableHead>{t.source}</UniversalTableHead>
+                  <UniversalTableHead>{language === 'he' ? 'סוכן' : 'Agent'}</UniversalTableHead>
                   <UniversalTableHead>{language === 'he' ? 'פעולות' : 'Actions'}</UniversalTableHead>
                 </UniversalTableRow>
               </UniversalTableHeader>
@@ -568,18 +725,16 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
                         )}
                       </button>
                     </UniversalTableCell>
-                    <UniversalTableCell className="font-medium">{lead.name}</UniversalTableCell>
+                    <UniversalTableCell className="font-medium">{lead.fullName}</UniversalTableCell>
                     <UniversalTableCell dir="ltr">{lead.phone}</UniversalTableCell>
                     <UniversalTableCell>{lead.email || '-'}</UniversalTableCell>
                     <UniversalTableCell>
-                      <StatusBadge
-                        status={lead.status === 'HOT' ? 'failed' : lead.status === 'WARM' ? 'pending' : 'active'}
-                        className={lead.status === 'HOT' ? '!bg-red-100 !text-red-800' : lead.status === 'WARM' ? '!bg-yellow-100 !text-yellow-800' : '!bg-blue-100 !text-blue-800'}
-                      >
-                        {t[lead.status.toLowerCase() as keyof typeof t]}
-                      </StatusBadge>
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(lead.qualificationStatus)}`}>
+                        {getStatusLabel(lead.qualificationStatus)}
+                      </span>
                     </UniversalTableCell>
                     <UniversalTableCell>{lead.source}</UniversalTableCell>
+                    <UniversalTableCell>{lead.assignedTo?.fullName || '-'}</UniversalTableCell>
                     <UniversalTableCell>
                       <div className="flex items-center gap-2">
                         <UniversalButton variant="ghost" size="sm" onClick={() => handleViewLead(lead.id)} className="!p-1.5">
@@ -588,13 +743,13 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
                         <UniversalButton variant="ghost" size="sm" onClick={() => handleEditLead(lead.id)} className="!p-1.5">
                           <Edit className="w-4 h-4 text-gray-600" />
                         </UniversalButton>
-                        <UniversalButton variant="ghost" size="sm" onClick={() => handleQualifyLead(lead.id)} className="!p-1.5">
-                          <Sparkles className="w-4 h-4 text-purple-600" />
+                        <UniversalButton variant="ghost" size="sm" onClick={() => handleDelete(lead.id)} className="!p-1.5">
+                          <Trash2 className="w-4 h-4 text-red-600" />
                         </UniversalButton>
                         <UniversalButton variant="ghost" size="sm" onClick={() => handleLinkProperty(lead.id)} className="!p-1.5">
                           <LinkIcon className="w-4 h-4 text-green-600" />
                         </UniversalButton>
-                        <WhatsAppActions phone={lead.phone} leadName={lead.name} variant="icon" />
+                        {lead.phone && <WhatsAppActions phone={lead.phone} leadName={lead.fullName} variant="icon" />}
                       </div>
                     </UniversalTableCell>
                   </UniversalTableRow>
@@ -695,9 +850,14 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
               className="w-full px-4 py-2.5 min-h-[44px] rounded-lg border border-gray-300 dark:border-[#2979FF]/20 bg-white dark:bg-[#1A2F4B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FF] transition-all"
             >
               <option value="">{t.all}</option>
-              <option value="HOT">{t.hot}</option>
-              <option value="WARM">{t.warm}</option>
-              <option value="COLD">{t.cold}</option>
+              <option value="NEW">{t.new}</option>
+              <option value="CONTACTED">{t.contacted}</option>
+              <option value="IN_PROGRESS">{t.inProgress}</option>
+              <option value="MEETING">{t.meeting}</option>
+              <option value="OFFER">{t.offer}</option>
+              <option value="DEAL">{t.deal}</option>
+              <option value="CONVERTED">{t.converted}</option>
+              <option value="DISQUALIFIED">{t.disqualified}</option>
             </select>
           </div>
 
@@ -715,6 +875,7 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
               <option value="Website">{t.website}</option>
               <option value="Facebook">{t.facebook}</option>
               <option value="Instagram">{t.instagram}</option>
+              <option value="Import">{language === 'he' ? 'ייבוא' : 'Import'}</option>
               <option value="Other">{t.other}</option>
             </select>
           </div>
@@ -723,12 +884,12 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
           {(tempStatusFilter || tempSourceFilter) && (
             <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
               <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Active Filters:
+                {language === 'he' ? 'פילטרים פעילים:' : 'Active Filters:'}
               </p>
               <div className="flex flex-wrap gap-2">
                 {tempStatusFilter && (
                   <span className="px-3 py-1 bg-[#2979FF]/10 text-[#2979FF] rounded-full text-sm font-medium">
-                    {t.status}: {tempStatusFilter === 'HOT' ? t.hot : tempStatusFilter === 'WARM' ? t.warm : t.cold}
+                    {t.status}: {getStatusLabel(tempStatusFilter)}
                   </span>
                 )}
                 {tempSourceFilter && (
@@ -744,15 +905,15 @@ export default function LeadsClient({ initialData }: LeadsClientProps) {
 
       {/* Toast */}
       {toast && (
-        <div className={`fixed bottom-6 right-6 bg-white rounded-lg shadow-2xl border-2 ${
+        <div className={`fixed bottom-6 ${language === 'he' ? 'left-6' : 'right-6'} bg-white dark:bg-[#1A2F4B] rounded-lg shadow-2xl border-2 ${
           toast.type === 'success' ? 'border-green-500' : 'border-red-500'
-        } p-4 flex items-center gap-3 animate-fade-in z-50`}>
+        } p-4 flex items-center gap-3 animate-fade-in z-50 max-w-md`}>
           {toast.type === 'success' ? (
-            <CheckCircle2 className="w-6 h-6 text-green-500" />
+            <CheckCircle2 className="w-6 h-6 text-green-500 flex-shrink-0" />
           ) : (
-            <AlertCircle className="w-6 h-6 text-red-500" />
+            <AlertCircle className="w-6 h-6 text-red-500 flex-shrink-0" />
           )}
-          <p className="text-gray-900 font-medium">{toast.message}</p>
+          <p className="text-gray-900 dark:text-white font-medium">{toast.message}</p>
         </div>
       )}
     </main>
