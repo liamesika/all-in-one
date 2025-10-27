@@ -1,18 +1,20 @@
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy-load OpenAI client to avoid build-time errors
+function getOpenAIClient() {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY not configured');
+  }
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+}
 
 export async function generateProductData(
   imageUrl: string,
   language: 'en' | 'he',
   productCategory?: string
 ) {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY not configured');
-  }
-
   const systemPrompt =
     language === 'he'
       ? 'אתה מומחה בכתיבה שיווקית לחנויות אינטרנט. צור תיאור מוצר מקצועי בעברית.'
@@ -24,6 +26,7 @@ export async function generateProductData(
       : `For this product image, generate: a catchy product name, detailed description (2-3 sentences), relevant tags (3-5), and a realistic base price in USD. ${productCategory ? `Category: ${productCategory}` : ''}`;
 
   try {
+    const openai = getOpenAIClient();
     const response = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
@@ -68,10 +71,6 @@ export async function generateCampaignContent(brief: {
   productCategory: string;
   additionalNotes?: string;
 }) {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY not configured');
-  }
-
   const systemPrompt = `You are an expert digital marketing strategist. Generate detailed audience segments and compelling ad copy variants for e-commerce campaigns.`;
 
   const userPrompt = `
@@ -110,6 +109,7 @@ Format as JSON with this structure:
 `;
 
   try {
+    const openai = getOpenAIClient();
     const response = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
@@ -138,11 +138,8 @@ export async function generateImage(
   prompt: string,
   size: '1024x1024' | '1024x1792' | '1792x1024' = '1024x1024'
 ) {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY not configured');
-  }
-
   try {
+    const openai = getOpenAIClient();
     const response = await openai.images.generate({
       model: 'dall-e-3',
       prompt: prompt,
