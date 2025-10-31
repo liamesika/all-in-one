@@ -1,100 +1,78 @@
 import { NextRequest, NextResponse } from 'next/server';
-import type { Task, UpdateTaskInput } from '@/lib/types/law/task';
+import { getCurrentUser } from '@/lib/auth.server';
+import { prisma } from '@/lib/prisma.server';
 
-// Simulate network delay
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+export const dynamic = 'force-dynamic';
 
-// GET /api/law/tasks/[id] - Get single task
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  await delay(400);
-
-  const { id } = await params;
-
-  // Mock task data
-  const mockTask: Task = {
-    id,
-    title: 'Sample Task',
-    description: 'Sample task description',
-    status: 'in_progress',
-    priority: 'medium',
-    dueDate: '2024-02-15',
-    case: {
-      id: 'case-1',
-      caseNumber: 'CASE-2024-001',
-      title: 'Sample Case',
-    },
-    assignee: {
-      id: 'attorney-1',
-      name: 'Attorney Name',
-      email: 'attorney@lawfirm.com',
-    },
-    createdBy: {
-      id: 'attorney-1',
-      name: 'Attorney Name',
-    },
-    createdAt: '2024-01-10T10:00:00Z',
-    updatedAt: new Date().toISOString(),
-  };
-
-  return NextResponse.json({ task: mockTask });
-}
-
-// PATCH /api/law/tasks/[id] - Update task
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  await delay(600);
-
-  const { id } = await params;
-
+// PUT /api/law/tasks/[id] - Update task
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const input: UpdateTaskInput = await request.json();
+    const currentUser = await getCurrentUser(request);
+    if (!currentUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    const updatedTask: Task = {
-      id,
-      title: input.title || 'Updated Task',
-      description: input.description,
-      status: input.status || 'todo',
-      priority: input.priority || 'medium',
-      dueDate: input.dueDate,
-      completedAt: input.completedAt,
-      caseId: input.caseId,
-      assignee: {
-        id: input.assigneeId || 'attorney-1',
-        name: 'Assignee Name',
-        email: 'assignee@lawfirm.com',
-      },
-      createdBy: {
-        id: 'current-user',
-        name: 'Current User',
-      },
-      createdAt: '2024-01-10T10:00:00Z',
-      updatedAt: new Date().toISOString(),
-    };
+    const { id } = await params;
+    const body = await request.json();
+    const { title, description, priority, status, boardColumn, dueDate, completedDate, assignedToId } = body;
 
+    const existingTask = await prisma.lawTask.findFirst({
+      where: { id, ownerUid: currentUser.uid },
+    });
+
+    if (!existingTask) {
+      return NextResponse.json({ error: 'Task not found' }, { status: 404 });
+    }
+
+    const updatedTask = await prisma.lawTask.update({
+      where: { id },
+      data: {
+        ...(title && { title }),
+        ...(description !== undefined && { description }),
+        ...(priority && { priority }),
+        ...(status && { status }),
+        ...(boardColumn && { boardColumn }),
+        ...(dueDate !== undefined && { dueDate: dueDate ? new Date(dueDate) : null }),
+        ...(completedDate !== undefined && { completedDate: completedDate ? new Date(completedDate) : null }),
+        ...(assignedToId !== undefined && { assignedToId }),
+      },
+      include: {
+        case: { select: { id: true, caseNumber: true, title: true } },
+        assignedTo: { select: { id: true, fullName: true, email: true } },
+      },
+    });
+
+    console.log('[PUT /api/law/tasks/[id]] Updated:', id);
     return NextResponse.json({ task: updatedTask });
   } catch (error) {
-    console.error('Failed to update task:', error);
+    console.error('[PUT /api/law/tasks/[id]] Error:', error);
     return NextResponse.json({ error: 'Failed to update task' }, { status: 500 });
   }
 }
 
 // DELETE /api/law/tasks/[id] - Delete task
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  await delay(500);
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const currentUser = await getCurrentUser(request);
+    if (!currentUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-  const { id } = await params;
+    const { id } = await params;
+    const existingTask = await prisma.lawTask.findFirst({
+      where: { id, ownerUid: currentUser.uid },
+    });
 
-  return NextResponse.json({
-    success: true,
-    message: 'Task deleted successfully',
-    id,
-  });
+    if (!existingTask) {
+      return NextResponse.json({ error: 'Task not found' }, { status: 404 });
+    }
+
+    await prisma.lawTask.delete({ where: { id } });
+
+    console.log('[DELETE /api/law/tasks/[id]] Deleted:', id);
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('[DELETE /api/law/tasks/[id]] Error:', error);
+    return NextResponse.json({ error: 'Failed to delete task' }, { status: 500 });
+  }
 }

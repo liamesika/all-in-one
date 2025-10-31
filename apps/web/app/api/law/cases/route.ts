@@ -1,179 +1,133 @@
 import { NextRequest, NextResponse } from 'next/server';
-import type { Case, CaseFilters, CreateCaseInput } from '@/lib/types/law/case';
+import { getCurrentUser } from '@/lib/auth.server';
+import { prisma } from '@/lib/prisma.server';
 
-// Mock database - in-memory storage for demo
-let mockCases: Case[] = [
-  {
-    id: '1',
-    caseNumber: 'CASE-2024-001',
-    title: 'Smith vs. Johnson Property Dispute',
-    description: 'Real estate boundary dispute between neighboring properties',
-    type: 'litigation',
-    status: 'active',
-    priority: 'high',
-    client: {
-      id: 'client-1',
-      name: 'John Smith',
-      email: 'john.smith@example.com',
-      phone: '+1 (555) 123-4567',
-    },
-    assignedAttorney: {
-      id: 'attorney-1',
-      name: 'Sarah Williams',
-      email: 'sarah.williams@lawfirm.com',
-    },
-    filingDate: '2024-01-15',
-    nextHearingDate: '2024-02-20',
-    billingRate: 350,
-    estimatedValue: 125000,
-    createdAt: '2024-01-10T10:00:00Z',
-    updatedAt: '2024-01-18T14:30:00Z',
-  },
-  {
-    id: '2',
-    caseNumber: 'CASE-2024-002',
-    title: 'Davis Family Trust Formation',
-    description: 'Establishing a comprehensive family trust for estate planning',
-    type: 'corporate',
-    status: 'pending',
-    priority: 'medium',
-    client: {
-      id: 'client-2',
-      name: 'Michael Davis',
-      email: 'michael.davis@example.com',
-      phone: '+1 (555) 234-5678',
-    },
-    assignedAttorney: {
-      id: 'attorney-2',
-      name: 'Robert Chen',
-      email: 'robert.chen@lawfirm.com',
-    },
-    filingDate: '2024-01-20',
-    billingRate: 400,
-    estimatedValue: 250000,
-    createdAt: '2024-01-18T09:00:00Z',
-    updatedAt: '2024-01-20T11:00:00Z',
-  },
-  {
-    id: '3',
-    caseNumber: 'CASE-2024-003',
-    title: 'Anderson Employment Discrimination',
-    description: 'Workplace discrimination case involving wrongful termination',
-    type: 'litigation',
-    status: 'active',
-    priority: 'urgent',
-    client: {
-      id: 'client-3',
-      name: 'Emily Anderson',
-      email: 'emily.anderson@example.com',
-      phone: '+1 (555) 345-6789',
-    },
-    assignedAttorney: {
-      id: 'attorney-1',
-      name: 'Sarah Williams',
-      email: 'sarah.williams@lawfirm.com',
-    },
-    filingDate: '2024-01-05',
-    nextHearingDate: '2024-02-10',
-    billingRate: 375,
-    estimatedValue: 175000,
-    createdAt: '2024-01-02T08:00:00Z',
-    updatedAt: '2024-01-22T16:45:00Z',
-  },
-];
+export const dynamic = 'force-dynamic';
 
-// Simulate network delay
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-// GET /api/law/cases - List cases with filters
+// GET /api/law/cases - List all cases
 export async function GET(request: NextRequest) {
-  await delay(500); // Simulate network latency
+  try {
+    const currentUser = await getCurrentUser(request);
+    if (!currentUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-  const searchParams = request.nextUrl.searchParams;
-  const status = searchParams.get('status');
-  const priority = searchParams.get('priority');
-  const type = searchParams.get('type');
-  const search = searchParams.get('search');
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const search = searchParams.get('search') || '';
+    const status = searchParams.get('status');
+    const clientId = searchParams.get('clientId');
+    const assignedToId = searchParams.get('assignedToId');
+    const skip = (page - 1) * limit;
 
-  let filtered = [...mockCases];
+    const where: any = { ownerUid: currentUser.uid };
 
-  // Apply filters
-  if (status) {
-    filtered = filtered.filter((c) => c.status === status);
-  }
-  if (priority) {
-    filtered = filtered.filter((c) => c.priority === priority);
-  }
-  if (type) {
-    filtered = filtered.filter((c) => c.type === type);
-  }
-  if (search) {
-    const query = search.toLowerCase();
-    filtered = filtered.filter(
-      (c) =>
-        c.title.toLowerCase().includes(query) ||
-        c.caseNumber.toLowerCase().includes(query) ||
-        c.client.name.toLowerCase().includes(query)
-    );
-  }
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { caseNumber: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+    if (status) where.status = status;
+    if (clientId) where.clientId = clientId;
+    if (assignedToId) where.assignedToId = assignedToId;
 
-  return NextResponse.json({
-    cases: filtered,
-    total: filtered.length,
-  });
+    const [cases, total] = await Promise.all([
+      prisma.lawCase.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          client: { select: { id: true, name: true, email: true } },
+          assignedTo: { select: { id: true, fullName: true, email: true } },
+          documents: { select: { id: true }, take: 1 },
+          tasks: { select: { id: true, status: true }, take: 10 },
+        },
+      }),
+      prisma.lawCase.count({ where }),
+    ]);
+
+    return NextResponse.json({
+      cases,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
+  } catch (error) {
+    console.error('[GET /api/law/cases] Error:', error);
+    return NextResponse.json({ error: 'Failed to fetch cases' }, { status: 500 });
+  }
 }
 
-// POST /api/law/cases - Create new case
+// POST /api/law/cases - Create case
 export async function POST(request: NextRequest) {
-  await delay(800); // Simulate network latency
-
   try {
-    const input: CreateCaseInput = await request.json();
+    const currentUser = await getCurrentUser(request);
+    if (!currentUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    // Validate required fields (basic validation)
-    if (!input.title || !input.clientName || !input.assignedAttorneyId) {
+    const body = await request.json();
+    const {
+      title,
+      description,
+      clientId,
+      caseType,
+      status,
+      priority,
+      assignedToId,
+      filingDate,
+      nextHearingDate,
+    } = body;
+
+    if (!title || !clientId || !caseType) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Title, client, and case type are required' },
         { status: 400 }
       );
     }
 
-    // Generate new case
-    const newCase: Case = {
-      id: `case-${Date.now()}`,
-      caseNumber: `CASE-${new Date().getFullYear()}-${String(mockCases.length + 1).padStart(3, '0')}`,
-      title: input.title,
-      description: input.description,
-      type: input.type,
-      status: input.status || 'pending',
-      priority: input.priority || 'medium',
-      client: {
-        id: input.clientId || `client-${Date.now()}`,
-        name: input.clientName,
-        email: input.clientEmail,
-        phone: input.clientPhone,
-      },
-      assignedAttorney: {
-        id: input.assignedAttorneyId,
-        name: 'Attorney Name', // In real app, fetch from database
-        email: 'attorney@lawfirm.com',
-      },
-      filingDate: input.filingDate,
-      nextHearingDate: input.nextHearingDate,
-      billingRate: input.billingRate,
-      estimatedValue: input.estimatedValue,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    // Verify client belongs to user
+    const client = await prisma.lawClient.findFirst({
+      where: { id: clientId, ownerUid: currentUser.uid },
+    });
 
-    mockCases.push(newCase);
+    if (!client) {
+      return NextResponse.json({ error: 'Client not found' }, { status: 404 });
+    }
 
+    // Generate case number
+    const caseCount = await prisma.lawCase.count({
+      where: { ownerUid: currentUser.uid },
+    });
+    const caseNumber = `LAW-${new Date().getFullYear()}-${String(caseCount + 1).padStart(3, '0')}`;
+
+    const newCase = await prisma.lawCase.create({
+      data: {
+        caseNumber,
+        title,
+        description,
+        clientId,
+        caseType,
+        status: status || 'active',
+        priority: priority || 'medium',
+        assignedToId,
+        filingDate: filingDate ? new Date(filingDate) : undefined,
+        nextHearingDate: nextHearingDate ? new Date(nextHearingDate) : undefined,
+        ownerUid: currentUser.uid,
+        organizationId: currentUser.uid,
+      },
+      include: {
+        client: true,
+        assignedTo: true,
+      },
+    });
+
+    console.log('[POST /api/law/cases] Created:', newCase.id);
     return NextResponse.json({ case: newCase }, { status: 201 });
   } catch (error) {
-    console.error('Failed to create case:', error);
-    return NextResponse.json(
-      { error: 'Failed to create case' },
-      { status: 500 }
-    );
+    console.error('[POST /api/law/cases] Error:', error);
+    return NextResponse.json({ error: 'Failed to create case' }, { status: 500 });
   }
 }

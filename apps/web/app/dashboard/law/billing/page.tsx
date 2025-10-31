@@ -1,12 +1,12 @@
 import { Suspense } from 'react';
-import { CasesPageClient } from './CasesPageClient';
+import { BillingPageClient } from './BillingPageClient';
 
 export const dynamic = 'force-dynamic';
 
-export default function CasesPage() {
+export default function BillingPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <CasesPageClient />
+      <BillingPageClient />
     </Suspense>
   );
 }

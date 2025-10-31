@@ -1,100 +1,145 @@
 import { NextRequest, NextResponse } from 'next/server';
-import type { Client, UpdateClientInput } from '@/lib/types/law/client';
+import { getCurrentUser } from '@/lib/auth.server';
+import { prisma } from '@/lib/prisma.server';
 
-// Simulate network delay
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+export const dynamic = 'force-dynamic';
 
 // GET /api/law/clients/[id] - Get single client
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  await delay(400);
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const currentUser = await getCurrentUser(request);
+    if (!currentUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-  const { id } = await params;
+    const { id } = await params;
+    const client = await prisma.lawClient.findFirst({
+      where: {
+        id,
+        ownerUid: currentUser.uid,
+      },
+      include: {
+        cases: {
+          select: {
+            id: true,
+            caseNumber: true,
+            title: true,
+            status: true,
+            priority: true,
+            createdAt: true,
+            nextHearingDate: true,
+          },
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    });
 
-  // Mock client data
-  const mockClient: Client = {
-    id,
-    name: 'Sample Client',
-    email: 'client@example.com',
-    phone: '+1 (555) 123-4567',
-    company: 'Sample Corp',
-    status: 'active',
-    tags: ['corporate'],
-    assignedAttorney: {
-      id: 'attorney-1',
-      name: 'Attorney Name',
-      email: 'attorney@lawfirm.com',
-    },
-    address: {
-      street: '123 Main St',
-      city: 'New York',
-      state: 'NY',
-      zipCode: '10001',
-      country: 'USA',
-    },
-    notes: 'Sample client notes',
-    casesCount: 3,
-    totalBilledAmount: 125000,
-    createdAt: '2024-01-10T10:00:00Z',
-    updatedAt: new Date().toISOString(),
-  };
+    if (!client) {
+      return NextResponse.json({ error: 'Client not found' }, { status: 404 });
+    }
 
-  return NextResponse.json({ client: mockClient });
+    return NextResponse.json({ client });
+  } catch (error) {
+    console.error('[GET /api/law/clients/[id]] Error:', error);
+    return NextResponse.json({ error: 'Failed to fetch client' }, { status: 500 });
+  }
 }
 
-// PATCH /api/law/clients/[id] - Update client
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  await delay(600);
-
-  const { id } = await params;
-
+// PUT /api/law/clients/[id] - Update client
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const input: UpdateClientInput = await request.json();
+    const currentUser = await getCurrentUser(request);
+    if (!currentUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    const updatedClient: Client = {
-      id,
-      name: input.name || 'Updated Client',
-      email: input.email,
-      phone: input.phone,
-      company: input.company,
-      status: input.status || 'active',
-      tags: input.tags || [],
-      assignedAttorney: {
-        id: input.assignedAttorneyId || 'attorney-1',
-        name: 'Attorney Name',
-        email: 'attorney@lawfirm.com',
+    const { id } = await params;
+    const body = await request.json();
+    const { name, email, phone, company, address, city, country, clientType, tags, notes } = body;
+
+    // Check if client exists and belongs to user
+    const existingClient = await prisma.lawClient.findFirst({
+      where: { id, ownerUid: currentUser.uid },
+    });
+
+    if (!existingClient) {
+      return NextResponse.json({ error: 'Client not found' }, { status: 404 });
+    }
+
+    // Check email uniqueness if changed
+    if (email && email !== existingClient.email) {
+      const emailTaken = await prisma.lawClient.findFirst({
+        where: {
+          ownerUid: currentUser.uid,
+          email,
+          id: { not: id },
+        },
+      });
+
+      if (emailTaken) {
+        return NextResponse.json({ error: 'Email already in use by another client' }, { status: 409 });
+      }
+    }
+
+    const updatedClient = await prisma.lawClient.update({
+      where: { id },
+      data: {
+        ...(name && { name }),
+        ...(email && { email }),
+        ...(phone !== undefined && { phone }),
+        ...(company !== undefined && { company }),
+        ...(address !== undefined && { address }),
+        ...(city !== undefined && { city }),
+        ...(country !== undefined && { country }),
+        ...(clientType && { clientType }),
+        ...(tags !== undefined && { tags }),
+        ...(notes !== undefined && { notes }),
       },
-      address: input.address,
-      notes: input.notes,
-      casesCount: 3,
-      createdAt: '2024-01-10T10:00:00Z',
-      updatedAt: new Date().toISOString(),
-    };
+      include: { cases: true },
+    });
 
+    console.log('[PUT /api/law/clients/[id]] Updated:', id);
     return NextResponse.json({ client: updatedClient });
   } catch (error) {
-    console.error('Failed to update client:', error);
+    console.error('[PUT /api/law/clients/[id]] Error:', error);
     return NextResponse.json({ error: 'Failed to update client' }, { status: 500 });
   }
 }
 
 // DELETE /api/law/clients/[id] - Delete client
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  await delay(500);
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const currentUser = await getCurrentUser(request);
+    if (!currentUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-  const { id } = await params;
+    const { id } = await params;
 
-  return NextResponse.json({
-    success: true,
-    message: 'Client deleted successfully',
-    id,
-  });
+    // Check if client exists and belongs to user
+    const existingClient = await prisma.lawClient.findFirst({
+      where: { id, ownerUid: currentUser.uid },
+      include: { cases: { select: { id: true } } },
+    });
+
+    if (!existingClient) {
+      return NextResponse.json({ error: 'Client not found' }, { status: 404 });
+    }
+
+    // Check if client has active cases
+    if (existingClient.cases && existingClient.cases.length > 0) {
+      return NextResponse.json(
+        { error: 'Cannot delete client with active cases. Please close or reassign cases first.' },
+        { status: 400 }
+      );
+    }
+
+    await prisma.lawClient.delete({ where: { id } });
+
+    console.log('[DELETE /api/law/clients/[id]] Deleted:', id);
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('[DELETE /api/law/clients/[id]] Error:', error);
+    return NextResponse.json({ error: 'Failed to delete client' }, { status: 500 });
+  }
 }

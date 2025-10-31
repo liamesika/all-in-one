@@ -1,7 +1,15 @@
-import { ClientsListPage } from './ClientsListPage';
+import { Suspense } from 'react';
+import { ClientsPageClient } from './ClientsPageClient';
 
-export const dynamic = 'force-dynamic';
+export const metadata = {
+  title: 'Clients - Law Management | Effinity',
+  description: 'Manage your law firm clients',
+};
 
 export default function ClientsPage() {
-  return <ClientsListPage />;
+  return (
+    <Suspense fallback={<div className="p-8">Loading clients...</div>}>
+      <ClientsPageClient />
+    </Suspense>
+  );
 }

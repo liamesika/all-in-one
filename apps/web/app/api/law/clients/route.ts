@@ -1,156 +1,94 @@
 import { NextRequest, NextResponse } from 'next/server';
-import type { Client, CreateClientInput } from '@/lib/types/law/client';
+import { getCurrentUser } from '@/lib/auth.server';
+import { prisma } from '@/lib/prisma.server';
 
-// Mock database - in-memory storage for demo
-let mockClients: Client[] = [
-  {
-    id: '1',
-    name: 'Acme Corporation',
-    email: 'contact@acme.com',
-    phone: '+1 (555) 100-1000',
-    company: 'Acme Corp',
-    status: 'active',
-    tags: ['corporate', 'high-value'],
-    assignedAttorney: {
-      id: 'attorney-1',
-      name: 'Sarah Williams',
-      email: 'sarah.williams@lawfirm.com',
-    },
-    address: {
-      street: '123 Business Ave',
-      city: 'New York',
-      state: 'NY',
-      zipCode: '10001',
-      country: 'USA',
-    },
-    notes: 'Major corporate client with ongoing litigation needs',
-    casesCount: 5,
-    totalBilledAmount: 450000,
-    createdAt: '2024-01-10T10:00:00Z',
-    updatedAt: '2024-01-20T14:30:00Z',
-  },
-  {
-    id: '2',
-    name: 'John Anderson',
-    email: 'john.anderson@email.com',
-    phone: '+1 (555) 200-2000',
-    status: 'active',
-    tags: ['individual', 'vip'],
-    assignedAttorney: {
-      id: 'attorney-2',
-      name: 'Robert Chen',
-      email: 'robert.chen@lawfirm.com',
-    },
-    notes: 'Personal injury case - VIP client',
-    casesCount: 2,
-    totalBilledAmount: 75000,
-    createdAt: '2024-01-15T09:00:00Z',
-    updatedAt: '2024-01-25T11:00:00Z',
-  },
-  {
-    id: '3',
-    name: 'TechStart Inc',
-    email: 'legal@techstart.io',
-    phone: '+1 (555) 300-3000',
-    company: 'TechStart Inc',
-    status: 'lead',
-    tags: ['corporate', 'referral'],
-    assignedAttorney: {
-      id: 'attorney-1',
-      name: 'Sarah Williams',
-      email: 'sarah.williams@lawfirm.com',
-    },
-    address: {
-      street: '456 Innovation Drive',
-      city: 'San Francisco',
-      state: 'CA',
-      zipCode: '94105',
-      country: 'USA',
-    },
-    notes: 'Potential client - intellectual property matters',
-    casesCount: 0,
-    createdAt: '2024-01-22T08:00:00Z',
-    updatedAt: '2024-01-22T08:00:00Z',
-  },
-];
+export const dynamic = 'force-dynamic';
 
-// Simulate network delay
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-// GET /api/law/clients - List clients with filters
+// GET /api/law/clients - List all clients
 export async function GET(request: NextRequest) {
-  await delay(500);
-
-  const searchParams = request.nextUrl.searchParams;
-  const status = searchParams.get('status');
-  const assignedAttorneyId = searchParams.get('assignedAttorneyId');
-  const search = searchParams.get('search');
-  const tags = searchParams.getAll('tags');
-
-  let filtered = [...mockClients];
-
-  // Apply filters
-  if (status) {
-    filtered = filtered.filter((c) => c.status === status);
-  }
-  if (assignedAttorneyId) {
-    filtered = filtered.filter((c) => c.assignedAttorney.id === assignedAttorneyId);
-  }
-  if (tags.length > 0) {
-    filtered = filtered.filter((c) => tags.some((tag) => c.tags.includes(tag as any)));
-  }
-  if (search) {
-    const query = search.toLowerCase();
-    filtered = filtered.filter(
-      (c) =>
-        c.name.toLowerCase().includes(query) ||
-        c.email?.toLowerCase().includes(query) ||
-        c.company?.toLowerCase().includes(query)
-    );
-  }
-
-  return NextResponse.json({
-    clients: filtered,
-    total: filtered.length,
-  });
-}
-
-// POST /api/law/clients - Create new client
-export async function POST(request: NextRequest) {
-  await delay(700);
-
   try {
-    const input: CreateClientInput = await request.json();
-
-    if (!input.name || !input.assignedAttorneyId) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    const currentUser = await getCurrentUser(request);
+    if (!currentUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const newClient: Client = {
-      id: `client-${Date.now()}`,
-      name: input.name,
-      email: input.email,
-      phone: input.phone,
-      company: input.company,
-      status: input.status || 'lead',
-      tags: input.tags || [],
-      assignedAttorney: {
-        id: input.assignedAttorneyId,
-        name: 'Attorney Name', // In real app, fetch from database
-        email: 'attorney@lawfirm.com',
-      },
-      address: input.address,
-      notes: input.notes,
-      casesCount: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const search = searchParams.get('search') || '';
+    const clientType = searchParams.get('clientType');
+    const skip = (page - 1) * limit;
 
-    mockClients.push(newClient);
+    const where: any = { ownerUid: currentUser.uid };
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { company: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+    if (clientType) where.clientType = clientType;
 
-    return NextResponse.json({ client: newClient }, { status: 201 });
+    const [clients, total] = await Promise.all([
+      prisma.lawClient.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: { cases: { select: { id: true, caseNumber: true, title: true, status: true }, take: 5 } },
+      }),
+      prisma.lawClient.count({ where }),
+    ]);
+
+    return NextResponse.json({
+      clients,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
   } catch (error) {
-    console.error('Failed to create client:', error);
+    console.error('[GET /api/law/clients] Error:', error);
+    return NextResponse.json({ error: 'Failed to fetch clients' }, { status: 500 });
+  }
+}
+
+// POST /api/law/clients - Create client
+export async function POST(request: NextRequest) {
+  try {
+    const currentUser = await getCurrentUser(request);
+    if (!currentUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { name, email, phone, company, address, city, country, clientType, tags, notes } = body;
+
+    if (!name || !email) {
+      return NextResponse.json({ error: 'Name and email are required' }, { status: 400 });
+    }
+
+    const existingClient = await prisma.lawClient.findFirst({
+      where: { ownerUid: currentUser.uid, email },
+    });
+
+    if (existingClient) {
+      return NextResponse.json({ error: 'Client with this email already exists' }, { status: 409 });
+    }
+
+    const client = await prisma.lawClient.create({
+      data: {
+        name, email, phone, company, address, city, country,
+        clientType: clientType || 'individual',
+        tags: tags || [],
+        notes,
+        ownerUid: currentUser.uid,
+        organizationId: currentUser.uid,
+      },
+      include: { cases: true },
+    });
+
+    console.log('[POST /api/law/clients] Created:', client.id);
+    return NextResponse.json({ client }, { status: 201 });
+  } catch (error) {
+    console.error('[POST /api/law/clients] Error:', error);
     return NextResponse.json({ error: 'Failed to create client' }, { status: 500 });
   }
 }
