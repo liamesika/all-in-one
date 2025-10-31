@@ -37,6 +37,10 @@ export function EcommerceHeader() {
       label: lang === 'he' ? 'מבנה החנות' : 'Store Structure',
       href: '/dashboard/ecommerce/structure'
     },
+    {
+      label: lang === 'he' ? 'הגדרות' : 'Settings',
+      href: '/dashboard/ecommerce/settings'
+    },
   ];
 
   const toggleLanguage = () => {
@@ -59,13 +63,14 @@ export function EcommerceHeader() {
   return (
     <>
       <header
-        className="fixed top-0 left-0 right-0 z-50 border-b border-gray-200 dark:border-gray-700 transition-all duration-300"
+        className="fixed top-0 left-0 right-0 z-50 border-b border-blue-600/20 dark:border-gray-700 transition-all duration-300 backdrop-blur-sm"
         style={{
           background: 'linear-gradient(135deg, #2979FF 0%, #1E5FCC 100%)',
-          boxShadow: '0 4px 6px -1px rgba(41, 121, 255, 0.1), 0 2px 4px -1px rgba(41, 121, 255, 0.06)'
+          boxShadow: '0 4px 12px -2px rgba(41, 121, 255, 0.15), 0 2px 6px -1px rgba(41, 121, 255, 0.1)',
+          minHeight: '72px'
         }}
       >
-        <div className="max-w-full mx-auto px-6 py-4">
+        <div className="max-w-full mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
             <div

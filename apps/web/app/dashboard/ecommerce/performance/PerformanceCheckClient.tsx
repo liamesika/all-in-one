@@ -21,7 +21,7 @@ import {
   CardBody,
   UniversalButton,
 } from '@/components/shared';
-import { RealEstateHeader } from '@/components/dashboard/RealEstateHeader';
+import { EcommerceHeader } from '@/components/dashboard/EcommerceHeader';
 import { useLang } from '@/components/i18n/LangProvider';
 import { auth } from '@/lib/firebase';
 
@@ -162,9 +162,9 @@ export function PerformanceCheckClient() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B]">
-      <RealEstateHeader />
+      <EcommerceHeader />
 
-      <div className="pt-20 pb-16 max-w-full mx-auto">
+      <div className="pt-24 pb-16 max-w-full mx-auto">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <button
             onClick={() => router.back()}

@@ -135,13 +135,44 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const updateProfile = async (displayName: string, avatarUrl: string) => {
-    // Store in localStorage for immediate persistence
-    if (typeof window !== 'undefined' && userProfile) {
-      const updatedProfile = { ...userProfile, displayName, avatarUrl };
-      localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
+    try {
+      // Call backend API to update profile
+      const token = await getToken();
+      if (!token) throw new Error('No authentication token');
 
-      // Optimistically update SWR cache
-      await refreshProfile(updatedProfile, { revalidate: false });
+      const response = await fetch('/api/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ displayName, avatarUrl }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
+
+      // Update local cache optimistically
+      if (typeof window !== 'undefined' && userProfile) {
+        const updatedProfile = { ...userProfile, displayName, avatarUrl };
+        localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
+
+        // Update SWR cache
+        await refreshProfile(updatedProfile, { revalidate: false });
+      }
+
+      // Also update Firebase user displayName
+      if (user) {
+        const { updateProfile: fbUpdateProfile } = await import('firebase/auth');
+        await fbUpdateProfile(user, {
+          displayName,
+          photoURL: avatarUrl,
+        });
+      }
+    } catch (error) {
+      console.error('Profile update error:', error);
+      throw error;
     }
   };
 

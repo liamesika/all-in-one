@@ -14,6 +14,7 @@ import {
   Target,
   Zap,
   ListTodo,
+  Check,
 } from 'lucide-react';
 import {
   UniversalCard,
@@ -244,7 +245,7 @@ export function EcommerceOverviewClient() {
     <div className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B]">
       <EcommerceHeader />
 
-      <div className="pt-20 pb-16 max-w-full mx-auto">
+      <div className="pt-24 pb-16 max-w-full mx-auto">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-8">
@@ -344,7 +345,37 @@ export function EcommerceOverviewClient() {
               </>
             )}
 
-            {/* Pricing Panel */}
+            {/* Current Plan Display for Active Subscriptions */}
+            {!loadingSubscription && subscription && subscription.status === 'ACTIVE' && (
+              <UniversalCard variant="elevated" className="mt-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-2 border-green-500/20">
+                <CardBody>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="flex-shrink-0 w-12 h-12 rounded-full bg-green-500 flex items-center justify-center">
+                        <Check className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                          {lang === 'he' ? 'תוכנית פעילה' : 'Active Plan'}
+                        </h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {subscription.plan === 'PRO' ? (lang === 'he' ? 'תוכנית Pro' : 'Pro Plan') : (lang === 'he' ? 'תוכנית Starter' : 'Starter Plan')}
+                        </p>
+                      </div>
+                    </div>
+                    <UniversalButton
+                      variant="primary"
+                      size="md"
+                      onClick={() => router.push('/dashboard/ecommerce/settings')}
+                    >
+                      {lang === 'he' ? 'שדרג תוכנית' : 'Upgrade Plan'}
+                    </UniversalButton>
+                  </div>
+                </CardBody>
+              </UniversalCard>
+            )}
+
+            {/* Pricing Panel - Only show for non-active subscriptions */}
             {!loadingSubscription && (!subscription || subscription.status !== 'ACTIVE') && (
               <div id="pricing-section" className="mt-8">
                 <PricingPanel

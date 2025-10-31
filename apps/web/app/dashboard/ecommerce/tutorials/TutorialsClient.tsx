@@ -341,7 +341,7 @@ export function TutorialsClient() {
     <div className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B]">
       <EcommerceHeader />
 
-      <div className="pt-20 pb-16 max-w-full mx-auto">
+      <div className="pt-24 pb-16 max-w-full mx-auto">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-8">
