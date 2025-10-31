@@ -62,7 +62,7 @@ export function PlatformHeader({
     { name: 'Dashboard', href: '/dashboard' },
     { name: 'Productions', href: '/dashboard/production/dashboard' },
     { name: 'Real Estate', href: '/dashboard/real-estate/dashboard' },
-    { name: 'E-commerce', href: '/dashboard/e-commerce/dashboard' },
+    { name: 'E-commerce', href: '/dashboard/ecommerce' },
   ];
 
   return (

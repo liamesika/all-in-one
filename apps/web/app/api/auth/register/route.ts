@@ -20,11 +20,11 @@ function resolveDashboardPath(vertical: Vertical): string {
   const verticalRoutes: Record<Vertical, string> = {
     REAL_ESTATE: '/dashboard/real-estate/dashboard',
     LAW: '/dashboard/law/dashboard',
-    E_COMMERCE: '/dashboard/e-commerce/dashboard',
+    E_COMMERCE: '/dashboard/ecommerce',
     PRODUCTION: '/dashboard/production/dashboard',
   };
 
-  return verticalRoutes[vertical] || '/dashboard/e-commerce/dashboard';
+  return verticalRoutes[vertical] || '/dashboard/ecommerce';
 }
 
 export async function POST(request: NextRequest) {

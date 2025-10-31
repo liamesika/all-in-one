@@ -100,7 +100,7 @@ describe('Vertical Mapping', () => {
   describe('getVerticalDashboardPath', () => {
     it('should generate correct dashboard paths for all verticals', () => {
       expect(getVerticalDashboardPath('REAL_ESTATE')).toBe('/dashboard/real-estate/dashboard');
-      expect(getVerticalDashboardPath('E_COMMERCE')).toBe('/dashboard/e-commerce/dashboard');
+      expect(getVerticalDashboardPath('E_COMMERCE')).toBe('/dashboard/ecommerce');
       expect(getVerticalDashboardPath('LAW')).toBe('/dashboard/law/dashboard');
       expect(getVerticalDashboardPath('PRODUCTION')).toBe('/dashboard/production/dashboard');
     });
@@ -111,10 +111,10 @@ describe('Vertical Mapping', () => {
   });
 
   describe('critical routing scenarios (regression prevention)', () => {
-    it('should correctly handle the E_COMMERCE -> e-commerce mismatch that was fixed', () => {
+    it('should correctly handle the E_COMMERCE -> ecommerce mismatch that was fixed', () => {
       // This was the specific bug fixed in v1.0.0
       const userWithECommerceVertical = 'E_COMMERCE' as VerticalEnum;
-      const expectedDashboardPath = '/dashboard/e-commerce/dashboard';
+      const expectedDashboardPath = '/dashboard/ecommerce';
 
       // User's defaultVertical from database should map to correct URL slug
       const dashboardPath = getVerticalDashboardPath(userWithECommerceVertical);
@@ -136,17 +136,17 @@ describe('Vertical Mapping', () => {
     });
 
     it('should handle all vertical routing round-trips correctly', () => {
-      const testCases: Array<{ enum: VerticalEnum; expectedSlug: VerticalSlug }> = [
-        { enum: 'E_COMMERCE', expectedSlug: 'e-commerce' },
-        { enum: 'REAL_ESTATE', expectedSlug: 'real-estate' },
-        { enum: 'LAW', expectedSlug: 'law' },
-        { enum: 'PRODUCTION', expectedSlug: 'production' }
+      const testCases: Array<{ enum: VerticalEnum; expectedPath: string }> = [
+        { enum: 'E_COMMERCE', expectedPath: '/dashboard/ecommerce' },
+        { enum: 'REAL_ESTATE', expectedPath: '/dashboard/real-estate/dashboard' },
+        { enum: 'LAW', expectedPath: '/dashboard/law/dashboard' },
+        { enum: 'PRODUCTION', expectedPath: '/dashboard/production/dashboard' }
       ];
 
-      testCases.forEach(({ enum: vertical, expectedSlug }) => {
+      testCases.forEach(({ enum: vertical, expectedPath }) => {
         // 1. Database enum -> Dashboard URL
         const dashboardPath = getVerticalDashboardPath(vertical);
-        expect(dashboardPath).toBe(`/dashboard/${expectedSlug}/dashboard`);
+        expect(dashboardPath).toBe(expectedPath);
 
         // 2. Dashboard URL -> Extract enum
         const extractedVertical = getVerticalFromPath(dashboardPath);

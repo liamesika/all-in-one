@@ -41,11 +41,11 @@ export class AuthService {
     const verticalRoutes = {
       [Vertical.REAL_ESTATE]: '/dashboard/real-estate/dashboard',
       [Vertical.LAW]: '/dashboard/law/dashboard',
-      [Vertical.E_COMMERCE]: '/dashboard/e-commerce/dashboard',
+      [Vertical.E_COMMERCE]: '/dashboard/ecommerce',
       [Vertical.PRODUCTION]: '/dashboard/production/dashboard',
     };
 
-    return verticalRoutes[vertical] || '/dashboard/e-commerce/dashboard';
+    return verticalRoutes[vertical] || '/dashboard/ecommerce';
   }
 
   async register(registerDto: RegisterDto): Promise<RegisterResponseDto> {

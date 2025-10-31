@@ -21,7 +21,7 @@ jest.mock('../lib/vertical-mapping', () => ({
   getVerticalDashboardPath: jest.fn((vertical: string) => {
     const mapping = {
       'REAL_ESTATE': '/dashboard/real-estate/dashboard',
-      'E_COMMERCE': '/dashboard/e-commerce/dashboard',
+      'E_COMMERCE': '/dashboard/ecommerce',
       'LAW': '/dashboard/law/dashboard',
       'PRODUCTION': '/dashboard/production/dashboard'
     };
@@ -111,7 +111,7 @@ describe('Middleware Redirect Behavior', () => {
     it('should allow access to known verticals', async () => {
       const knownVerticals = [
         '/dashboard/real-estate/dashboard',
-        '/dashboard/e-commerce/dashboard',
+        '/dashboard/ecommerce',
         '/dashboard/law/dashboard',
         '/dashboard/production/dashboard'
       ];
@@ -202,10 +202,10 @@ describe('Middleware Redirect Behavior', () => {
 
     it('should prevent the E_COMMERCE routing loop that existed before v1.0.0', async () => {
       // Before the fix, users with E_COMMERCE defaultVertical would get redirected
-      // to /dashboard/E_COMMERCE/dashboard (invalid) instead of /dashboard/e-commerce/dashboard
+      // to /dashboard/E_COMMERCE/dashboard (invalid) instead of /dashboard/ecommerce
 
       const request = createMockRequest(
-        'https://effinity.co.il/dashboard/e-commerce/dashboard',
+        'https://effinity.co.il/dashboard/ecommerce',
         { session: mockSessionCookie }
       );
       const response = await middleware(request);
@@ -219,7 +219,7 @@ describe('Middleware Redirect Behavior', () => {
       // Should be allowed (middleware doesn't enforce vertical matching)
 
       const request = createMockRequest(
-        'https://effinity.co.il/dashboard/e-commerce/dashboard',
+        'https://effinity.co.il/dashboard/ecommerce',
         { session: mockSessionCookie }
       );
       const response = await middleware(request);

@@ -50,7 +50,7 @@ export default function DashboardPage() {
         if (!response.ok) {
           console.error('❌ [DASHBOARD] Failed to fetch user data:', response.status);
           // Fallback to e-commerce
-          router.replace('/dashboard/e-commerce/dashboard');
+          router.replace('/dashboard/ecommerce');
           return;
         }
 
@@ -61,19 +61,19 @@ export default function DashboardPage() {
 
         const verticalMap: Record<string, string> = {
           'REAL_ESTATE': '/dashboard/real-estate/dashboard',
-          'E_COMMERCE': '/dashboard/e-commerce/dashboard',
+          'E_COMMERCE': '/dashboard/ecommerce',
           'LAW': '/dashboard/law/dashboard',
           'PRODUCTION': '/dashboard/production/dashboard',
         };
 
-        const dashboardPath = verticalMap[vertical] || '/dashboard/e-commerce/dashboard';
+        const dashboardPath = verticalMap[vertical] || '/dashboard/ecommerce';
         console.log('➡️ [DASHBOARD] Redirecting to:', dashboardPath);
 
         router.replace(dashboardPath);
       } catch (error) {
         console.error('❌ [DASHBOARD] Error determining dashboard:', error);
         // Fallback to e-commerce on any error
-        router.replace('/dashboard/e-commerce/dashboard');
+        router.replace('/dashboard/ecommerce');
       }
     };
 

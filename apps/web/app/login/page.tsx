@@ -54,12 +54,12 @@ function LoginFormInner() {
 
               const verticalPaths: Record<string, string> = {
                 'REAL_ESTATE': '/dashboard/real-estate/dashboard',
-                'E_COMMERCE': '/dashboard/e-commerce/dashboard',
+                'E_COMMERCE': '/dashboard/ecommerce',
                 'LAW': '/dashboard/law/dashboard',
                 'PRODUCTION': '/dashboard/production/dashboard',
               };
 
-              const dashboardPath = verticalPaths[profile.vertical] || '/dashboard/e-commerce/dashboard';
+              const dashboardPath = verticalPaths[profile.vertical] || '/dashboard/ecommerce';
               console.log('🚀 [LOGIN] Auto-redirecting authenticated user to:', dashboardPath);
               router.push(dashboardPath);
             }

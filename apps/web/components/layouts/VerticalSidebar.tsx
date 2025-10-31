@@ -60,10 +60,10 @@ const verticalConfigs: Record<string, VerticalConfig> = {
     icon: <ShoppingCart className="w-5 h-5" />,
     color: '#10B981',
     navItems: [
-      { label: 'Dashboard', href: '/e-commerce/dashboard', icon: <Home className="w-5 h-5" /> },
-      { label: 'Leads', href: '/e-commerce/leads', icon: <Users className="w-5 h-5" /> },
-      { label: 'Campaigns', href: '/e-commerce/campaigns', icon: <BarChart3 className="w-5 h-5" /> },
-      { label: 'Settings', href: '/e-commerce/settings', icon: <Settings className="w-5 h-5" /> },
+      { label: 'Dashboard', href: '/dashboard/ecommerce', icon: <Home className="w-5 h-5" /> },
+      { label: 'Leads', href: '/dashboard/e-commerce/leads', icon: <Users className="w-5 h-5" /> },
+      { label: 'Campaigns', href: '/dashboard/e-commerce/campaigns', icon: <BarChart3 className="w-5 h-5" /> },
+      { label: 'Settings', href: '/dashboard/e-commerce/settings', icon: <Settings className="w-5 h-5" /> },
     ],
   },
   'productions': {

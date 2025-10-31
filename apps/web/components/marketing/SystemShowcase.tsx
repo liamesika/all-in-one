@@ -23,7 +23,7 @@ const systems = [
     description: 'Product catalog, order management, marketing automation, and analytics',
     features: ['Product Management', 'Order Tracking', 'Marketing Automation', 'Revenue Analytics'],
     screenshotPlaceholder: 'E-Commerce Dashboard',
-    href: '/dashboard/e-commerce/dashboard'
+    href: '/dashboard/ecommerce'
   },
   {
     id: 'productions',

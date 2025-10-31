@@ -42,7 +42,7 @@ const verticals: Vertical[] = [
     color: '#9C27B0',
     gradient: 'from-purple-500 to-purple-700',
     description: 'Product catalog, orders, marketing automation, and analytics',
-    href: '/dashboard/e-commerce/dashboard',
+    href: '/dashboard/ecommerce',
     features: ['Products', 'Orders', 'Campaigns', 'Analytics']
   },
   {
