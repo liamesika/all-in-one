@@ -297,6 +297,7 @@ function CreateInvoiceModal({ onClose, onSuccess, lang }: { onClose: () => void;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     setLoading(true);
     try {
       const user = auth.currentUser;
@@ -307,70 +308,147 @@ function CreateInvoiceModal({ onClose, onSuccess, lang }: { onClose: () => void;
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-      if (!response.ok) throw new Error('Failed to create');
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to create invoice');
+      }
       onSuccess();
     } catch (err: any) {
-      setError(err.message);
+      console.error('[Create Invoice Error]', err);
+      setError(err.message || 'An error occurred');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white dark:bg-gray-900 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b">
-          <h2 className="text-2xl font-bold">{lang === 'he' ? 'חשבונית חדשה' : 'New Invoice'}</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
+      <div className="bg-white dark:bg-gray-900 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{lang === 'he' ? 'חשבונית חדשה' : 'New Invoice'}</h2>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {error && <div className="p-4 bg-red-50 border border-red-200 rounded text-sm text-red-600">{error}</div>}
-          <div className="grid md:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-600 dark:text-red-400">
+              {error}
+            </div>
+          )}
+
+          <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium mb-1">{lang === 'he' ? 'לקוח *' : 'Client *'}</label>
-              <select required value={formData.clientId} onChange={(e) => setFormData({...formData, clientId: e.target.value})} className="w-full px-4 py-2 border rounded-lg">
-                <option value="">Select client</option>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {lang === 'he' ? 'לקוח *' : 'Client *'}
+              </label>
+              <select
+                required
+                value={formData.clientId}
+                onChange={(e) => setFormData({...formData, clientId: e.target.value})}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              >
+                <option value="">{lang === 'he' ? 'בחר לקוח' : 'Select client'}</option>
                 {clients.map(client => <option key={client.id} value={client.id}>{client.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">{lang === 'he' ? 'תיק' : 'Case'}</label>
-              <select value={formData.caseId} onChange={(e) => setFormData({...formData, caseId: e.target.value})} className="w-full px-4 py-2 border rounded-lg">
-                <option value="">None</option>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {lang === 'he' ? 'תיק קשור' : 'Related Case'}
+              </label>
+              <select
+                value={formData.caseId}
+                onChange={(e) => setFormData({...formData, caseId: e.target.value})}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              >
+                <option value="">{lang === 'he' ? 'ללא תיק' : 'None'}</option>
                 {cases.map(c => <option key={c.id} value={c.id}>{c.caseNumber} - {c.title}</option>)}
               </select>
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium mb-1">{lang === 'he' ? 'תיאור' : 'Description'}</label>
-              <textarea value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="w-full px-4 py-2 border rounded-lg" rows={3} />
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {lang === 'he' ? 'תיאור' : 'Description'}
+              </label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                placeholder={lang === 'he' ? 'הזן תיאור החשבונית' : 'Enter invoice description'}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                rows={3}
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">{lang === 'he' ? 'סכום *' : 'Amount *'}</label>
-              <input required type="number" step="0.01" value={formData.amount} onChange={(e) => setFormData({...formData, amount: e.target.value})} className="w-full px-4 py-2 border rounded-lg" />
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {lang === 'he' ? 'סכום *' : 'Amount *'}
+              </label>
+              <input
+                required
+                type="number"
+                step="0.01"
+                value={formData.amount}
+                onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                placeholder="0.00"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">{lang === 'he' ? 'מטבע' : 'Currency'}</label>
-              <select value={formData.currency} onChange={(e) => setFormData({...formData, currency: e.target.value})} className="w-full px-4 py-2 border rounded-lg">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {lang === 'he' ? 'מטבע' : 'Currency'}
+              </label>
+              <select
+                value={formData.currency}
+                onChange={(e) => setFormData({...formData, currency: e.target.value})}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              >
                 <option value="USD">USD</option>
                 <option value="EUR">EUR</option>
                 <option value="ILS">ILS</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">{lang === 'he' ? 'סטטוס' : 'Status'}</label>
-              <select value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})} className="w-full px-4 py-2 border rounded-lg">
-                <option value="draft">Draft</option>
-                <option value="sent">Sent</option>
-                <option value="paid">Paid</option>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {lang === 'he' ? 'סטטוס' : 'Status'}
+              </label>
+              <select
+                value={formData.status}
+                onChange={(e) => setFormData({...formData, status: e.target.value})}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              >
+                <option value="draft">{lang === 'he' ? 'טיוטה' : 'Draft'}</option>
+                <option value="sent">{lang === 'he' ? 'נשלח' : 'Sent'}</option>
+                <option value="paid">{lang === 'he' ? 'שולם' : 'Paid'}</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">{lang === 'he' ? 'תאריך יעד' : 'Due Date'}</label>
-              <input type="date" value={formData.dueDate} onChange={(e) => setFormData({...formData, dueDate: e.target.value})} className="w-full px-4 py-2 border rounded-lg" />
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {lang === 'he' ? 'תאריך יעד' : 'Due Date'}
+              </label>
+              <input
+                type="date"
+                value={formData.dueDate}
+                onChange={(e) => setFormData({...formData, dueDate: e.target.value})}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              />
             </div>
           </div>
-          <div className="flex gap-3 pt-4">
-            <UniversalButton type="button" variant="secondary" size="md" onClick={onClose} disabled={loading} className="flex-1">Cancel</UniversalButton>
-            <UniversalButton type="submit" variant="primary" size="md" disabled={loading} className="flex-1">{loading ? 'Creating...' : 'Create'}</UniversalButton>
+
+          <div className="flex gap-4 pt-4">
+            <UniversalButton
+              type="button"
+              variant="secondary"
+              size="md"
+              onClick={onClose}
+              disabled={loading}
+              className="flex-1"
+            >
+              {lang === 'he' ? 'ביטול' : 'Cancel'}
+            </UniversalButton>
+            <UniversalButton
+              type="submit"
+              variant="primary"
+              size="md"
+              disabled={loading}
+              className="flex-1"
+            >
+              {loading ? (lang === 'he' ? 'יוצר...' : 'Creating...') : (lang === 'he' ? 'צור חשבונית' : 'Create Invoice')}
+            </UniversalButton>
           </div>
         </form>
       </div>
