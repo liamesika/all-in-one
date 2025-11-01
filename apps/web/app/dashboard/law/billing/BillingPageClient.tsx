@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { DollarSign, Plus, Search, Filter, User, Briefcase, Calendar, Download } from 'lucide-react';
-import { LawHeader } from '@/components/dashboard/LawHeader';
 import { UniversalCard, CardHeader, CardBody, UniversalButton } from '@/components/shared';
 import { useLang } from '@/components/i18n/LangProvider';
 import { auth } from '@/lib/firebase';
@@ -89,11 +88,7 @@ export function BillingPageClient() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B]">
-      <LawHeader />
-
-      <div className="pt-24 pb-16">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="p-8">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
               <DollarSign className="w-8 h-8 text-amber-500" />
@@ -255,8 +250,6 @@ export function BillingPageClient() {
               )}
             </CardBody>
           </UniversalCard>
-        </div>
-      </div>
 
       {showCreateModal && (
         <CreateInvoiceModal onClose={() => setShowCreateModal(false)} onSuccess={() => { setShowCreateModal(false); fetchInvoices(); }} lang={lang} />

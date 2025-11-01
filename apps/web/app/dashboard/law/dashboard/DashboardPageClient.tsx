@@ -14,7 +14,6 @@ import {
   FileText,
   ChevronRight,
 } from 'lucide-react';
-import { LawHeader } from '@/components/dashboard/LawHeader';
 import { UniversalCard, CardHeader, CardBody, UniversalButton } from '@/components/shared';
 import { useLang } from '@/components/i18n/LangProvider';
 import { auth } from '@/lib/firebase';
@@ -206,19 +205,15 @@ export function DashboardPageClient() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B]">
-      <LawHeader />
-
-      <div className="pt-24 pb-16">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              {lang === 'he' ? 'לוח בקרה' : 'Dashboard'}
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              {lang === 'he' ? 'מבט כללי על משרד עורכי הדין' : 'Law office overview'}
-            </p>
-          </div>
+    <div className="p-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          {lang === 'he' ? 'לוח בקרה' : 'Dashboard'}
+        </h1>
+        <p className="text-gray-600 dark:text-gray-400">
+          {lang === 'he' ? 'מבט כללי על משרד עורכי הדין' : 'Law office overview'}
+        </p>
+      </div>
 
           {loading ? (
             <div className="flex justify-center py-12">

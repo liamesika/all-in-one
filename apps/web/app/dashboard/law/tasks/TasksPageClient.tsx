@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { CheckSquare, Plus, Search, User, Calendar, Briefcase } from 'lucide-react';
-import { LawHeader } from '@/components/dashboard/LawHeader';
 import { UniversalCard, CardHeader, CardBody, UniversalButton } from '@/components/shared';
 import { useLang } from '@/components/i18n/LangProvider';
 import { auth } from '@/lib/firebase';
@@ -109,11 +108,7 @@ export function TasksPageClient() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B]">
-      <LawHeader />
-
-      <div className="pt-24 pb-16">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="p-8">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
               <CheckSquare className="w-8 h-8 text-amber-500" />
@@ -216,8 +211,6 @@ export function TasksPageClient() {
               ))}
             </div>
           )}
-        </div>
-      </div>
 
       {showCreateModal && (
         <CreateTaskModal onClose={() => setShowCreateModal(false)} onSuccess={() => { setShowCreateModal(false); fetchTasks(); }} lang={lang} />
@@ -257,6 +250,7 @@ function CreateTaskModal({ onClose, onSuccess, lang }: { onClose: () => void; on
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     setLoading(true);
     try {
       const user = auth.currentUser;
@@ -267,63 +261,134 @@ function CreateTaskModal({ onClose, onSuccess, lang }: { onClose: () => void; on
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-      if (!response.ok) throw new Error('Failed to create');
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to create task');
+      }
       onSuccess();
     } catch (err: any) {
-      setError(err.message);
+      console.error('[Create Task Error]', err);
+      setError(err.message || 'An error occurred');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white dark:bg-gray-900 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b">
-          <h2 className="text-2xl font-bold">{lang === 'he' ? 'משימה חדשה' : 'New Task'}</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
+      <div className="bg-white dark:bg-gray-900 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{lang === 'he' ? 'משימה חדשה' : 'New Task'}</h2>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {error && <div className="p-4 bg-red-50 border border-red-200 rounded text-sm text-red-600">{error}</div>}
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-600 dark:text-red-400">
+              {error}
+            </div>
+          )}
+
           <div>
-            <label className="block text-sm font-medium mb-1">{lang === 'he' ? 'כותרת *' : 'Title *'}</label>
-            <input required type="text" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} className="w-full px-4 py-2 border rounded-lg" />
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {lang === 'he' ? 'כותרת *' : 'Title *'}
+            </label>
+            <input
+              required
+              type="text"
+              value={formData.title}
+              onChange={(e) => setFormData({...formData, title: e.target.value})}
+              placeholder={lang === 'he' ? 'הזן כותרת משימה' : 'Enter task title'}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+            />
           </div>
+
           <div>
-            <label className="block text-sm font-medium mb-1">{lang === 'he' ? 'תיאור' : 'Description'}</label>
-            <textarea value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="w-full px-4 py-2 border rounded-lg" rows={3} />
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {lang === 'he' ? 'תיאור' : 'Description'}
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              placeholder={lang === 'he' ? 'הזן תיאור המשימה' : 'Enter task description'}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              rows={3}
+            />
           </div>
-          <div className="grid md:grid-cols-2 gap-4">
+
+          <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium mb-1">{lang === 'he' ? 'תיק' : 'Case'}</label>
-              <select value={formData.caseId} onChange={(e) => setFormData({...formData, caseId: e.target.value})} className="w-full px-4 py-2 border rounded-lg">
-                <option value="">None</option>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {lang === 'he' ? 'תיק קשור' : 'Related Case'}
+              </label>
+              <select
+                value={formData.caseId}
+                onChange={(e) => setFormData({...formData, caseId: e.target.value})}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              >
+                <option value="">{lang === 'he' ? 'ללא תיק' : 'None'}</option>
                 {cases.map(c => <option key={c.id} value={c.id}>{c.caseNumber} - {c.title}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">{lang === 'he' ? 'עדיפות' : 'Priority'}</label>
-              <select value={formData.priority} onChange={(e) => setFormData({...formData, priority: e.target.value})} className="w-full px-4 py-2 border rounded-lg">
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {lang === 'he' ? 'עדיפות' : 'Priority'}
+              </label>
+              <select
+                value={formData.priority}
+                onChange={(e) => setFormData({...formData, priority: e.target.value})}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              >
+                <option value="low">{lang === 'he' ? 'נמוכה' : 'Low'}</option>
+                <option value="medium">{lang === 'he' ? 'בינונית' : 'Medium'}</option>
+                <option value="high">{lang === 'he' ? 'גבוהה' : 'High'}</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">{lang === 'he' ? 'סטטוס' : 'Status'}</label>
-              <select value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})} className="w-full px-4 py-2 border rounded-lg">
-                <option value="todo">To Do</option>
-                <option value="in_progress">In Progress</option>
-                <option value="done">Done</option>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {lang === 'he' ? 'סטטוס' : 'Status'}
+              </label>
+              <select
+                value={formData.status}
+                onChange={(e) => setFormData({...formData, status: e.target.value})}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              >
+                <option value="todo">{lang === 'he' ? 'לביצוע' : 'To Do'}</option>
+                <option value="in_progress">{lang === 'he' ? 'בביצוע' : 'In Progress'}</option>
+                <option value="done">{lang === 'he' ? 'הושלם' : 'Done'}</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">{lang === 'he' ? 'תאריך יעד' : 'Due Date'}</label>
-              <input type="date" value={formData.dueDate} onChange={(e) => setFormData({...formData, dueDate: e.target.value})} className="w-full px-4 py-2 border rounded-lg" />
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {lang === 'he' ? 'תאריך יעד' : 'Due Date'}
+              </label>
+              <input
+                type="date"
+                value={formData.dueDate}
+                onChange={(e) => setFormData({...formData, dueDate: e.target.value})}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              />
             </div>
           </div>
-          <div className="flex gap-3 pt-4">
-            <UniversalButton type="button" variant="secondary" size="md" onClick={onClose} disabled={loading} className="flex-1">Cancel</UniversalButton>
-            <UniversalButton type="submit" variant="primary" size="md" disabled={loading} className="flex-1">{loading ? 'Creating...' : 'Create'}</UniversalButton>
+
+          <div className="flex gap-4 pt-4">
+            <UniversalButton
+              type="button"
+              variant="secondary"
+              size="md"
+              onClick={onClose}
+              disabled={loading}
+              className="flex-1"
+            >
+              {lang === 'he' ? 'ביטול' : 'Cancel'}
+            </UniversalButton>
+            <UniversalButton
+              type="submit"
+              variant="primary"
+              size="md"
+              disabled={loading}
+              className="flex-1"
+            >
+              {loading ? (lang === 'he' ? 'יוצר...' : 'Creating...') : (lang === 'he' ? 'צור משימה' : 'Create Task')}
+            </UniversalButton>
           </div>
         </form>
       </div>

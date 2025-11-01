@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Users, Search, Plus, Filter, ChevronRight, Mail, Phone, Building2, User } from 'lucide-react';
-import { LawHeader } from '@/components/dashboard/LawHeader';
 import { UniversalCard, CardHeader, CardBody, UniversalButton } from '@/components/shared';
 import { useLang } from '@/components/i18n/LangProvider';
 import { auth } from '@/lib/firebase';
@@ -75,11 +74,7 @@ export function ClientsPageClient() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0E1A2B]">
-      <LawHeader />
-
-      <div className="pt-24 pb-16">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="p-8">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
               <Users className="w-8 h-8 text-amber-500" />
@@ -215,8 +210,6 @@ export function ClientsPageClient() {
               )}
             </CardBody>
           </UniversalCard>
-        </div>
-      </div>
 
       {showCreateModal && (
         <CreateClientModal onClose={() => setShowCreateModal(false)} onSuccess={() => { setShowCreateModal(false); fetchClients(); }} lang={lang} />
@@ -234,6 +227,7 @@ function CreateClientModal({ onClose, onSuccess, lang }: { onClose: () => void; 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     setLoading(true);
     try {
       const user = auth.currentUser;
@@ -244,53 +238,120 @@ function CreateClientModal({ onClose, onSuccess, lang }: { onClose: () => void; 
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-      if (!response.ok) throw new Error('Failed to create');
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to create client');
+      }
       onSuccess();
     } catch (err: any) {
-      setError(err.message);
+      console.error('[Create Client Error]', err);
+      setError(err.message || 'An error occurred');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white dark:bg-gray-900 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b">
-          <h2 className="text-2xl font-bold">{lang === 'he' ? 'לקוח חדש' : 'New Client'}</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
+      <div className="bg-white dark:bg-gray-900 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{lang === 'he' ? 'לקוח חדש' : 'New Client'}</h2>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {error && <div className="p-4 bg-red-50 border border-red-200 rounded text-sm text-red-600">{error}</div>}
-          <div className="grid md:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-600 dark:text-red-400">
+              {error}
+            </div>
+          )}
+
+          <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium mb-1">{lang === 'he' ? 'שם מלא *' : 'Full Name *'}</label>
-              <input required type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-2 border rounded-lg" />
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {lang === 'he' ? 'שם מלא *' : 'Full Name *'}
+              </label>
+              <input
+                required
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                placeholder={lang === 'he' ? 'הזן שם מלא' : 'Enter full name'}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">{lang === 'he' ? 'אימייל *' : 'Email *'}</label>
-              <input required type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full px-4 py-2 border rounded-lg" />
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {lang === 'he' ? 'אימייל *' : 'Email *'}
+              </label>
+              <input
+                required
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                placeholder={lang === 'he' ? 'example@domain.com' : 'example@domain.com'}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">{lang === 'he' ? 'טלפון' : 'Phone'}</label>
-              <input type="tel" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full px-4 py-2 border rounded-lg" />
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {lang === 'he' ? 'טלפון' : 'Phone'}
+              </label>
+              <input
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                placeholder={lang === 'he' ? '+972-50-123-4567' : '+1-555-123-4567'}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">{lang === 'he' ? 'סוג' : 'Type'}</label>
-              <select value={formData.clientType} onChange={(e) => setFormData({...formData, clientType: e.target.value})} className="w-full px-4 py-2 border rounded-lg">
-                <option value="individual">Individual</option>
-                <option value="corporate">Corporate</option>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {lang === 'he' ? 'סוג לקוח *' : 'Client Type *'}
+              </label>
+              <select
+                value={formData.clientType}
+                onChange={(e) => setFormData({...formData, clientType: e.target.value})}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              >
+                <option value="individual">{lang === 'he' ? 'פרטי' : 'Individual'}</option>
+                <option value="corporate">{lang === 'he' ? 'תאגיד' : 'Corporate'}</option>
               </select>
             </div>
             {formData.clientType === 'corporate' && (
               <div>
-                <label className="block text-sm font-medium mb-1">Company</label>
-                <input type="text" value={formData.company} onChange={(e) => setFormData({...formData, company: e.target.value})} className="w-full px-4 py-2 border rounded-lg" />
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {lang === 'he' ? 'שם חברה' : 'Company Name'}
+                </label>
+                <input
+                  type="text"
+                  value={formData.company}
+                  onChange={(e) => setFormData({...formData, company: e.target.value})}
+                  placeholder={lang === 'he' ? 'הזן שם חברה' : 'Enter company name'}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                />
               </div>
             )}
           </div>
-          <div className="flex gap-3 pt-4">
-            <UniversalButton type="button" variant="secondary" size="md" onClick={onClose} disabled={loading} className="flex-1">Cancel</UniversalButton>
-            <UniversalButton type="submit" variant="primary" size="md" disabled={loading} className="flex-1">{loading ? 'Creating...' : 'Create'}</UniversalButton>
+
+          <div className="flex gap-4 pt-4">
+            <UniversalButton
+              type="button"
+              variant="secondary"
+              size="md"
+              onClick={onClose}
+              disabled={loading}
+              className="flex-1"
+            >
+              {lang === 'he' ? 'ביטול' : 'Cancel'}
+            </UniversalButton>
+            <UniversalButton
+              type="submit"
+              variant="primary"
+              size="md"
+              disabled={loading}
+              className="flex-1"
+            >
+              {loading ? (lang === 'he' ? 'יוצר...' : 'Creating...') : (lang === 'he' ? 'צור לקוח' : 'Create Client')}
+            </UniversalButton>
           </div>
         </form>
       </div>
