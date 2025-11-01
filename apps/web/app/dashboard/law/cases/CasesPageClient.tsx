@@ -80,44 +80,47 @@ export function CasesPageClient() {
 
   const getPriorityColor = (priority: string) => {
     const colors: Record<string, string> = {
-      low: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
-      medium: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-      high: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      low: 'bg-gray-500/20 text-gray-400',
+      medium: 'bg-amber-500/20 text-amber-400',
+      high: 'bg-red-500/20 text-red-400',
     };
     return colors[priority] || colors.medium;
   };
 
   const getStatusColor = (caseStatus: string) => {
     const colors: Record<string, string> = {
-      active: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-      pending: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-      closed: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400',
-      archived: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      active: 'bg-green-500/20 text-green-400',
+      pending: 'bg-yellow-500/20 text-yellow-400',
+      closed: 'bg-gray-500/20 text-gray-400',
+      archived: 'bg-blue-500/20 text-blue-400',
     };
     return colors[caseStatus] || colors.active;
   };
 
   return (
-    <div className="p-8">
+    <div className="p-8 lg:p-10 min-h-screen bg-gradient-to-br from-[#0f1a2c] to-[#17223c]">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
               <Briefcase className="w-8 h-8 text-amber-500" />
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                <h1 className="text-3xl font-bold text-white">
                   {lang === 'he' ? 'תיקים' : 'Cases'}
                 </h1>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-gray-300">
                   {lang === 'he' ? 'נהל תיקים משפטיים' : 'Manage legal cases'}
                 </p>
               </div>
             </div>
-            <UniversalButton variant="primary" size="md" onClick={() => setShowCreateModal(true)}>
-              <Plus className="w-5 h-5 mr-2" />
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="bg-amber-500 hover:bg-amber-400 text-[#0e1a2b] font-semibold rounded-xl px-5 py-2.5 transition-all flex items-center gap-2"
+            >
+              <Plus className="w-5 h-5" />
               {lang === 'he' ? 'תיק חדש' : 'New Case'}
-            </UniversalButton>
+            </button>
           </div>
 
-          <UniversalCard variant="elevated" className="mb-6">
+          <UniversalCard variant="elevated" className="mb-6 bg-gradient-to-br from-[#0f1a2c] to-[#1a2841] border border-white/10 hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-300">
             <CardBody>
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1">
@@ -128,7 +131,7 @@ export function CasesPageClient() {
                       placeholder={lang === 'he' ? 'חפש תיקים...' : 'Search cases...'}
                       value={search}
                       onChange={(e) => handleSearch(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      className="w-full pl-10 pr-4 py-2 border border-white/10 rounded-lg bg-[#1e3a5f]/20 text-white placeholder-gray-400 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -137,7 +140,7 @@ export function CasesPageClient() {
                   <select
                     value={status}
                     onChange={(e) => handleFilterChange(e.target.value)}
-                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
+                    className="px-4 py-2 border border-white/10 rounded-lg bg-[#1e3a5f]/20 text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                   >
                     <option value="">{lang === 'he' ? 'כל הסטטוסים' : 'All Statuses'}</option>
                     <option value="active">{lang === 'he' ? 'פעיל' : 'Active'}</option>
@@ -150,7 +153,7 @@ export function CasesPageClient() {
             </CardBody>
           </UniversalCard>
 
-          <UniversalCard variant="elevated">
+          <UniversalCard variant="elevated" className="bg-gradient-to-br from-[#0f1a2c] to-[#1a2841] border border-white/10 hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-300">
             <CardBody>
               {loading ? (
                 <div className="flex justify-center py-12">
@@ -159,20 +162,20 @@ export function CasesPageClient() {
               ) : cases.length === 0 ? (
                 <div className="text-center py-12">
                   <Briefcase className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 dark:text-gray-400">{lang === 'he' ? 'לא נמצאו תיקים' : 'No cases found'}</p>
+                  <p className="text-gray-400">{lang === 'he' ? 'לא נמצאו תיקים' : 'No cases found'}</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b border-gray-200 dark:border-gray-700">
-                        <th className="px-4 py-3 text-left text-sm font-medium">{lang === 'he' ? 'מספר תיק' : 'Case #'}</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium">{lang === 'he' ? 'כותרת' : 'Title'}</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium">{lang === 'he' ? 'לקוח' : 'Client'}</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium">{lang === 'he' ? 'סטטוס' : 'Status'}</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium">{lang === 'he' ? 'עדיפות' : 'Priority'}</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium">{lang === 'he' ? 'סוג' : 'Type'}</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium">{lang === 'he' ? 'משימות' : 'Tasks'}</th>
+                      <tr className="border-b border-white/10">
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-white">{lang === 'he' ? 'מספר תיק' : 'Case #'}</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-white">{lang === 'he' ? 'כותרת' : 'Title'}</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-white">{lang === 'he' ? 'לקוח' : 'Client'}</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-white">{lang === 'he' ? 'סטטוס' : 'Status'}</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-white">{lang === 'he' ? 'עדיפות' : 'Priority'}</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-white">{lang === 'he' ? 'סוג' : 'Type'}</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-white">{lang === 'he' ? 'משימות' : 'Tasks'}</th>
                         <th className="px-4 py-3"></th>
                       </tr>
                     </thead>
@@ -180,19 +183,19 @@ export function CasesPageClient() {
                       {cases.map((caseItem) => (
                         <tr
                           key={caseItem.id}
-                          className="border-b hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer"
+                          className="border-b border-white/10 hover:bg-[#1e3a5f]/30 transition-all duration-300 cursor-pointer"
                           onClick={() => router.push(`/dashboard/law/cases/${caseItem.id}`)}
                         >
                           <td className="px-4 py-4">
-                            <span className="font-mono text-sm font-medium text-blue-600 dark:text-blue-400">
+                            <span className="font-mono text-sm font-medium text-blue-400">
                               {caseItem.caseNumber}
                             </span>
                           </td>
                           <td className="px-4 py-4">
                             <div>
-                              <p className="font-medium">{caseItem.title}</p>
+                              <p className="font-medium text-white">{caseItem.title}</p>
                               {caseItem.description && (
-                                <p className="text-sm text-gray-500 truncate max-w-xs">{caseItem.description}</p>
+                                <p className="text-sm text-gray-400 truncate max-w-xs">{caseItem.description}</p>
                               )}
                             </div>
                           </td>
@@ -200,7 +203,7 @@ export function CasesPageClient() {
                             {caseItem.client ? (
                               <div className="flex items-center gap-2">
                                 <User className="w-4 h-4 text-gray-400" />
-                                <span className="text-sm">{caseItem.client.name}</span>
+                                <span className="text-sm text-white">{caseItem.client.name}</span>
                               </div>
                             ) : (
                               <span className="text-sm text-gray-400">-</span>
@@ -216,10 +219,10 @@ export function CasesPageClient() {
                               {caseItem.priority.charAt(0).toUpperCase() + caseItem.priority.slice(1)}
                             </span>
                           </td>
-                          <td className="px-4 py-4 text-sm">{caseItem.caseType}</td>
+                          <td className="px-4 py-4 text-sm text-white">{caseItem.caseType}</td>
                           <td className="px-4 py-4">
                             {caseItem.tasks && caseItem.tasks.length > 0 ? (
-                              <span className="text-sm">
+                              <span className="text-sm text-white">
                                 {caseItem.tasks.filter(t => t.status !== 'done').length} / {caseItem.tasks.length}
                               </span>
                             ) : (
@@ -237,16 +240,24 @@ export function CasesPageClient() {
               )}
 
               {totalPages > 1 && (
-                <div className="flex justify-center gap-2 mt-6 pt-6 border-t">
-                  <UniversalButton variant="secondary" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>
+                <div className="flex justify-center gap-2 mt-6 pt-6 border-t border-white/10">
+                  <button
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="bg-[#1e3a5f] hover:bg-[#2a4a7a] text-white font-medium rounded-lg px-4 py-2 transition-all disabled:opacity-50"
+                  >
                     {lang === 'he' ? 'הקודם' : 'Previous'}
-                  </UniversalButton>
-                  <span className="text-sm px-4 py-2">
+                  </button>
+                  <span className="text-sm px-4 py-2 text-white">
                     {lang === 'he' ? `עמוד ${page} מתוך ${totalPages}` : `Page ${page} of ${totalPages}`}
                   </span>
-                  <UniversalButton variant="secondary" size="sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
+                  <button
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    className="bg-[#1e3a5f] hover:bg-[#2a4a7a] text-white font-medium rounded-lg px-4 py-2 transition-all disabled:opacity-50"
+                  >
                     {lang === 'he' ? 'הבא' : 'Next'}
-                  </UniversalButton>
+                  </button>
                 </div>
               )}
             </CardBody>

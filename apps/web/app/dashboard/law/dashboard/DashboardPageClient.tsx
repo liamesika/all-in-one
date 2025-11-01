@@ -205,12 +205,12 @@ export function DashboardPageClient() {
   };
 
   return (
-    <div className="p-8">
+    <div className="p-8 lg:p-10 min-h-screen bg-gradient-to-br from-[#0f1a2c] to-[#17223c]">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+        <h1 className="text-3xl font-bold text-white mb-2">
           {lang === 'he' ? 'לוח בקרה' : 'Dashboard'}
         </h1>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-gray-300">
           {lang === 'he' ? 'מבט כללי על משרד עורכי הדין' : 'Law office overview'}
         </p>
       </div>
@@ -226,16 +226,16 @@ export function DashboardPageClient() {
                   <UniversalCard
                     key={card.title}
                     variant="elevated"
-                    className="cursor-pointer hover:shadow-lg transition-shadow"
+                    className="cursor-pointer bg-gradient-to-br from-[#0f1a2c] to-[#1a2841] border border-white/10 hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-300"
                     onClick={() => router.push(card.link)}
                   >
                     <CardBody>
                       <div className="flex items-start justify-between">
                         <div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{card.title}</p>
-                          <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                          <p className="text-sm text-gray-400 mb-1">{card.title}</p>
+                          <p className="text-2xl font-bold text-white">
                             {typeof card.value === 'string' ? card.value : card.value}
-                            {card.total && <span className="text-sm text-gray-500 ml-2">/ {card.total}</span>}
+                            {card.total && <span className="text-sm text-gray-400 ml-2">/ {card.total}</span>}
                           </p>
                         </div>
                         <div className={`p-3 rounded-lg ${card.color}`}>
@@ -248,13 +248,14 @@ export function DashboardPageClient() {
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                <UniversalCard variant="elevated">
+                <UniversalCard variant="elevated" className="bg-gradient-to-br from-[#0f1a2c] to-[#1a2841] border border-white/10 hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-300">
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold">{lang === 'he' ? 'תיקים אחרונים' : 'Recent Cases'}</h3>
+                      <h3 className="text-lg font-semibold text-white">{lang === 'he' ? 'תיקים אחרונים' : 'Recent Cases'}</h3>
                       <UniversalButton
                         variant="secondary"
                         size="sm"
+                        className="bg-amber-500 hover:bg-amber-400 text-[#0e1a2b] font-semibold rounded-xl px-5 py-2.5 transition-all"
                         onClick={() => router.push('/dashboard/law/cases')}
                       >
                         {lang === 'he' ? 'הכל' : 'View All'}
@@ -272,19 +273,19 @@ export function DashboardPageClient() {
                         {recentCases.map((caseItem) => (
                           <div
                             key={caseItem.id}
-                            className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer"
+                            className="flex items-center justify-between p-3 border border-white/10 rounded-lg bg-[#1e3a5f]/20 hover:bg-[#2a4a7a]/30 cursor-pointer transition-all duration-300"
                             onClick={() => router.push(`/dashboard/law/cases/${caseItem.id}`)}
                           >
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
-                                <span className="font-mono text-xs text-blue-600 dark:text-blue-400">
+                                <span className="font-mono text-xs text-blue-400">
                                   {caseItem.caseNumber}
                                 </span>
                                 <AlertCircle className={`w-4 h-4 ${getPriorityColor(caseItem.priority)}`} />
                               </div>
-                              <p className="font-medium text-sm text-gray-900 dark:text-white">{caseItem.title}</p>
+                              <p className="font-medium text-sm text-white">{caseItem.title}</p>
                               {caseItem.client && (
-                                <p className="text-xs text-gray-500">{caseItem.client.name}</p>
+                                <p className="text-xs text-gray-400">{caseItem.client.name}</p>
                               )}
                             </div>
                             <ChevronRight className="w-5 h-5 text-gray-400" />
@@ -295,13 +296,14 @@ export function DashboardPageClient() {
                   </CardBody>
                 </UniversalCard>
 
-                <UniversalCard variant="elevated">
+                <UniversalCard variant="elevated" className="bg-gradient-to-br from-[#0f1a2c] to-[#1a2841] border border-white/10 hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-300">
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold">{lang === 'he' ? 'אירועים קרובים' : 'Upcoming Events'}</h3>
+                      <h3 className="text-lg font-semibold text-white">{lang === 'he' ? 'אירועים קרובים' : 'Upcoming Events'}</h3>
                       <UniversalButton
                         variant="secondary"
                         size="sm"
+                        className="bg-amber-500 hover:bg-amber-400 text-[#0e1a2b] font-semibold rounded-xl px-5 py-2.5 transition-all"
                         onClick={() => router.push('/dashboard/law/calendar')}
                       >
                         {lang === 'he' ? 'הכל' : 'View All'}
@@ -319,7 +321,7 @@ export function DashboardPageClient() {
                         {upcomingEvents.map((event) => (
                           <div
                             key={event.id}
-                            className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                            className="flex items-start gap-3 p-3 border border-white/10 rounded-lg bg-[#1e3a5f]/20 hover:bg-[#2a4a7a]/30 transition-all duration-300"
                           >
                             <div className="flex-shrink-0">
                               <div className={`p-2 rounded-lg ${getEventTypeColor(event.eventType)}`}>
@@ -327,13 +329,13 @@ export function DashboardPageClient() {
                               </div>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-sm text-gray-900 dark:text-white">{event.title}</p>
-                              <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                              <p className="font-medium text-sm text-white">{event.title}</p>
+                              <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
                                 <Clock className="w-3 h-3" />
                                 <span>{new Date(event.eventDate).toLocaleString()}</span>
                               </div>
                               {event.case && (
-                                <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                                <p className="text-xs text-blue-400 mt-1">
                                   {event.case.caseNumber}
                                 </p>
                               )}
@@ -346,13 +348,14 @@ export function DashboardPageClient() {
                 </UniversalCard>
               </div>
 
-              <UniversalCard variant="elevated">
+              <UniversalCard variant="elevated" className="bg-gradient-to-br from-[#0f1a2c] to-[#1a2841] border border-white/10 hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-300">
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold">{lang === 'he' ? 'לקוחות אחרונים' : 'Recent Clients'}</h3>
+                    <h3 className="text-lg font-semibold text-white">{lang === 'he' ? 'לקוחות אחרונים' : 'Recent Clients'}</h3>
                     <UniversalButton
                       variant="secondary"
                       size="sm"
+                      className="bg-amber-500 hover:bg-amber-400 text-[#0e1a2b] font-semibold rounded-xl px-5 py-2.5 transition-all"
                       onClick={() => router.push('/dashboard/law/clients')}
                     >
                       {lang === 'he' ? 'הכל' : 'View All'}
@@ -370,19 +373,19 @@ export function DashboardPageClient() {
                       {recentClients.map((client) => (
                         <div
                           key={client.id}
-                          className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer"
+                          className="flex items-center gap-3 p-3 border border-white/10 rounded-lg bg-[#1e3a5f]/20 hover:bg-[#2a4a7a]/30 cursor-pointer transition-all duration-300"
                           onClick={() => router.push(`/dashboard/law/clients/${client.id}`)}
                         >
                           <div className="flex-shrink-0">
-                            <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center">
-                              <Users className="w-5 h-5 text-amber-600" />
+                            <div className="w-10 h-10 bg-amber-500/20 rounded-full flex items-center justify-center">
+                              <Users className="w-5 h-5 text-amber-400" />
                             </div>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm text-gray-900 dark:text-white truncate">
+                            <p className="font-medium text-sm text-white truncate">
                               {client.name}
                             </p>
-                            <p className="text-xs text-gray-500 truncate">{client.email}</p>
+                            <p className="text-xs text-gray-400 truncate">{client.email}</p>
                           </div>
                         </div>
                       ))}

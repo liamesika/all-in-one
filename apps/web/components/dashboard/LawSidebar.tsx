@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -10,8 +9,6 @@ import {
   CheckSquare,
   DollarSign,
   Settings,
-  ChevronLeft,
-  ChevronRight,
 } from 'lucide-react';
 import { useLang } from '@/components/i18n/LangProvider';
 
@@ -19,7 +16,6 @@ export function LawSidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const { lang } = useLang();
-  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const menuItems = [
     {
@@ -63,68 +59,53 @@ export function LawSidebar() {
 
   return (
     <div
-      className={`fixed left-0 top-0 h-full bg-[#1e3a5f] dark:bg-[#0a1929] transition-all duration-300 z-40 flex flex-col ${
-        isCollapsed ? 'w-20' : 'w-64'
-      }`}
+      className="group fixed left-0 top-0 h-full bg-[#0e1a2b] w-[72px] hover:w-60 rounded-r-[24px] transition-all duration-300 ease-in-out z-40 flex flex-col overflow-hidden shadow-[4px_0_20px_rgba(0,0,0,0.3)]"
     >
       {/* Logo/Header */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-white/10">
-        {!isCollapsed && (
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-amber-500 rounded flex items-center justify-center">
-              <Briefcase className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-white font-semibold">
-              {lang === 'he' ? 'משרד עורכי דין' : 'Law Office'}
-            </span>
+      <div className="h-16 flex items-center px-4 border-b border-white/10 flex-shrink-0">
+        <div className="flex items-center gap-3 whitespace-nowrap">
+          <div className="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0">
+            <Briefcase className="w-6 h-6 text-[#0e1a2b]" />
           </div>
-        )}
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-2 hover:bg-white/10 rounded-lg transition-colors ml-auto"
-        >
-          {isCollapsed ? (
-            <ChevronRight className="w-5 h-5 text-white" />
-          ) : (
-            <ChevronLeft className="w-5 h-5 text-white" />
-          )}
-        </button>
+          <span className="text-white font-semibold text-base opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            {lang === 'he' ? 'משרד עורכי דין' : 'Law Office'}
+          </span>
+        </div>
       </div>
 
       {/* Navigation Items */}
-      <nav className="flex-1 py-4 overflow-y-auto">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          const active = isActive(item.path);
+      <nav className="flex-1 py-4 px-2 overflow-y-auto overflow-x-hidden">
+        <div className="space-y-2">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.path);
 
-          return (
-            <button
-              key={item.path}
-              onClick={() => router.push(item.path)}
-              className={`w-full flex items-center gap-3 px-4 py-3 transition-all ${
-                active
-                  ? 'bg-amber-500 text-white'
-                  : 'text-gray-300 hover:bg-white/10 hover:text-white'
-              } ${isCollapsed ? 'justify-center' : ''}`}
-              title={isCollapsed ? item.label : undefined}
-            >
-              <Icon className="w-5 h-5 flex-shrink-0" />
-              {!isCollapsed && (
-                <span className="font-medium">{item.label}</span>
-              )}
-            </button>
-          );
-        })}
+            return (
+              <button
+                key={item.path}
+                onClick={() => router.push(item.path)}
+                className={`w-full flex items-center justify-start h-[50px] px-3 rounded-xl font-medium overflow-hidden transition-all duration-300 ease-in-out ${
+                  active
+                    ? 'bg-amber-500 text-[#0e1a2b]'
+                    : 'text-[#6b7280] hover:bg-[#1e3a5f20] hover:text-white'
+                }`}
+              >
+                <Icon className="w-6 h-6 flex-shrink-0" />
+                <span className="ml-4 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </nav>
 
       {/* Footer */}
-      {!isCollapsed && (
-        <div className="p-4 border-t border-white/10">
-          <div className="text-xs text-gray-400 text-center">
-            © 2025 Effinity
-          </div>
+      <div className="p-4 border-t border-white/10 flex-shrink-0">
+        <div className="text-xs text-gray-400 text-center whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          © 2025 Effinity
         </div>
-      )}
+      </div>
     </div>
   );
 }

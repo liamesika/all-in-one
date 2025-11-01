@@ -108,51 +108,63 @@ export function CalendarPageClient() {
 
   const getEventTypeColor = (type: string) => {
     const colors: Record<string, string> = {
-      hearing: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-      meeting: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      deadline: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-      consultation: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+      hearing: 'bg-red-500/20 text-red-400',
+      meeting: 'bg-blue-500/20 text-blue-400',
+      deadline: 'bg-amber-500/20 text-amber-400',
+      consultation: 'bg-green-500/20 text-green-400',
     };
     return colors[type] || colors.meeting;
   };
 
   return (
-    <div className="p-8">
+    <div className="p-8 lg:p-10 min-h-screen bg-gradient-to-br from-[#0f1a2c] to-[#17223c]">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
               <CalendarIcon className="w-8 h-8 text-amber-500" />
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                <h1 className="text-3xl font-bold text-white">
                   {lang === 'he' ? 'יומן' : 'Calendar'}
                 </h1>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-gray-300">
                   {lang === 'he' ? 'נהל אירועים ופגישות' : 'Manage events and meetings'}
                 </p>
               </div>
             </div>
-            <UniversalButton variant="primary" size="md" onClick={() => setShowCreateModal(true)}>
-              <Plus className="w-5 h-5 mr-2" />
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="bg-amber-500 hover:bg-amber-400 text-[#0e1a2b] font-semibold rounded-xl px-5 py-2.5 transition-all flex items-center gap-2"
+            >
+              <Plus className="w-5 h-5" />
               {lang === 'he' ? 'אירוע חדש' : 'New Event'}
-            </UniversalButton>
+            </button>
           </div>
 
-          <UniversalCard variant="elevated" className="mb-6">
+          <UniversalCard variant="elevated" className="mb-6 bg-gradient-to-br from-[#0f1a2c] to-[#1a2841] border border-white/10 hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-300">
             <CardBody>
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
-                  <UniversalButton variant="secondary" size="sm" onClick={() => navigateMonth(-1)}>
+                  <button
+                    onClick={() => navigateMonth(-1)}
+                    className="bg-[#1e3a5f] hover:bg-[#2a4a7a] text-white font-medium rounded-lg px-4 py-2 transition-all"
+                  >
                     <ChevronLeft className="w-5 h-5" />
-                  </UniversalButton>
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                  </button>
+                  <h2 className="text-xl font-bold text-white">
                     {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                   </h2>
-                  <UniversalButton variant="secondary" size="sm" onClick={() => navigateMonth(1)}>
+                  <button
+                    onClick={() => navigateMonth(1)}
+                    className="bg-[#1e3a5f] hover:bg-[#2a4a7a] text-white font-medium rounded-lg px-4 py-2 transition-all"
+                  >
                     <ChevronRight className="w-5 h-5" />
-                  </UniversalButton>
+                  </button>
                 </div>
-                <UniversalButton variant="secondary" size="sm" onClick={() => setCurrentDate(new Date())}>
+                <button
+                  onClick={() => setCurrentDate(new Date())}
+                  className="bg-[#1e3a5f] hover:bg-[#2a4a7a] text-white font-medium rounded-lg px-4 py-2 transition-all"
+                >
                   {lang === 'he' ? 'היום' : 'Today'}
-                </UniversalButton>
+                </button>
               </div>
 
               {loading ? (
@@ -162,7 +174,7 @@ export function CalendarPageClient() {
               ) : (
                 <div className="grid grid-cols-7 gap-2">
                   {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                    <div key={day} className="text-center font-medium text-sm text-gray-600 dark:text-gray-400 py-2">
+                    <div key={day} className="text-center font-medium text-sm text-white py-2">
                       {day}
                     </div>
                   ))}
@@ -175,13 +187,13 @@ export function CalendarPageClient() {
                       <div
                         key={index}
                         className={`min-h-[100px] p-2 border rounded-lg ${
-                          date ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'
-                        } ${isToday ? 'border-amber-500 border-2' : 'border-gray-200 dark:border-gray-700'}`}
+                          date ? 'bg-[#1e3a5f]/20' : 'bg-[#0f1a2c]'
+                        } ${isToday ? 'border-amber-500 border-2' : 'border-white/10'}`}
                       >
                         {date && (
                           <>
                             <div className={`text-sm font-medium mb-1 ${
-                              isToday ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-white'
+                              isToday ? 'text-amber-400' : 'text-white'
                             }`}>
                               {date.getDate()}
                             </div>
@@ -196,7 +208,7 @@ export function CalendarPageClient() {
                                 </div>
                               ))}
                               {dayEvents.length > 3 && (
-                                <div className="text-xs text-gray-500">
+                                <div className="text-xs text-gray-400">
                                   +{dayEvents.length - 3} more
                                 </div>
                               )}
@@ -211,9 +223,9 @@ export function CalendarPageClient() {
             </CardBody>
           </UniversalCard>
 
-          <UniversalCard variant="elevated">
+          <UniversalCard variant="elevated" className="bg-gradient-to-br from-[#0f1a2c] to-[#1a2841] border border-white/10 hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-300">
             <CardHeader>
-              <h3 className="text-lg font-semibold">{lang === 'he' ? 'אירועים קרובים' : 'Upcoming Events'}</h3>
+              <h3 className="text-lg font-semibold text-white">{lang === 'he' ? 'אירועים קרובים' : 'Upcoming Events'}</h3>
             </CardHeader>
             <CardBody>
               {events.length === 0 ? (
@@ -224,18 +236,18 @@ export function CalendarPageClient() {
               ) : (
                 <div className="space-y-3">
                   {events.slice(0, 10).map(event => (
-                    <div key={event.id} className="flex items-start gap-4 p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <div key={event.id} className="flex items-start gap-4 p-4 border border-white/10 rounded-lg hover:bg-[#1e3a5f]/30 transition-all duration-300">
                       <div className="flex-shrink-0">
                         <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${getEventTypeColor(event.eventType)}`}>
                           <CalendarIcon className="w-6 h-6" />
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900 dark:text-white">{event.title}</h4>
+                        <h4 className="font-medium text-white">{event.title}</h4>
                         {event.description && (
-                          <p className="text-sm text-gray-600 dark:text-gray-400">{event.description}</p>
+                          <p className="text-sm text-gray-300">{event.description}</p>
                         )}
-                        <div className="flex flex-wrap gap-3 mt-2 text-xs text-gray-500">
+                        <div className="flex flex-wrap gap-3 mt-2 text-xs text-gray-400">
                           <div className="flex items-center gap-1">
                             <Clock className="w-3 h-3" />
                             {new Date(event.eventDate).toLocaleString()}

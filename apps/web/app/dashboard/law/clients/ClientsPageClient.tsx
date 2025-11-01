@@ -74,26 +74,31 @@ export function ClientsPageClient() {
   };
 
   return (
-    <div className="p-8">
+    <div className="p-8 lg:p-10 min-h-screen bg-gradient-to-br from-[#0f1a2c] to-[#17223c]">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
               <Users className="w-8 h-8 text-amber-500" />
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                <h1 className="text-3xl font-bold text-white">
                   {lang === 'he' ? 'לקוחות' : 'Clients'}
                 </h1>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-gray-300">
                   {lang === 'he' ? 'נהל את לקוחות משרד עורכי הדין' : 'Manage your law firm clients'}
                 </p>
               </div>
             </div>
-            <UniversalButton variant="primary" size="md" onClick={() => setShowCreateModal(true)}>
+            <UniversalButton
+              variant="primary"
+              size="md"
+              className="bg-amber-500 hover:bg-amber-400 text-[#0e1a2b] font-semibold rounded-xl px-5 py-2.5 transition-all"
+              onClick={() => setShowCreateModal(true)}
+            >
               <Plus className="w-5 h-5 mr-2" />
               {lang === 'he' ? 'לקוח חדש' : 'New Client'}
             </UniversalButton>
           </div>
 
-          <UniversalCard variant="elevated" className="mb-6">
+          <UniversalCard variant="elevated" className="mb-6 bg-gradient-to-br from-[#0f1a2c] to-[#1a2841] border border-white/10">
             <CardBody>
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1">
@@ -104,16 +109,16 @@ export function ClientsPageClient() {
                       placeholder={lang === 'he' ? 'חפש לקוחות...' : 'Search clients...'}
                       value={search}
                       onChange={(e) => handleSearch(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      className="w-full pl-10 pr-4 py-2 border border-white/10 rounded-lg bg-[#1e3a5f]/20 text-white placeholder-gray-400 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     />
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Filter className="w-5 h-5 text-gray-500" />
+                  <Filter className="w-5 h-5 text-gray-400" />
                   <select
                     value={clientType}
                     onChange={(e) => handleFilterChange(e.target.value)}
-                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
+                    className="px-4 py-2 border border-white/10 rounded-lg bg-[#1e3a5f]/20 text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                   >
                     <option value="">{lang === 'he' ? 'כל הסוגים' : 'All Types'}</option>
                     <option value="individual">{lang === 'he' ? 'פרטי' : 'Individual'}</option>
@@ -124,7 +129,7 @@ export function ClientsPageClient() {
             </CardBody>
           </UniversalCard>
 
-          <UniversalCard variant="elevated">
+          <UniversalCard variant="elevated" className="bg-gradient-to-br from-[#0f1a2c] to-[#1a2841] border border-white/10 hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-300">
             <CardBody>
               {loading ? (
                 <div className="flex justify-center py-12">
@@ -133,18 +138,18 @@ export function ClientsPageClient() {
               ) : clients.length === 0 ? (
                 <div className="text-center py-12">
                   <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 dark:text-gray-400">{lang === 'he' ? 'לא נמצאו לקוחות' : 'No clients found'}</p>
+                  <p className="text-gray-400">{lang === 'he' ? 'לא נמצאו לקוחות' : 'No clients found'}</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b border-gray-200 dark:border-gray-700">
-                        <th className="px-4 py-3 text-left text-sm font-medium">{lang === 'he' ? 'שם' : 'Name'}</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium">{lang === 'he' ? 'אימייל' : 'Email'}</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium">{lang === 'he' ? 'טלפון' : 'Phone'}</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium">{lang === 'he' ? 'סוג' : 'Type'}</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium">{lang === 'he' ? 'תיקים' : 'Cases'}</th>
+                      <tr className="border-b border-white/10">
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-white">{lang === 'he' ? 'שם' : 'Name'}</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-white">{lang === 'he' ? 'אימייל' : 'Email'}</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-white">{lang === 'he' ? 'טלפון' : 'Phone'}</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-white">{lang === 'he' ? 'סוג' : 'Type'}</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-white">{lang === 'he' ? 'תיקים' : 'Cases'}</th>
                         <th className="px-4 py-3"></th>
                       </tr>
                     </thead>
@@ -152,39 +157,39 @@ export function ClientsPageClient() {
                       {clients.map((client) => (
                         <tr
                           key={client.id}
-                          className="border-b hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer"
+                          className="border-b border-white/10 hover:bg-[#1e3a5f]/30 cursor-pointer transition-all duration-300"
                           onClick={() => router.push(`/dashboard/law/clients/${client.id}`)}
                         >
                           <td className="px-4 py-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                              <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
                                 {client.clientType === 'corporate' ? (
-                                  <Building2 className="w-5 h-5 text-amber-600" />
+                                  <Building2 className="w-5 h-5 text-amber-400" />
                                 ) : (
-                                  <User className="w-5 h-5 text-amber-600" />
+                                  <User className="w-5 h-5 text-amber-400" />
                                 )}
                               </div>
                               <div>
-                                <p className="font-medium">{client.name}</p>
-                                {client.company && <p className="text-sm text-gray-500">{client.company}</p>}
+                                <p className="font-medium text-white">{client.name}</p>
+                                {client.company && <p className="text-sm text-gray-400">{client.company}</p>}
                               </div>
                             </div>
                           </td>
                           <td className="px-4 py-4">
-                            <div className="flex items-center gap-2 text-sm">
-                              <Mail className="w-4 h-4" />
+                            <div className="flex items-center gap-2 text-sm text-gray-300">
+                              <Mail className="w-4 h-4 text-gray-400" />
                               {client.email}
                             </div>
                           </td>
-                          <td className="px-4 py-4 text-sm">{client.phone || '-'}</td>
+                          <td className="px-4 py-4 text-sm text-gray-300">{client.phone || '-'}</td>
                           <td className="px-4 py-4">
-                            <span className={`px-3 py-1 rounded-full text-xs ${
-                              client.clientType === 'corporate' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              client.clientType === 'corporate' ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400'
                             }`}>
                               {client.clientType === 'corporate' ? 'Corporate' : 'Individual'}
                             </span>
                           </td>
-                          <td className="px-4 py-4 text-sm">{client.cases?.length || 0}</td>
+                          <td className="px-4 py-4 text-sm text-gray-300">{client.cases?.length || 0}</td>
                           <td className="px-4 py-4">
                             <ChevronRight className="w-5 h-5 text-gray-400" />
                           </td>
@@ -196,14 +201,26 @@ export function ClientsPageClient() {
               )}
 
               {totalPages > 1 && (
-                <div className="flex justify-center gap-2 mt-6 pt-6 border-t">
-                  <UniversalButton variant="secondary" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>
+                <div className="flex justify-center gap-2 mt-6 pt-6 border-t border-white/10">
+                  <UniversalButton
+                    variant="secondary"
+                    size="sm"
+                    className="bg-[#1e3a5f] hover:bg-[#2a4a7a] text-white font-medium rounded-lg px-4 py-2 transition-all"
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                  >
                     {lang === 'he' ? 'הקודם' : 'Previous'}
                   </UniversalButton>
-                  <span className="text-sm px-4 py-2">
+                  <span className="text-sm px-4 py-2 text-white">
                     {lang === 'he' ? `עמוד ${page} מתוך ${totalPages}` : `Page ${page} of ${totalPages}`}
                   </span>
-                  <UniversalButton variant="secondary" size="sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
+                  <UniversalButton
+                    variant="secondary"
+                    size="sm"
+                    className="bg-[#1e3a5f] hover:bg-[#2a4a7a] text-white font-medium rounded-lg px-4 py-2 transition-all"
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                  >
                     {lang === 'he' ? 'הבא' : 'Next'}
                   </UniversalButton>
                 </div>

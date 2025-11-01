@@ -8,7 +8,7 @@ export default function LawLayout({ children }: { children: React.ReactNode }) {
     <LangProvider>
       <div className="flex min-h-screen bg-gray-50 dark:bg-[#0E1A2B]">
         <LawSidebar />
-        <main className="flex-1 ml-64">
+        <main className="flex-1 ml-[72px]">
           {children}
         </main>
       </div>
