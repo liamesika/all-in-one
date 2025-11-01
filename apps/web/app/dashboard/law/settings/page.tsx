@@ -5,6 +5,8 @@ import { useLanguage } from '@/lib/language-context';
 import { UniversalCard } from '@/components/shared/UniversalCard';
 import { UniversalButton } from '@/components/shared';
 
+export const dynamic = 'force-dynamic';
+
 export default function LawSettingsPage() {
   const { language } = useLanguage();
   const [activeTab, setActiveTab] = useState<'firm' | 'notifications' | 'legal' | 'billing'>('firm');
