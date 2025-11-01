@@ -392,8 +392,6 @@ export function DashboardPageClient() {
               </UniversalCard>
             </>
           )}
-        </div>
-      </div>
     </div>
   );
 }
