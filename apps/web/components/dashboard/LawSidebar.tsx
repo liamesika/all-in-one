@@ -59,7 +59,7 @@ export function LawSidebar() {
 
   return (
     <div
-      className="group fixed left-0 top-0 h-full bg-[#0e1a2b] w-[72px] hover:w-60 rounded-r-[24px] transition-all duration-300 ease-in-out z-40 flex flex-col overflow-hidden shadow-[4px_0_20px_rgba(0,0,0,0.3)]"
+      className="group fixed left-0 top-0 h-full bg-[#0e1a2b] w-[72px] hover:w-60 rounded-r-[24px] transition-all duration-300 ease-in-out z-40 flex flex-col overflow-hidden shadow-[4px_0_20px_rgba(0,0,0,0.3)] hidden md:flex"
     >
       {/* Logo/Header */}
       <div className="h-16 flex items-center px-4 border-b border-white/10 flex-shrink-0">

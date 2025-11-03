@@ -255,8 +255,10 @@ export function DashboardPageClient() {
                       <UniversalButton
                         variant="secondary"
                         size="sm"
-                        className="bg-amber-500 hover:bg-amber-400 text-[#0e1a2b] font-semibold rounded-xl px-4 py-2 transition-all ml-auto"
+                        className="bg-amber-500 hover:bg-amber-400 text-[#0e1a2b] font-semibold rounded-xl px-4 min-h-[40px] transition-all ml-auto"
                         onClick={() => router.push('/dashboard/law/cases')}
+                        aria-label={lang === 'he' ? 'הצג את כל התיקים' : 'View all cases'}
+                        title={lang === 'he' ? 'הצג את כל התיקים' : 'View all cases'}
                       >
                         {lang === 'he' ? 'הכל' : 'View All'}
                       </UniversalButton>
@@ -303,8 +305,10 @@ export function DashboardPageClient() {
                       <UniversalButton
                         variant="secondary"
                         size="sm"
-                        className="bg-amber-500 hover:bg-amber-400 text-[#0e1a2b] font-semibold rounded-xl px-4 py-2 transition-all ml-auto"
+                        className="bg-amber-500 hover:bg-amber-400 text-[#0e1a2b] font-semibold rounded-xl px-4 min-h-[40px] transition-all ml-auto"
                         onClick={() => router.push('/dashboard/law/calendar')}
+                        aria-label={lang === 'he' ? 'הצג את כל האירועים' : 'View all events'}
+                        title={lang === 'he' ? 'הצג את כל האירועים' : 'View all events'}
                       >
                         {lang === 'he' ? 'הכל' : 'View All'}
                       </UniversalButton>
@@ -355,8 +359,10 @@ export function DashboardPageClient() {
                     <UniversalButton
                       variant="secondary"
                       size="sm"
-                      className="bg-amber-500 hover:bg-amber-400 text-[#0e1a2b] font-semibold rounded-xl px-4 py-2 transition-all ml-auto"
+                      className="bg-amber-500 hover:bg-amber-400 text-[#0e1a2b] font-semibold rounded-xl px-4 min-h-[40px] transition-all ml-auto"
                       onClick={() => router.push('/dashboard/law/clients')}
+                      aria-label={lang === 'he' ? 'הצג את כל הלקוחות' : 'View all clients'}
+                      title={lang === 'he' ? 'הצג את כל הלקוחות' : 'View all clients'}
                     >
                       {lang === 'he' ? 'הכל' : 'View All'}
                     </UniversalButton>
