@@ -99,7 +99,7 @@ export function ClientsPageClient() {
           </div>
 
           <UniversalCard variant="elevated" className="mb-6 bg-gradient-to-br from-[#0f1a2c] to-[#1a2841] border border-white/10">
-            <CardBody>
+            <CardBody className="p-5 sm:p-6 md:p-7">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1">
                   <div className="relative">
@@ -130,7 +130,7 @@ export function ClientsPageClient() {
           </UniversalCard>
 
           <UniversalCard variant="elevated" className="bg-gradient-to-br from-[#0f1a2c] to-[#1a2841] border border-white/10 hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-300">
-            <CardBody>
+            <CardBody className="p-5 sm:p-6 md:p-7">
               {loading ? (
                 <div className="flex justify-center py-12">
                   <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
@@ -141,7 +141,7 @@ export function ClientsPageClient() {
                   <p className="text-gray-400">{lang === 'he' ? 'לא נמצאו לקוחות' : 'No clients found'}</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto px-2">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-white/10">
@@ -162,7 +162,7 @@ export function ClientsPageClient() {
                         >
                           <td className="px-4 py-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+                              <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-amber-500/20">
                                 {client.clientType === 'corporate' ? (
                                   <Building2 className="w-5 h-5 text-amber-400" />
                                 ) : (
@@ -201,7 +201,7 @@ export function ClientsPageClient() {
               )}
 
               {totalPages > 1 && (
-                <div className="flex justify-center gap-2 mt-6 pt-6 border-t border-white/10">
+                <div className="flex justify-center gap-2 pt-4 mt-2 border-t border-white/10">
                   <UniversalButton
                     variant="secondary"
                     size="sm"
@@ -246,23 +246,41 @@ function CreateClientModal({ onClose, onSuccess, lang }: { onClose: () => void; 
     e.preventDefault();
     setError('');
     setLoading(true);
+
     try {
+      // Wait for auth to be ready
       const user = auth.currentUser;
-      if (!user) throw new Error('Not authenticated');
-      const token = await user.getIdToken();
+      if (!user) {
+        setError('Please sign in to continue');
+        setLoading(false);
+        return;
+      }
+
+      // Force token refresh to ensure it's valid
+      const token = await user.getIdToken(true); // true = forceRefresh
+
       const response = await fetch('/api/law/clients', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(formData),
       });
+
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || 'Failed to create client');
       }
+
       onSuccess();
     } catch (err: any) {
       console.error('[Create Client Error]', err);
-      setError(err.message || 'An error occurred');
+      if (err.message?.includes('auth') || err.message?.includes('401')) {
+        setError('Session expired. Please refresh and try again.');
+      } else {
+        setError(err.message || 'An error occurred');
+      }
     } finally {
       setLoading(false);
     }

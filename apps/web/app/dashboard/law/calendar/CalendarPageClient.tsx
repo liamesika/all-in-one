@@ -24,6 +24,7 @@ export function CalendarPageClient() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week'>('month');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   useEffect(() => {
     fetchEvents();
@@ -140,7 +141,7 @@ export function CalendarPageClient() {
           </div>
 
           <UniversalCard variant="elevated" className="mb-6 bg-gradient-to-br from-[#0f1a2c] to-[#1a2841] border border-white/10 hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-300">
-            <CardBody>
+            <CardBody className="p-5 sm:p-6 md:p-7">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
                   <button
@@ -186,8 +187,23 @@ export function CalendarPageClient() {
                     return (
                       <div
                         key={index}
+                        role={date ? "button" : undefined}
+                        tabIndex={date ? 0 : undefined}
+                        onClick={() => {
+                          if (date) {
+                            setSelectedDate(date);
+                            setShowCreateModal(true);
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (date && (e.key === 'Enter' || e.key === ' ')) {
+                            e.preventDefault();
+                            setSelectedDate(date);
+                            setShowCreateModal(true);
+                          }
+                        }}
                         className={`min-h-[100px] p-2 border rounded-lg ${
-                          date ? 'bg-[#1e3a5f]/20' : 'bg-[#0f1a2c]'
+                          date ? 'bg-[#1e3a5f]/20 cursor-pointer hover:bg-[#2a4a7a]/30 transition-all' : 'bg-[#0f1a2c]'
                         } ${isToday ? 'border-amber-500 border-2' : 'border-white/10'}`}
                       >
                         {date && (
@@ -224,21 +240,21 @@ export function CalendarPageClient() {
           </UniversalCard>
 
           <UniversalCard variant="elevated" className="bg-gradient-to-br from-[#0f1a2c] to-[#1a2841] border border-white/10 hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-300">
-            <CardHeader>
-              <h3 className="text-lg font-semibold text-white">{lang === 'he' ? 'אירועים קרובים' : 'Upcoming Events'}</h3>
+            <CardHeader className="p-5 sm:p-6 md:p-7 pb-0">
+              <h3 className="text-lg font-semibold text-white mb-2 md:mb-3">{lang === 'he' ? 'אירועים קרובים' : 'Upcoming Events'}</h3>
             </CardHeader>
-            <CardBody>
+            <CardBody className="p-5 sm:p-6 md:p-7">
               {events.length === 0 ? (
                 <div className="text-center py-8 text-gray-400">
                   <CalendarIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">{lang === 'he' ? 'אין אירועים' : 'No events'}</p>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="flex flex-col gap-4">
                   {events.slice(0, 10).map(event => (
                     <div key={event.id} className="flex items-start gap-4 p-4 border border-white/10 rounded-lg hover:bg-[#1e3a5f]/30 transition-all duration-300">
                       <div className="flex-shrink-0">
-                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${getEventTypeColor(event.eventType)}`}>
+                        <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl ${getEventTypeColor(event.eventType)}`}>
                           <CalendarIcon className="w-6 h-6" />
                         </div>
                       </div>
@@ -283,17 +299,48 @@ export function CalendarPageClient() {
           </UniversalCard>
 
       {showCreateModal && (
-        <CreateEventModal onClose={() => setShowCreateModal(false)} onSuccess={() => { setShowCreateModal(false); fetchEvents(); }} lang={lang} />
+        <CreateEventModal
+          onClose={() => {
+            setShowCreateModal(false);
+            setSelectedDate(null);
+          }}
+          onSuccess={() => {
+            setShowCreateModal(false);
+            setSelectedDate(null);
+            fetchEvents();
+          }}
+          lang={lang}
+          prefilledDate={selectedDate || undefined}
+        />
       )}
     </div>
   );
 }
 
-function CreateEventModal({ onClose, onSuccess, lang }: { onClose: () => void; onSuccess: () => void; lang: string }) {
+function CreateEventModal({
+  onClose,
+  onSuccess,
+  lang,
+  prefilledDate
+}: {
+  onClose: () => void;
+  onSuccess: () => void;
+  lang: string;
+  prefilledDate?: Date;
+}) {
   const [cases, setCases] = useState<Array<{ id: string; caseNumber: string; title: string }>>([]);
   const [clients, setClients] = useState<Array<{ id: string; name: string }>>([]);
   const [formData, setFormData] = useState({
-    title: '', description: '', eventDate: '', eventType: 'meeting', location: '', caseId: '', clientId: '', reminderMinutes: 30
+    title: '',
+    description: '',
+    eventDate: prefilledDate
+      ? new Date(prefilledDate.setHours(9, 0, 0, 0)).toISOString().slice(0, 16)
+      : '',
+    eventType: 'meeting',
+    location: '',
+    reminderMinutes: 30,
+    caseId: '',
+    clientId: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -330,23 +377,41 @@ function CreateEventModal({ onClose, onSuccess, lang }: { onClose: () => void; o
     e.preventDefault();
     setError('');
     setLoading(true);
+
     try {
+      // Wait for auth to be ready
       const user = auth.currentUser;
-      if (!user) throw new Error('Not authenticated');
-      const token = await user.getIdToken();
+      if (!user) {
+        setError('Please sign in to continue');
+        setLoading(false);
+        return;
+      }
+
+      // Force token refresh to ensure it's valid
+      const token = await user.getIdToken(true); // true = forceRefresh
+
       const response = await fetch('/api/law/calendar', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(formData),
       });
+
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || 'Failed to create event');
       }
+
       onSuccess();
     } catch (err: any) {
       console.error('[Create Event Error]', err);
-      setError(err.message || 'An error occurred');
+      if (err.message?.includes('auth') || err.message?.includes('401')) {
+        setError('Session expired. Please refresh and try again.');
+      } else {
+        setError(err.message || 'An error occurred');
+      }
     } finally {
       setLoading(false);
     }

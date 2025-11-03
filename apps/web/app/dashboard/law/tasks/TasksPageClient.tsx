@@ -143,7 +143,7 @@ export function TasksPageClient() {
                   onDragOver={handleDragOver}
                   onDrop={() => handleDrop(column.id)}
                 >
-                  <div className={`mb-4 pb-3 border-b-2 ${column.color}`}>
+                  <div className={`mb-3 pb-3 border-b-2 ${column.color}`}>
                     <h3 className="text-lg font-semibold text-white flex items-center justify-between">
                       <span>{column.title}</span>
                       <span className="text-sm bg-[#1e3a5f]/40 px-2 py-1 rounded">
@@ -152,7 +152,7 @@ export function TasksPageClient() {
                     </h3>
                   </div>
 
-                  <div className="space-y-3 flex-1">
+                  <div className="flex flex-col gap-4 flex-1">
                     {tasks
                       .filter(task => task.boardColumn === column.id)
                       .map((task) => (
@@ -162,7 +162,7 @@ export function TasksPageClient() {
                           onDragStart={() => handleDragStart(task)}
                           className="cursor-move border border-white/10 rounded-lg bg-[#1e3a5f]/20 hover:bg-[#2a4a7a]/30 transition-all duration-300 p-4"
                         >
-                          <div className="space-y-2">
+                          <div className="flex flex-col gap-3">
                             <div className="flex items-start justify-between gap-2">
                               <h4 className="font-medium text-white">{task.title}</h4>
                               <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${getPriorityColor(task.priority)}`}>
@@ -252,23 +252,41 @@ function CreateTaskModal({ onClose, onSuccess, lang }: { onClose: () => void; on
     e.preventDefault();
     setError('');
     setLoading(true);
+
     try {
+      // Wait for auth to be ready
       const user = auth.currentUser;
-      if (!user) throw new Error('Not authenticated');
-      const token = await user.getIdToken();
+      if (!user) {
+        setError('Please sign in to continue');
+        setLoading(false);
+        return;
+      }
+
+      // Force token refresh to ensure it's valid
+      const token = await user.getIdToken(true); // true = forceRefresh
+
       const response = await fetch('/api/law/tasks', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(formData),
       });
+
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || 'Failed to create task');
       }
+
       onSuccess();
     } catch (err: any) {
       console.error('[Create Task Error]', err);
-      setError(err.message || 'An error occurred');
+      if (err.message?.includes('auth') || err.message?.includes('401')) {
+        setError('Session expired. Please refresh and try again.');
+      } else {
+        setError(err.message || 'An error occurred');
+      }
     } finally {
       setLoading(false);
     }

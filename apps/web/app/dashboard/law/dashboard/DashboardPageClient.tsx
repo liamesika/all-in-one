@@ -229,7 +229,7 @@ export function DashboardPageClient() {
                     className="cursor-pointer bg-gradient-to-br from-[#0f1a2c] to-[#1a2841] border border-white/10 hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-300"
                     onClick={() => router.push(card.link)}
                   >
-                    <CardBody>
+                    <CardBody className="p-5 sm:p-6">
                       <div className="flex items-start justify-between">
                         <div>
                           <p className="text-sm text-gray-400 mb-1">{card.title}</p>
@@ -238,8 +238,8 @@ export function DashboardPageClient() {
                             {card.total && <span className="text-sm text-gray-400 ml-2">/ {card.total}</span>}
                           </p>
                         </div>
-                        <div className={`p-3 rounded-lg ${card.color}`}>
-                          <card.icon className="w-6 h-6" />
+                        <div className={`inline-flex items-center justify-center w-10 h-10 rounded-xl ${card.color}`}>
+                          <card.icon className="w-5 h-5" />
                         </div>
                       </div>
                     </CardBody>
@@ -249,31 +249,31 @@ export function DashboardPageClient() {
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 <UniversalCard variant="elevated" className="bg-gradient-to-br from-[#0f1a2c] to-[#1a2841] border border-white/10 hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-300">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
+                  <CardHeader className="p-5 sm:p-6 md:p-7 pb-0">
+                    <div className="flex items-center justify-between mb-2 md:mb-3">
                       <h3 className="text-lg font-semibold text-white">{lang === 'he' ? 'תיקים אחרונים' : 'Recent Cases'}</h3>
                       <UniversalButton
                         variant="secondary"
                         size="sm"
-                        className="bg-amber-500 hover:bg-amber-400 text-[#0e1a2b] font-semibold rounded-xl px-5 py-2.5 transition-all"
+                        className="bg-amber-500 hover:bg-amber-400 text-[#0e1a2b] font-semibold rounded-xl px-4 py-2 transition-all ml-auto"
                         onClick={() => router.push('/dashboard/law/cases')}
                       >
                         {lang === 'he' ? 'הכל' : 'View All'}
                       </UniversalButton>
                     </div>
                   </CardHeader>
-                  <CardBody>
+                  <CardBody className="p-5 sm:p-6 md:p-7">
                     {recentCases.length === 0 ? (
                       <div className="text-center py-8 text-gray-400">
                         <Briefcase className="w-12 h-12 mx-auto mb-2 opacity-50" />
                         <p className="text-sm">{lang === 'he' ? 'אין תיקים' : 'No cases'}</p>
                       </div>
                     ) : (
-                      <div className="space-y-3">
+                      <div className="flex flex-col gap-4">
                         {recentCases.map((caseItem) => (
                           <div
                             key={caseItem.id}
-                            className="flex items-center justify-between p-3 border border-white/10 rounded-lg bg-[#1e3a5f]/20 hover:bg-[#2a4a7a]/30 cursor-pointer transition-all duration-300"
+                            className="flex items-center justify-between p-4 border border-white/10 rounded-lg bg-[#1e3a5f]/20 hover:bg-[#2a4a7a]/30 cursor-pointer transition-all duration-300"
                             onClick={() => router.push(`/dashboard/law/cases/${caseItem.id}`)}
                           >
                             <div className="flex-1">
@@ -297,35 +297,35 @@ export function DashboardPageClient() {
                 </UniversalCard>
 
                 <UniversalCard variant="elevated" className="bg-gradient-to-br from-[#0f1a2c] to-[#1a2841] border border-white/10 hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-300">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
+                  <CardHeader className="p-5 sm:p-6 md:p-7 pb-0">
+                    <div className="flex items-center justify-between mb-2 md:mb-3">
                       <h3 className="text-lg font-semibold text-white">{lang === 'he' ? 'אירועים קרובים' : 'Upcoming Events'}</h3>
                       <UniversalButton
                         variant="secondary"
                         size="sm"
-                        className="bg-amber-500 hover:bg-amber-400 text-[#0e1a2b] font-semibold rounded-xl px-5 py-2.5 transition-all"
+                        className="bg-amber-500 hover:bg-amber-400 text-[#0e1a2b] font-semibold rounded-xl px-4 py-2 transition-all ml-auto"
                         onClick={() => router.push('/dashboard/law/calendar')}
                       >
                         {lang === 'he' ? 'הכל' : 'View All'}
                       </UniversalButton>
                     </div>
                   </CardHeader>
-                  <CardBody>
+                  <CardBody className="p-5 sm:p-6 md:p-7">
                     {upcomingEvents.length === 0 ? (
                       <div className="text-center py-8 text-gray-400">
                         <CalendarIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
                         <p className="text-sm">{lang === 'he' ? 'אין אירועים' : 'No events'}</p>
                       </div>
                     ) : (
-                      <div className="space-y-3">
+                      <div className="flex flex-col gap-4">
                         {upcomingEvents.map((event) => (
                           <div
                             key={event.id}
-                            className="flex items-start gap-3 p-3 border border-white/10 rounded-lg bg-[#1e3a5f]/20 hover:bg-[#2a4a7a]/30 transition-all duration-300"
+                            className="flex items-start gap-3 p-4 border border-white/10 rounded-lg bg-[#1e3a5f]/20 hover:bg-[#2a4a7a]/30 transition-all duration-300"
                           >
                             <div className="flex-shrink-0">
-                              <div className={`p-2 rounded-lg ${getEventTypeColor(event.eventType)}`}>
-                                <CalendarIcon className="w-4 h-4" />
+                              <div className={`inline-flex items-center justify-center w-10 h-10 rounded-xl ${getEventTypeColor(event.eventType)}`}>
+                                <CalendarIcon className="w-5 h-5" />
                               </div>
                             </div>
                             <div className="flex-1 min-w-0">
@@ -349,35 +349,35 @@ export function DashboardPageClient() {
               </div>
 
               <UniversalCard variant="elevated" className="bg-gradient-to-br from-[#0f1a2c] to-[#1a2841] border border-white/10 hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-300">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
+                <CardHeader className="p-5 sm:p-6 md:p-7 pb-0">
+                  <div className="flex items-center justify-between mb-2 md:mb-3">
                     <h3 className="text-lg font-semibold text-white">{lang === 'he' ? 'לקוחות אחרונים' : 'Recent Clients'}</h3>
                     <UniversalButton
                       variant="secondary"
                       size="sm"
-                      className="bg-amber-500 hover:bg-amber-400 text-[#0e1a2b] font-semibold rounded-xl px-5 py-2.5 transition-all"
+                      className="bg-amber-500 hover:bg-amber-400 text-[#0e1a2b] font-semibold rounded-xl px-4 py-2 transition-all ml-auto"
                       onClick={() => router.push('/dashboard/law/clients')}
                     >
                       {lang === 'he' ? 'הכל' : 'View All'}
                     </UniversalButton>
                   </div>
                 </CardHeader>
-                <CardBody>
+                <CardBody className="p-5 sm:p-6 md:p-7">
                   {recentClients.length === 0 ? (
                     <div className="text-center py-8 text-gray-400">
                       <Users className="w-12 h-12 mx-auto mb-2 opacity-50" />
                       <p className="text-sm">{lang === 'he' ? 'אין לקוחות' : 'No clients'}</p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {recentClients.map((client) => (
                         <div
                           key={client.id}
-                          className="flex items-center gap-3 p-3 border border-white/10 rounded-lg bg-[#1e3a5f]/20 hover:bg-[#2a4a7a]/30 cursor-pointer transition-all duration-300"
+                          className="flex items-center gap-3 p-4 border border-white/10 rounded-lg bg-[#1e3a5f]/20 hover:bg-[#2a4a7a]/30 cursor-pointer transition-all duration-300"
                           onClick={() => router.push(`/dashboard/law/clients/${client.id}`)}
                         >
                           <div className="flex-shrink-0">
-                            <div className="w-10 h-10 bg-amber-500/20 rounded-full flex items-center justify-center">
+                            <div className="inline-flex items-center justify-center w-10 h-10 bg-amber-500/20 rounded-full">
                               <Users className="w-5 h-5 text-amber-400" />
                             </div>
                           </div>
