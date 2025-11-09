@@ -191,6 +191,50 @@ enum FieldValidationStatus {
   PENDING
 }
 
+enum AgentRole {
+  MANAGER
+  AGENT
+  ASSISTANT
+  OTHER
+}
+
+enum RealEstateRole {
+  OFFICE_MANAGER
+  AGENT
+  ADMIN
+  ASSISTANT
+}
+
+enum AgentStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum AgentTaskStatus {
+  BACKLOG
+  TODO
+  IN_PROGRESS
+  REVIEW
+  DONE
+  BLOCKED
+}
+
+enum AgentTaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum AgentTaskActivityType {
+  CREATED
+  UPDATED
+  STATUS_CHANGED
+  COMMENT
+  REMINDER_SENT
+  FILE_UPLOADED
+}
+
 enum CampaignStatus {
   DRAFT
   READY
@@ -475,6 +519,13 @@ enum RealEstateLeadStatus {
   DISQUALIFIED
 }
 
+enum MeetingStatus {
+  SCHEDULED
+  DONE
+  CANCELED
+  NO_SHOW
+}
+
 enum EcommerceLeadStatus {
   NEW
   CONTACTED
@@ -608,6 +659,9 @@ model User {
   emailNotifications Boolean  @default(true)
   pushNotifications  Boolean  @default(true)
 
+  // Real Estate role
+  realEstateRole RealEstateRole?
+
   // Relations
   memberships        Membership[]
   userProfile        UserProfile?
@@ -620,13 +674,15 @@ model User {
   productionTasks ProductionTask[]
   productionFiles ProductionFileAsset[]
 
+  // Real Estate CRM relations
+  assignedLeads   RealEstateLead[]   @relation("RealEstateLeadAssignee")
+  assignedClients RealEstateClient[] @relation("ClientAssignedAgent")
+  meetingParticipations MeetingAgent[]
+
   // Law vertical relations
   assignedCases      LawCase[]     @relation("LawCaseAssignee")
   uploadedDocuments  LawDocument[] @relation("LawDocumentUploader")
   assignedLawTasks   LawTask[]     @relation("LawTaskAssignee")
-
-  // Real Estate vertical relations
-  assignedLeads      RealEstateLead[] @relation("RealEstateLeadAssignee")
 
   @@index([email])
 }
@@ -811,6 +867,9 @@ model Property {
   leads        RealEstateLead[] @relation("PropertyToLeads")
   landingPages LandingPage[]
   organization Organization?    @relation(fields: [orgId], references: [id])
+  taskLinks    AgentTaskProperty[]
+  clientLinks  ClientProperty[]
+  meetingLinks MeetingProperty[]
   rooms        Int?
   size         Int?
 
@@ -921,6 +980,7 @@ model RealEstateLead {
   organization        Organization?         @relation(fields: [orgId], references: [id])
   assignedTo          User?                 @relation("RealEstateLeadAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
   RealEstateLeadEvent RealEstateLeadEvent[]
+  convertedToClient   RealEstateClient?     @relation("LeadToClient")
 
   // Performance-critical indexes
   @@index([ownerUid])
@@ -3148,4 +3208,253 @@ model EcomCampaignVersion {
   @@index([ownerUid])
   @@index([orgId])
   @@index([createdAt])
+}
+
+// ========= Real Estate Agents & Tasks Management ========= //
+
+model Agent {
+  id        String      @id @default(cuid())
+  tenantId  String
+  userId    String?
+  name      String
+  email     String
+  phone     String?
+  role      AgentRole   @default(AGENT)
+  status    AgentStatus @default(ACTIVE)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  // Relations
+  assignedTasks     AgentTaskAssignee[]
+  createdTasks      AgentTask[]         @relation("TaskCreator")
+  taskReminders     AgentTaskReminder[]
+  taskActivities    AgentTaskActivity[]
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([status])
+}
+
+model AgentTask {
+  id             String       @id @default(cuid())
+  tenantId       String
+  title          String
+  description    String?      @db.Text
+  status         AgentTaskStatus   @default(TODO)
+  priority       AgentTaskPriority @default(MEDIUM)
+  dueDate        DateTime?
+  startDate      DateTime?
+  progress       Int          @default(0)
+  hasAttachments Boolean      @default(false)
+  createdById    String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // Relations
+  creator        Agent                 @relation("TaskCreator", fields: [createdById], references: [id])
+  assignees      AgentTaskAssignee[]
+  properties     AgentTaskProperty[]
+  activities     AgentTaskActivity[]
+  reminders      AgentTaskReminder[]
+  attachments    AgentTaskAttachment[]
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([priority])
+  @@index([dueDate])
+  @@index([createdById])
+}
+
+model AgentTaskAssignee {
+  taskId   String
+  agentId  String
+  assignedAt DateTime @default(now())
+
+  task  AgentTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  agent Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, agentId])
+  @@index([taskId])
+  @@index([agentId])
+}
+
+model AgentTaskProperty {
+  taskId     String
+  propertyId String
+  linkedAt   DateTime @default(now())
+
+  task     AgentTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  property Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, propertyId])
+  @@index([taskId])
+  @@index([propertyId])
+}
+
+model AgentTaskActivity {
+  id        String           @id @default(cuid())
+  taskId    String
+  actorId   String
+  type      AgentTaskActivityType
+  message   String?
+  metadata  Json?
+  createdAt DateTime         @default(now())
+
+  task  AgentTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  actor Agent     @relation(fields: [actorId], references: [id])
+
+  @@index([taskId])
+  @@index([actorId])
+  @@index([createdAt])
+}
+
+model AgentTaskReminder {
+  id          String    @id @default(cuid())
+  taskId      String
+  agentId     String?
+  scheduledAt DateTime
+  deliveredAt DateTime?
+  message     String?
+  createdAt   DateTime  @default(now())
+
+  task  AgentTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  agent Agent?    @relation(fields: [agentId], references: [id])
+
+  @@index([taskId])
+  @@index([agentId])
+  @@index([scheduledAt])
+}
+
+model AgentTaskAttachment {
+  id        String   @id @default(cuid())
+  taskId    String
+  fileName  String
+  fileUrl   String
+  fileSize  Int?
+  mimeType  String?
+  uploadedBy String
+  createdAt DateTime @default(now())
+
+  task AgentTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+}
+
+// Real Estate CRM: Client model
+model RealEstateClient {
+  id          String   @id @default(cuid())
+  tenantId    String
+  fullName    String
+  email       String?
+  phone       String?
+  notes       String?  @db.Text
+
+  // Client source
+  convertedFromLeadId String?  @unique
+  source              String?
+
+  // Assignment
+  assignedAgentId String?
+
+  // Status
+  status    String   @default("ACTIVE") // ACTIVE, INACTIVE, ARCHIVED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  convertedFromLead RealEstateLead?       @relation("LeadToClient", fields: [convertedFromLeadId], references: [id])
+  assignedAgent     User?                 @relation("ClientAssignedAgent", fields: [assignedAgentId], references: [id])
+  meetingParticipations MeetingClient[]
+  properties        ClientProperty[]
+
+  @@index([tenantId])
+  @@index([assignedAgentId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// Many-to-many: Client <-> Property
+model ClientProperty {
+  clientId   String
+  propertyId String
+  role       String   @default("BUYER") // BUYER, SELLER, TENANT, LANDLORD
+  linkedAt   DateTime @default(now())
+
+  client   RealEstateClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  property Property         @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@id([clientId, propertyId])
+  @@index([clientId])
+  @@index([propertyId])
+}
+
+// Meetings module
+model Meeting {
+  id          String        @id @default(cuid())
+  tenantId    String
+  title       String
+  description String?       @db.Text
+  location    String?
+
+  // Timing
+  start  DateTime
+  end    DateTime
+  status MeetingStatus @default(SCHEDULED)
+
+  // Relations
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Participants and linkage
+  agentParticipants    MeetingAgent[]
+  clientParticipants   MeetingClient[]
+  propertyParticipants MeetingProperty[]
+
+  @@index([tenantId])
+  @@index([createdById])
+  @@index([start])
+  @@index([status])
+}
+
+// Many-to-many: Meeting <-> Agent (via User)
+model MeetingAgent {
+  meetingId String
+  userId    String
+  joinedAt  DateTime @default(now())
+
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([meetingId, userId])
+  @@index([meetingId])
+  @@index([userId])
+}
+
+// Many-to-many: Meeting <-> Client
+model MeetingClient {
+  meetingId String
+  clientId  String
+  joinedAt  DateTime @default(now())
+
+  meeting Meeting          @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  client  RealEstateClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@id([meetingId, clientId])
+  @@index([meetingId])
+  @@index([clientId])
+}
+
+// Many-to-many: Meeting <-> Property
+model MeetingProperty {
+  meetingId  String
+  propertyId String
+  linkedAt   DateTime @default(now())
+
+  meeting  Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@id([meetingId, propertyId])
+  @@index([meetingId])
+  @@index([propertyId])
 }

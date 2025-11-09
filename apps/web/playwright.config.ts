@@ -1,7 +1,4 @@
 import { defineConfig, devices } from '@playwright/test';
-import * as path from 'path';
-
-const STORAGE_STATE_PATH = path.join(__dirname, 'e2e', '.auth', 'storage-state.json');
 
 export default defineConfig({
   testDir: './e2e',
@@ -9,39 +6,25 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
-
-  // Global setup for Firebase authentication
-  globalSetup: require.resolve('./e2e/global-setup.ts'),
-
+  reporter: process.env.CI ? [['html'], ['line']] : 'list',
   use: {
-    baseURL: 'http://localhost:3001',
+    baseURL: process.env.BASE_URL || 'http://localhost:3000',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
   },
-
   projects: [
     {
-      name: 'chromium-desktop',
-      use: {
-        ...devices['Desktop Chrome'],
-        viewport: { width: 1280, height: 720 },
-        storageState: STORAGE_STATE_PATH,
-      },
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
     },
     {
-      name: 'chromium-mobile',
-      use: {
-        ...devices['iPhone 12'],
-        storageState: STORAGE_STATE_PATH,
-      },
+      name: 'mobile',
+      use: { ...devices['iPhone 12'] },
     },
   ],
-
-  webServer: {
-    command: 'pnpm --filter web dev',
-    url: 'http://localhost:3001',
+  webServer: process.env.CI ? undefined : {
+    command: 'pnpm dev',
+    url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
   },

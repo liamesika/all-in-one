@@ -47,9 +47,9 @@ import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import { EmptyState } from '@/components/dashboard/EmptyState';
 import { analytics } from '@/lib/analytics';
-import { PricingPanel } from '@/components/pricing/PricingPanel';
 import { TrialBanner } from '@/components/subscription/TrialBanner';
 import { auth } from '@/lib/firebase';
+import { TasksWidget } from './components/TasksWidget';
 
 interface Subscription {
   status: 'ACTIVE' | 'TRIAL' | 'EXPIRED' | 'CANCELED';
@@ -364,10 +364,7 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
                   status="expired"
                   lang={lang}
                   onUpgrade={() => {
-                    const pricingSection = document.getElementById('pricing-section');
-                    if (pricingSection) {
-                      pricingSection.scrollIntoView({ behavior: 'smooth' });
-                    }
+                    window.location.href = '/pricing';
                   }}
                 />
               </div>
@@ -385,10 +382,7 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
                       daysRemaining={daysRemaining}
                       lang={lang}
                       onUpgrade={() => {
-                        const pricingSection = document.getElementById('pricing-section');
-                        if (pricingSection) {
-                          pricingSection.scrollIntoView({ behavior: 'smooth' });
-                        }
+                        window.location.href = '/pricing';
                       }}
                     />
                   </div>
@@ -398,16 +392,6 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
           </>
         )}
 
-        {/* Pricing Panel */}
-        {!loadingSubscription && (!subscription || subscription.status !== 'ACTIVE') && (
-          <div id="pricing-section" className="mb-8">
-            <PricingPanel
-              vertical="realestate"
-              lang={lang}
-              onTrialStart={handleTrialStart}
-            />
-          </div>
-        )}
 
         {/* Primary KPI Cards - Emphasized */}
         <div className="mb-10">
@@ -544,9 +528,14 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
           )}
 
           {shouldShowSection('operations') && (
-            <div className="animate-fade-in">
-              <OperationsProductivitySection data={data.operations} />
-            </div>
+            <>
+              <div className="animate-fade-in">
+                <OperationsProductivitySection data={data.operations} />
+              </div>
+              <div className="animate-fade-in mt-6">
+                <TasksWidget />
+              </div>
+            </>
           )}
 
           {shouldShowSection('clientExperience') && (

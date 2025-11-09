@@ -28,6 +28,8 @@ export function RealEstateHeader() {
       '/dashboard/real-estate/customers': { en: 'Customers', he: 'לקוחות' },
       '/dashboard/real-estate/campaigns': { en: 'Campaigns', he: 'קמפיינים' },
       '/dashboard/real-estate/ai-searcher': { en: 'AI Property Search', he: 'חיפוש AI' },
+      '/dashboard/real-estate/neighborhoods': { en: 'Smart Neighborhood Map', he: 'מפת שכונות חכמה' },
+      '/dashboard/real-estate/agents': { en: 'Agents & Tasks', he: 'סוכנים ומשימות' },
       '/dashboard/real-estate/automations': { en: 'Automations', he: 'אוטומציות' },
       '/dashboard/real-estate/integrations': { en: 'Integrations', he: 'אינטגרציות' },
       '/dashboard/real-estate/reports': { en: 'Reports & Analytics', he: 'דוחות וניתוח' },

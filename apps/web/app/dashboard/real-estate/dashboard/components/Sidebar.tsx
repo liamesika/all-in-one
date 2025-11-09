@@ -31,15 +31,15 @@ export function Sidebar({ currentPath = 'dashboard' }: SidebarProps) {
       icon: '🎯'
     },
     {
-      href: '/dashboard/real-estate/customers',
-      label: lang === 'he' ? 'לקוחות' : 'Customers',
-      key: 'customers',
+      href: '/dashboard/real-estate/clients',
+      label: lang === 'he' ? 'לקוחות' : 'Clients',
+      key: 'clients',
       icon: '👥'
     },
     {
-      href: '/dashboard/real-estate/calendar',
-      label: lang === 'he' ? 'יומן' : 'Calendar',
-      key: 'calendar',
+      href: '/dashboard/real-estate/meetings',
+      label: lang === 'he' ? 'פגישות' : 'Meetings',
+      key: 'meetings',
       icon: '📅'
     },
     {
@@ -59,6 +59,18 @@ export function Sidebar({ currentPath = 'dashboard' }: SidebarProps) {
       label: lang === 'he' ? 'חיפוש AI' : 'AI Search',
       key: 'ai-searcher',
       icon: '🔍'
+    },
+    {
+      href: '/dashboard/real-estate/neighborhoods',
+      label: lang === 'he' ? 'מפת שכונות' : 'Neighborhoods',
+      key: 'neighborhoods',
+      icon: '🗺️'
+    },
+    {
+      href: '/dashboard/real-estate/agents',
+      label: lang === 'he' ? 'סוכנים ומשימות' : 'Agents & Tasks',
+      key: 'agents',
+      icon: '✅'
     },
     {
       href: '/dashboard/real-estate/automations',

@@ -100,6 +100,7 @@ export function getFirebaseAdmin() {
 
 // Convenience exports for Firebase Admin services
 export const adminAuth = () => getAuth(getFirebaseAdmin());
+export const auth = { verifyIdToken: async (token: string) => await adminAuth().verifyIdToken(token) };
 export const adminFirestore = () => {
   const firestore = getFirestore(getFirebaseAdmin());
 
