@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Saved View by ID API
  * GET, PATCH, DELETE individual saved views

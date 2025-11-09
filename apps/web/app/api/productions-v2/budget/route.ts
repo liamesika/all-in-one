@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Productions Vertical - Budget API (v2)
  * Uses ProductionBudgetItem schema with organizationId field

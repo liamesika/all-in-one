@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Productions Vertical - Projects API (v2)
  * Uses ProductionProject schema with organizationId field

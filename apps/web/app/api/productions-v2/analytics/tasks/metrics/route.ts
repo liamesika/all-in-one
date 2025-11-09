@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Productions Vertical - Task Metrics Analytics API (v2)
  * GET: Get task metrics by status

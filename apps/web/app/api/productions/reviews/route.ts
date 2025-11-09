@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Creative Productions - Reviews API
  * GET: List pending reviews

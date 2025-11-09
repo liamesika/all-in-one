@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Creative Productions - Duplicate Template
  * POST: Create a copy of an existing template

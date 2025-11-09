@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Productions Vertical - Project Detail API (v2)
  * GET: Get single project

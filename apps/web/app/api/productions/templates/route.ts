@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Creative Productions - Templates API
  * GET: List templates with filters

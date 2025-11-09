@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Productions Vertical - Revenue Analytics API (v2)
  * GET: Get revenue data over time

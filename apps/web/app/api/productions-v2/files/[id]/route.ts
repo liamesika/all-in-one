@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Productions Vertical - File Detail API (v2)
  * DELETE: Delete a file

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Productions Vertical - Budget Item Detail API (v2)
  * PATCH: Update budget item

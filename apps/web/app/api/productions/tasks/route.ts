@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Creative Productions - Tasks API
  * GET: List tasks

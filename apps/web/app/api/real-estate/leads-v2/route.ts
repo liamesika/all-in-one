@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { withRealEstateAuth } from '@/lib/realEstateApiAuth';
 import { getLeadsWhere, enforceAgentOrManager } from '@/lib/realEstateAuth';

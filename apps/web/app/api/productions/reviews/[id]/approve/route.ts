@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Creative Productions - Approve Review
  * POST: Approve asset/project (locks asset version)

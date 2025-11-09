@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Seed demo notifications (dev-only)
  * POST /api/notifications/seed

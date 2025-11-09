@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { PrismaClient, MeetingStatus } from '@prisma/client';
 import { withRealEstateAuth } from '@/lib/realEstateApiAuth';

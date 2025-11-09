@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Stripe Billing Portal API
  * POST: Create billing portal session for subscription management

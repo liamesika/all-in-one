@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Productions Vertical - Files API (v2)
  * Uses ProductionFileAsset schema with organizationId field

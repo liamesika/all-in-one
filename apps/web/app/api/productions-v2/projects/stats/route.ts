@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Productions Vertical - Project Statistics API (v2)
  * GET: Get project statistics for dashboard

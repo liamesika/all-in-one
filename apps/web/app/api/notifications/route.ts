@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Notifications API - Sprint A2
  * GET: List notifications with filtering and pagination

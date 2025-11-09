@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Productions Vertical - Analytics Overview API (v2)
  * GET: Get overview analytics for dashboard

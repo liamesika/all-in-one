@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 import { NextRequest, NextResponse } from 'next/server';
 

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Dismiss notification (never reappear)
  * PATCH /api/notifications/[id]/dismiss

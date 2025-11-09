@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Productions Vertical - File Upload API (v2)
  * POST: Upload a file to a project

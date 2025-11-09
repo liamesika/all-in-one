@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Snooze notification (hide temporarily)
  * PATCH /api/notifications/[id]/snooze

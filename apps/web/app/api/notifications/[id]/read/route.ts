@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Mark notification as read
  * PATCH /api/notifications/[id]/read

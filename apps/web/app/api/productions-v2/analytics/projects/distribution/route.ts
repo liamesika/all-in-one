@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Productions Vertical - Project Distribution Analytics API (v2)
  * GET: Get project distribution by type

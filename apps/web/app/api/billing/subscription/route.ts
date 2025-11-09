@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Subscription management API
  * GET: Fetch current subscription

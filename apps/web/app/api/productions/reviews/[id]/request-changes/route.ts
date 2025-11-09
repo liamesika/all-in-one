@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Creative Productions - Request Changes
  * POST: Request changes on review (comments required)

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 /**
  * EXAMPLE: API Route with Billing Limits Enforcement

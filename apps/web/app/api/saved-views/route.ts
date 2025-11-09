@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Saved Views API
  * Save current filters/sorts as named views, set defaults, share via URL
