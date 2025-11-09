@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { withRealEstateAuth } from '@/lib/realEstateApiAuth';
 import { getClientsWhere, enforceAgentOrManager } from '@/lib/realEstateAuth';
+import { prisma } from '@/lib/prisma.server';
 
+export const dynamic = 'force-dynamic';
 
 export const GET = withRealEstateAuth(async (request, { auth }) => {
   try {
