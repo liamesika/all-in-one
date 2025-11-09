@@ -218,3 +218,4 @@ export function RealEstateHeader() {
     </>
   );
 }
+export { RealEstateHeader as EcommerceHeader } from './RealEstateHeader';
