@@ -3458,3 +3458,20 @@ model MeetingProperty {
   @@index([meetingId])
   @@index([propertyId])
 }
+
+// Public lead submissions from landing page
+model PublicLead {
+  id            String   @id @default(cuid())
+  companyName   String
+  contactPerson String
+  email         String
+  phone         String
+  employeeCount String   // "1-10", "11-50", "51-200", "200+"
+  industry      String
+  purpose       String   @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([createdAt])
+  @@index([email])
+}
