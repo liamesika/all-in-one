@@ -1,9 +1,7 @@
 import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import * as cheerio from 'cheerio';
 
-const prisma = new PrismaClient();
 
 async function scrapeYad2(url: string) {
   try {

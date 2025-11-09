@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { withRealEstateAuth } from '@/lib/realEstateApiAuth';
 import { getLeadsWhere, enforceAgentOrManager } from '@/lib/realEstateAuth';
 import { z } from 'zod';
 
-const prisma = new PrismaClient();
 
 const createLeadSchema = z.object({
   fullName: z.string().min(2).max(100),

@@ -11,7 +11,13 @@ const nextConfig = {
   generateEtags: true,
 
   // Disable static optimization to prevent SSR document errors
-  output: 'standalone',
+  skipTrailingSlashRedirect: true,
+  experimental: { skipMiddlewareUrlNormalize: true },
+
+  // Skip generating error pages during static generation
+  generateBuildId: async () => {
+    return process.env.VERCEL_GIT_COMMIT_SHA || process.env.BUILD_ID || 'development'
+  },
 
   // External packages for server components (temporarily disabled for build)
   // serverExternalPackages: [
@@ -188,7 +194,9 @@ const sentryWebpackPluginOptions = {
   disableLogger: true,
 };
 
+// Temporarily disable Sentry to debug build issues
+export default nextConfig;
 // Only wrap with Sentry if DSN is configured
-export default process.env.NEXT_PUBLIC_SENTRY_DSN
-  ? withSentryConfig(nextConfig, sentryWebpackPluginOptions)
-  : nextConfig;
+// export default process.env.NEXT_PUBLIC_SENTRY_DSN
+//   ? withSentryConfig(nextConfig, sentryWebpackPluginOptions)
+//   : nextConfig;

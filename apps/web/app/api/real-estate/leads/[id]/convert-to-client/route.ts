@@ -3,7 +3,6 @@ import { PrismaClient, RealEstateLeadStatus } from '@prisma/client';
 import { withRealEstateAuth } from '@/lib/realEstateApiAuth';
 import { canAccessLead } from '@/lib/realEstateAuth';
 
-const prisma = new PrismaClient();
 
 export const POST = withRealEstateAuth(async (request, { auth, params }) => {
   try {

@@ -3,7 +3,6 @@ import { PrismaClient, MeetingStatus } from '@prisma/client';
 import { withRealEstateAuth } from '@/lib/realEstateApiAuth';
 import { getMeetingsWhere, enforceAgentOrManager } from '@/lib/realEstateAuth';
 
-const prisma = new PrismaClient();
 
 export const GET = withRealEstateAuth(async (request, { auth }) => {
   try {

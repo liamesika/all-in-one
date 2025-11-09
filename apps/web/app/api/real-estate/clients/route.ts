@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { withRealEstateAuth } from '@/lib/realEstateApiAuth';
 import { getClientsWhere, enforceAgentOrManager } from '@/lib/realEstateAuth';
 
-const prisma = new PrismaClient();
 
 export const GET = withRealEstateAuth(async (request, { auth }) => {
   try {
