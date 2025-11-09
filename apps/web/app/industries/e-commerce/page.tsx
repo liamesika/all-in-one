@@ -21,7 +21,6 @@ import { MarketingNav } from '@/components/marketing/MarketingNav';
 import { MarketingFooter } from '@/components/marketing/MarketingFooter';
 import { CTASection } from '@/components/marketing/CTASection';
 import { trackEventWithConsent } from '@/lib/analytics/consent';
-import { PageHead } from '@/components/seo/PageHead';
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { preserveUTMParams, appendUTMParams } from '@/lib/utils/utm';
 
@@ -168,14 +167,6 @@ export default function EcommercePage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <PageHead
-        title="E-Commerce Management Platform | Effinity"
-        description="Complete e-commerce management with marketing automation. Save 20+ hours per week and grow revenue by 50%. Cart recovery, inventory tracking, and omnichannel selling."
-        canonical="https://effinity.co.il/industries/e-commerce"
-        ogImage="https://effinity.co.il/og-e-commerce.jpg"
-        keywords="e-commerce platform, online store management, cart abandonment recovery, inventory management, marketing automation"
-        jsonLd={jsonLd}
-      />
       <MarketingNav />
 
       {/* Hero Section */}

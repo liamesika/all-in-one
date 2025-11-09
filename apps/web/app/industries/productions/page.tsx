@@ -21,7 +21,6 @@ import { MarketingNav } from '@/components/marketing/MarketingNav';
 import { MarketingFooter } from '@/components/marketing/MarketingFooter';
 import { CTASection } from '@/components/marketing/CTASection';
 import { trackEventWithConsent } from '@/lib/analytics/consent';
-import { PageHead } from '@/components/seo/PageHead';
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { preserveUTMParams, appendUTMParams } from '@/lib/utils/utm';
 
@@ -168,14 +167,6 @@ export default function ProductionsPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <PageHead
-        title="Creative Productions Management Platform | Effinity"
-        description="Project management for creative studios with automation. Save 18+ hours per week and increase margins by 30%. Budget tracking, timeline management, and asset delivery."
-        canonical="https://effinity.co.il/industries/productions"
-        ogImage="https://effinity.co.il/og-productions.jpg"
-        keywords="production management, creative studio software, project management, budget tracking, timeline management, video production"
-        jsonLd={jsonLd}
-      />
       <MarketingNav />
 
       {/* Hero Section */}

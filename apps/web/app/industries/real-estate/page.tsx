@@ -21,7 +21,6 @@ import { MarketingNav } from '@/components/marketing/MarketingNav';
 import { MarketingFooter } from '@/components/marketing/MarketingFooter';
 import { CTASection } from '@/components/marketing/CTASection';
 import { trackEventWithConsent } from '@/lib/analytics/consent';
-import { PageHead } from '@/components/seo/PageHead';
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { preserveUTMParams, appendUTMParams } from '@/lib/utils/utm';
 
@@ -191,14 +190,6 @@ export default function RealEstatePage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <PageHead
-        title="Real Estate Management Platform | Effinity"
-        description="Complete real estate management with AI-powered automation. Save 15+ hours per week and increase conversions by 40%. Property listings, lead management, campaign attribution, and automated follow-ups."
-        canonical="https://effinity.co.il/industries/real-estate"
-        ogImage="https://effinity.co.il/og-real-estate.jpg"
-        keywords="real estate management, property management software, real estate CRM, lead management, AI property search, campaign attribution"
-        jsonLd={jsonLd}
-      />
 
       <MarketingNav />
 

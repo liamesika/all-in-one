@@ -21,7 +21,6 @@ import { MarketingNav } from '@/components/marketing/MarketingNav';
 import { MarketingFooter } from '@/components/marketing/MarketingFooter';
 import { CTASection } from '@/components/marketing/CTASection';
 import { trackEventWithConsent } from '@/lib/analytics/consent';
-import { PageHead } from '@/components/seo/PageHead';
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { preserveUTMParams, appendUTMParams } from '@/lib/utils/utm';
 
@@ -168,14 +167,6 @@ export default function LawPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <PageHead
-        title="Law Practice Management Platform | Effinity"
-        description="Complete law practice management with automation. Save 12+ hours per week and capture 40% more billable hours. Case tracking, document automation, time tracking, and billing."
-        canonical="https://effinity.co.il/industries/law"
-        ogImage="https://effinity.co.il/og-law.jpg"
-        keywords="law practice management, legal case management, time tracking, billing software, document automation"
-        jsonLd={jsonLd}
-      />
       <MarketingNav />
 
       {/* Hero Section */}

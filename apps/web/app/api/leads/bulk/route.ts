@@ -1,8 +1,6 @@
 import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma.server';
 
 export const POST = withAuth(async (request, { user }) => {
   try {

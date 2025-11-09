@@ -9,8 +9,8 @@ export default function GlobalError({ error }) {
   }, [error]);
 
   return (
-    <html>
-      <body>
+    <html lang="en">
+      <body style={{ margin: 0 }}>
         <div style={{
           display: 'flex',
           flexDirection: 'column',

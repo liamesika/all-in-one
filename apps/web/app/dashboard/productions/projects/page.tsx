@@ -11,6 +11,8 @@ export const metadata: Metadata = {
   description: 'Manage creative production projects in Kanban view',
 };
 
+export const dynamic = 'force-dynamic';
+
 export default function ProjectsBoardPage() {
   return <ProjectsBoardClient />;
 }

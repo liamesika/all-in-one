@@ -12,6 +12,8 @@ import { GlobalFooter } from '@/components/GlobalFooter';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: {
     default: 'Effinity — AI-Powered Business Management Platform',

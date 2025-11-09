@@ -25,6 +25,9 @@ export function PageHead({
   jsonLd,
 }: PageHeadProps) {
   useEffect(() => {
+    // Guard: only run in browser
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
     // Set page title
     document.title = title;
 

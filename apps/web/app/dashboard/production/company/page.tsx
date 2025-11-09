@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+
+export const dynamic = 'force-dynamic';
 import Link from 'next/link';
 import {
   Plus,

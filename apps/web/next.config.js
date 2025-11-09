@@ -9,7 +9,9 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   generateEtags: true,
-  
+
+  // Disable static optimization to prevent SSR document errors
+  output: 'standalone',
 
   // External packages for server components (temporarily disabled for build)
   // serverExternalPackages: [
