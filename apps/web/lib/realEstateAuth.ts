@@ -1,7 +1,6 @@
 import { auth } from './firebase';
-import { PrismaClient, RealEstateRole } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { RealEstateRole } from '@prisma/client';
+import { prisma } from './prisma.server';
 
 export interface RealEstateAuthContext {
   uid: string;
