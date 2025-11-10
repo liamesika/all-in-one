@@ -47,6 +47,11 @@ const nextConfig = {
 
   // Webpack optimization
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
+    // Ensure node_modules/.prisma is included in output traces
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '.prisma/client': require.resolve('@prisma/client'),
+    };
     // CRITICAL: Fix "self is not defined" error by changing webpack's global object
     // Apply to both client and server to prevent self references in any bundles
     config.output.globalObject = '(typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : this)';
