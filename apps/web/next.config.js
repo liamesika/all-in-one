@@ -42,6 +42,9 @@ const nextConfig = {
 
   output: 'standalone',
 
+  // Prevent static optimization of API routes
+  staticPageGenerationTimeout: 1000,
+
   // Skip prerendering of error pages to bypass OpenTelemetry Html import issue
   generateBuildId: async () => {
     return 'build-' + Date.now()
