@@ -40,6 +40,8 @@ const nextConfig = {
     // ],
   },
 
+  output: 'standalone',
+
   // Skip prerendering of error pages to bypass OpenTelemetry Html import issue
   generateBuildId: async () => {
     return 'build-' + Date.now()
