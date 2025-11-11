@@ -48,6 +48,7 @@ import { useRouter } from 'next/navigation';
 import { EmptyState } from '@/components/dashboard/EmptyState';
 import { analytics } from '@/lib/analytics';
 import { TrialBanner } from '@/components/subscription/TrialBanner';
+import { DashboardWidgets } from '@/components/real-estate/DashboardWidgets';
 import { auth } from '@/lib/firebase';
 import { TasksWidget } from './components/TasksWidget';
 
@@ -392,6 +393,8 @@ function RealEstateDashboardContent({ initialFilters }: { initialFilters?: any }
           </>
         )}
 
+        {/* Dashboard Widgets - Real-time Stats */}
+        <DashboardWidgets language={lang as 'en' | 'he'} />
 
         {/* Primary KPI Cards - Emphasized */}
         <div className="mb-10">
