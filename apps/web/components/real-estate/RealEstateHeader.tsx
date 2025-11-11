@@ -7,25 +7,37 @@
 
 import { useState } from 'react';
 import { useLanguage } from '@/lib/language-context';
-import { usePathname } from 'next/navigation';
-import { Bell, User, MessageCircle, Globe, Menu, X } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Bell, User, MessageCircle, Globe, Menu, X, Briefcase } from 'lucide-react';
 import { UniversalButton } from '@/components/shared';
 
 export function RealEstateHeader() {
   const { language, setLanguage } = useLanguage();
   const pathname = usePathname();
+  const router = useRouter();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   // Determine page title based on pathname
   const getPageTitle = () => {
+    // Management routes
+    if (pathname.includes('/management/leads')) return language === 'he' ? 'ניהול - לידים' : 'Management - Leads';
+    if (pathname.includes('/management/clients')) return language === 'he' ? 'ניהול - לקוחות' : 'Management - Clients';
+    if (pathname.includes('/management/employees')) return language === 'he' ? 'ניהול - עובדים' : 'Management - Employees';
+    if (pathname.includes('/management/tasks')) return language === 'he' ? 'ניהול - משימות' : 'Management - Tasks';
+    if (pathname.includes('/management/properties')) return language === 'he' ? 'ניהול - נכסים' : 'Management - Properties';
+    if (pathname.includes('/management/calendar')) return language === 'he' ? 'ניהול - יומן' : 'Management - Calendar';
+    if (pathname.includes('/management')) return language === 'he' ? 'ניהול - סקירה' : 'Management - Overview';
+
     const titles: Record<string, { en: string; he: string }> = {
       '/dashboard/real-estate/dashboard': { en: 'Dashboard', he: 'לוח בקרה' },
       '/dashboard/real-estate/properties': { en: 'Properties', he: 'נכסים' },
       '/dashboard/real-estate/leads': { en: 'Leads', he: 'לידים' },
       '/dashboard/real-estate/calendar': { en: 'Calendar', he: 'יומן' },
       '/dashboard/real-estate/customers': { en: 'Customers', he: 'לקוחות' },
+      '/dashboard/real-estate/clients': { en: 'Clients', he: 'לקוחות' },
+      '/dashboard/real-estate/employees': { en: 'Employees', he: 'עובדים' },
       '/dashboard/real-estate/campaigns': { en: 'Campaigns', he: 'קמפיינים' },
       '/dashboard/real-estate/ai-searcher': { en: 'AI Property Search', he: 'חיפוש AI' },
       '/dashboard/real-estate/neighborhoods': { en: 'Smart Neighborhood Map', he: 'מפת שכונות חכמה' },
@@ -70,6 +82,23 @@ export function RealEstateHeader() {
             {getPageTitle()}
           </h1>
         </div>
+
+        {/* Center: Management Link */}
+        <nav className="hidden md:flex items-center">
+          <button
+            onClick={() => router.push('/dashboard/real-estate/management')}
+            className={`
+              flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all
+              ${pathname.includes('/management')
+                ? 'bg-[#2979FF] text-white shadow-md'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+              }
+            `}
+          >
+            <Briefcase className="w-5 h-5" />
+            <span>{language === 'he' ? 'ניהול' : 'Management'}</span>
+          </button>
+        </nav>
 
         {/* Right: Actions */}
         <div className="flex items-center gap-2 md:gap-4">
@@ -214,10 +243,22 @@ export function RealEstateHeader() {
       {showMobileMenu && (
         <div className="md:hidden border-t border-gray-200 dark:border-[#2979FF]/20 bg-white dark:bg-[#0E1A2B]">
           <nav className="p-4 space-y-2">
-            {/* Mobile navigation links can be added here if needed */}
-            <p className="text-sm text-gray-600 dark:text-gray-400 text-center py-4">
-              {language === 'he' ? 'השתמש בסרגל הצד לניווט' : 'Use sidebar for navigation'}
-            </p>
+            <button
+              onClick={() => {
+                router.push('/dashboard/real-estate/management');
+                setShowMobileMenu(false);
+              }}
+              className={`
+                w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all
+                ${pathname.includes('/management')
+                  ? 'bg-[#2979FF] text-white shadow-md'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                }
+              `}
+            >
+              <Briefcase className="w-5 h-5" />
+              <span>{language === 'he' ? 'ניהול' : 'Management'}</span>
+            </button>
           </nav>
         </div>
       )}
