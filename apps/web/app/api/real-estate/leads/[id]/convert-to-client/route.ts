@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
-import { PrismaClient, RealEstateLeadStatus } from '@prisma/client';
+import { RealEstateLeadStatus } from '@prisma/client';
+import { prisma } from '@/lib/prisma.server';
 import { withRealEstateAuth } from '@/lib/realEstateApiAuth';
 import { canAccessLead } from '@/lib/realEstateAuth';
 

@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { withAuth, getOwnerUid } from '@/lib/apiAuth';
 import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma.server';
 
 
 export const GET = withAuth(async (request, { user }) => {
